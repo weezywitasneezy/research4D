@@ -151,6 +151,222 @@
             margin-left: 10px;
             vertical-align: middle;
         }
+
+        /* Music Player Styles */
+        .music-player-section {
+            background-color: #f0f7ff;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+            border: 1px dashed #3498db;
+        }
+        
+        .music-player {
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            margin: 20px 0;
+            border-left: 5px solid #e74c3c;
+        }
+        
+        .player-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .album-art {
+            width: 80px;
+            height: 80px;
+            border-radius: 5px;
+            margin-right: 15px;
+            object-fit: cover;
+            background-color: #ddd;
+        }
+        
+        .song-info {
+            flex-grow: 1;
+        }
+        
+        .song-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 0 0 5px 0;
+        }
+        
+        .song-artist {
+            font-size: 14px;
+            color: #666;
+            margin: 0;
+        }
+        
+        .controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        
+        .control-buttons {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .control-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #333;
+            font-size: 20px;
+            padding: 5px;
+            transition: color 0.2s;
+        }
+        
+        .control-button:hover {
+            color: #e74c3c;
+        }
+        
+        .play-button {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #e74c3c;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .play-button:hover {
+            background-color: #c0392b;
+        }
+        
+        .progress-container {
+            width: 100%;
+            background-color: #eee;
+            border-radius: 5px;
+            height: 5px;
+            cursor: pointer;
+            margin-bottom: 5px;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            border-radius: 5px;
+            background-color: #e74c3c;
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+        
+        .time-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .playlist {
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            margin-top: 15px;
+        }
+        
+        .playlist-header {
+            font-size: 16px;
+            font-weight: bold;
+            margin: 0 0 10px 0;
+            color: #2c3e50;
+        }
+        
+        .playlist-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .playlist-item:hover {
+            background-color: #f0f0f0;
+        }
+        
+        .playlist-item.active {
+            background-color: #ffe6e6;
+        }
+        
+        .playlist-number {
+            width: 25px;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .playlist-info {
+            flex-grow: 1;
+        }
+        
+        .playlist-title {
+            font-size: 14px;
+            margin: 0 0 3px 0;
+        }
+        
+        .playlist-artist {
+            font-size: 12px;
+            color: #666;
+            margin: 0;
+        }
+        
+        .playlist-duration {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .player-section-title {
+            color: #1a2a3a;
+            padding-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .player-section-title i {
+            margin-right: 10px;
+            color: #e74c3c;
+        }
+
+        .playlist-toggle {
+            font-size: 14px;
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            padding: 5px 10px;
+            border-radius: 15px;
+            cursor: pointer;
+            margin-left: 15px;
+            transition: all 0.2s;
+        }
+
+        .playlist-toggle:hover {
+            background: #e74c3c;
+            color: white;
+            border-color: #e74c3c;
+        }
+
+        /* Toggle for playlist visibility */
+        .playlist-container {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .playlist-container.show {
+            max-height: 500px;
+        }
     </style>
 </head>
 <body>
@@ -171,6 +387,52 @@
         <div class="institute metaxis">
             <h3>The Metaxis Institute</h3>
             <p>Looks for areas where the Sky and Moon Palace studies intersect</p>
+        </div>
+    </div>
+
+    <div class="music-player-section">
+        <h2 class="player-section-title">
+            <i>♫</i> 4D Dimensional Audio Experience <span class="section-badge">NEW</span>
+            <button class="playlist-toggle" id="playlistToggle">Show Playlist</button>
+        </h2>
+        <p>Enhance your exploration of the fourth dimension with our curated selection of music designed to stimulate dimensional thinking and facilitate deeper understanding of the concepts in our research papers.</p>
+        
+        <div class="music-player">
+            <div class="player-header">
+                <img src="images/dimensional-harmony.jpg" alt="Album Art" class="album-art" id="currentAlbumArt">
+                <div class="song-info">
+                    <p class="song-title" id="currentSongTitle">Dimensional Harmony</p>
+                    <p class="song-artist" id="currentArtist">The 4D Ensemble</p>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <div class="control-buttons">
+                    <button class="control-button" id="prevButton">⏮</button>
+                    <button class="play-button" id="playButton">▶</button>
+                    <button class="control-button" id="nextButton">⏭</button>
+                </div>
+                <div class="volume-control">
+                    <button class="control-button" id="volumeButton">🔊</button>
+                </div>
+            </div>
+            
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <div class="time-info">
+                <span id="currentTime">0:00</span>
+                <span id="totalTime">0:00</span>
+            </div>
+
+            <div class="playlist-container" id="playlistContainer">
+                <div class="playlist">
+                    <h3 class="playlist-header">Dimensional Audio Collection</h3>
+                    <div id="playlistItems">
+                        <!-- Playlist items will be added here dynamically -->
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -269,6 +531,7 @@
             <li>Compiled historical survey of pre-2000 BCE elements relevant to fourth spatial dimension</li>
             <li>Made important conceptual clarification focusing specifically on fourth spatial dimension</li>
             <li>Published three research papers on Mesopotamian ziggurats as dimensional bridges</li>
+            <li>Developed dimensional audio experience to enhance research understanding</li>
         </ul>
         
         <h3>Next Steps</h3>
@@ -285,5 +548,229 @@
     <footer>
         <p>© 2025 4D Research Institutes. This is a conceptual research project exploring the fourth spatial dimension.</p>
     </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Sample playlist - replace with your actual songs
+            const playlist = [
+                {
+                    title: "Cosmic Drift",
+                    artist: "The 4D Ensemble",
+                    file: "music/Cosmic-Drift.mp3",
+                    albumArt: "images/Cosmic-Drift.webp",
+                    duration: "4:00"
+                },
+                {
+                    title: "Celestial Reflections",
+                    artist: "Mesopotamian Echoes",
+                    file: "music/Celestial-Reflections.mp3",
+                    albumArt: "images/Celestial-Reflections.webp",
+                    duration: "2:11"
+                }
+            ];
+            
+            // Player elements
+            const playButton = document.getElementById('playButton');
+            const prevButton = document.getElementById('prevButton');
+            const nextButton = document.getElementById('nextButton');
+            const volumeButton = document.getElementById('volumeButton');
+            const progressBar = document.getElementById('progressBar');
+            const progressContainer = document.getElementById('progressContainer');
+            const currentTimeEl = document.getElementById('currentTime');
+            const totalTimeEl = document.getElementById('totalTime');
+            const currentSongTitle = document.getElementById('currentSongTitle');
+            const currentArtist = document.getElementById('currentArtist');
+            const currentAlbumArt = document.getElementById('currentAlbumArt');
+            const playlistItems = document.getElementById('playlistItems');
+            const playlistToggle = document.getElementById('playlistToggle');
+            const playlistContainer = document.getElementById('playlistContainer');
+            
+            // Create audio element
+            const audio = new Audio();
+            
+            // Player state
+            let currentSongIndex = 0;
+            let isPlaying = false;
+            let isMuted = false;
+            
+            // Initialize player
+            function initPlayer() {
+                // Load first song
+                loadSong(currentSongIndex);
+                
+                // Create playlist items
+                createPlaylist();
+                
+                // Add event listeners
+                playButton.addEventListener('click', togglePlay);
+                prevButton.addEventListener('click', playPrevious);
+                nextButton.addEventListener('click', playNext);
+                volumeButton.addEventListener('click', toggleMute);
+                audio.addEventListener('timeupdate', updateProgress);
+                audio.addEventListener('ended', playNext);
+                progressContainer.addEventListener('click', setProgress);
+                playlistToggle.addEventListener('click', togglePlaylist);
+            }
+            
+            // Load song
+            function loadSong(index) {
+                const song = playlist[index];
+                
+                currentSongTitle.textContent = song.title;
+                currentArtist.textContent = song.artist;
+                
+                // Only update the album art src if it exists
+                if (song.albumArt) {
+                    currentAlbumArt.src = song.albumArt;
+                }
+                
+                audio.src = song.file;
+                
+                // Highlight active song in playlist
+                const playlistItems = document.querySelectorAll('.playlist-item');
+                playlistItems.forEach(item => item.classList.remove('active'));
+                
+                if (playlistItems[index]) {
+                    playlistItems[index].classList.add('active');
+                    
+                    // Scroll to the active item
+                    playlistItems[index].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            }
+            
+            // Toggle play/pause
+            function togglePlay() {
+                if (isPlaying) {
+                    pauseSong();
+                } else {
+                    playSong();
+                }
+            }
+            
+            // Play song
+            function playSong() {
+                isPlaying = true;
+                playButton.innerHTML = '⏸';
+                audio.play();
+            }
+            
+            // Pause song
+            function pauseSong() {
+                isPlaying = false;
+                playButton.innerHTML = '▶';
+                audio.pause();
+            }
+            
+            // Toggle mute
+            function toggleMute() {
+                isMuted = !isMuted;
+                audio.muted = isMuted;
+                volumeButton.innerHTML = isMuted ? '🔇' : '🔊';
+            }
+            
+            // Play previous song
+            function playPrevious() {
+                currentSongIndex--;
+                if (currentSongIndex < 0) {
+                    currentSongIndex = playlist.length - 1;
+                }
+                
+                loadSong(currentSongIndex);
+                
+                if (isPlaying) {
+                    playSong();
+                }
+            }
+            
+            // Play next song
+            function playNext() {
+                currentSongIndex++;
+                if (currentSongIndex >= playlist.length) {
+                    currentSongIndex = 0;
+                }
+                
+                loadSong(currentSongIndex);
+                
+                if (isPlaying) {
+                    playSong();
+                }
+            }
+            
+            // Update progress bar
+            function updateProgress(e) {
+                const { duration, currentTime } = e.srcElement;
+                
+                if (duration) {
+                    // Update progress bar
+                    const progressPercent = (currentTime / duration) * 100;
+                    progressBar.style.width = `${progressPercent}%`;
+                    
+                    // Update time displays
+                    currentTimeEl.textContent = formatTime(currentTime);
+                    totalTimeEl.textContent = formatTime(duration);
+                }
+            }
+            
+            // Set progress bar on click
+            function setProgress(e) {
+                const width = this.clientWidth;
+                const clickX = e.offsetX;
+                const duration = audio.duration;
+                
+                audio.currentTime = (clickX / width) * duration;
+            }
+            
+            // Format time in minutes and seconds
+            function formatTime(seconds) {
+                const min = Math.floor(seconds / 60);
+                const sec = Math.floor(seconds % 60);
+                return `${min}:${sec < 10 ? '0' + sec : sec}`;
+            }
+            
+            // Toggle playlist visibility
+            function togglePlaylist() {
+                playlistContainer.classList.toggle('show');
+                playlistToggle.textContent = playlistContainer.classList.contains('show') ? 'Hide Playlist' : 'Show Playlist';
+            }
+            
+            // Create playlist items
+            function createPlaylist() {
+                playlistItems.innerHTML = '';
+                
+                playlist.forEach((song, index) => {
+                    const playlistItem = document.createElement('div');
+                    playlistItem.classList.add('playlist-item');
+                    if (index === currentSongIndex) {
+                        playlistItem.classList.add('active');
+                    }
+                    
+                    playlistItem.innerHTML = `
+                        <div class="playlist-number">${index + 1}</div>
+                        <div class="playlist-info">
+                            <p class="playlist-title">${song.title}</p>
+                            <p class="playlist-artist">${song.artist}</p>
+                        </div>
+                        <div class="playlist-duration">${song.duration}</div>
+                    `;
+                    
+                    playlistItem.addEventListener('click', () => {
+                        currentSongIndex = index;
+                        loadSong(currentSongIndex);
+                        
+                        if (isPlaying) {
+                            playSong();
+                        } else {
+                            playSong(); // Auto-play when selecting a new track
+                        }
+                    });
+                    
+                    playlistItems.appendChild(playlistItem);
+                });
+            }
+            
+            // Initialize the player
+            initPlayer();
+        });
+    </script>
 </body>
 </html>
