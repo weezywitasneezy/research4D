@@ -880,5 +880,78 @@
     </script>
     
     <script src="world-visualization.js"></script>
+    <!-- Add this code block right before the closing </body> tag in your HTML file -->
+<script>
+    // Add loading indicator for the visualization
+    document.addEventListener('DOMContentLoaded', function() {
+      const vizContainer = document.getElementById('visualization-mount');
+      if (vizContainer) {
+        // Create loading indicator
+        const loader = document.createElement('div');
+        loader.id = 'viz-loader';
+        loader.style.cssText = `
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          background-color: rgba(0,0,0,0.2);
+          color: white;
+          font-size: 18px;
+          z-index: 100;
+        `;
+        
+        const spinnerContainer = document.createElement('div');
+        spinnerContainer.style.cssText = `
+          text-align: center;
+        `;
+        
+        const spinner = document.createElement('div');
+        spinner.style.cssText = `
+          width: 50px;
+          height: 50px;
+          margin: 0 auto 15px auto;
+          border: 5px solid rgba(255,255,255,0.3);
+          border-radius: 50%;
+          border-top-color: #fff;
+          animation: spin 1s ease-in-out infinite;
+        `;
+        
+        const loadingText = document.createElement('div');
+        loadingText.textContent = 'Loading 4D World Visualization...';
+        
+        // Add loading animation
+        const style = document.createElement('style');
+        style.textContent = `
+          @keyframes spin {
+            to { transform: rotate(360deg); }
+          }
+        `;
+        document.head.appendChild(style);
+        
+        spinnerContainer.appendChild(spinner);
+        spinnerContainer.appendChild(loadingText);
+        loader.appendChild(spinnerContainer);
+        vizContainer.appendChild(loader);
+        
+        // Remove loader when visualization is ready
+        window.addEventListener('vizLoaded', function() {
+          if (loader && loader.parentNode) {
+            loader.parentNode.removeChild(loader);
+          }
+        });
+        
+        // Fallback - remove loader after 10 seconds even if viz doesn't load
+        setTimeout(() => {
+          if (loader && loader.parentNode) {
+            loader.parentNode.removeChild(loader);
+          }
+        }, 10000);
+      }
+    });
+  </script>
 </body>
 </html>
