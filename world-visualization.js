@@ -13,14 +13,20 @@ function initWorldVisualization() {
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x87ceeb); // Sky blue background
 
-    // Camera setup - adjusted for smaller viewport
+    // Camera setup - adjusted for smaller viewport with zoom
     const camera = new THREE.PerspectiveCamera(
         45, 
         container.clientWidth / container.clientHeight, 
         0.1, 
         2000
     );
-    camera.position.set(300, 200, 300);
+    
+    // ZOOM ADJUSTMENT: Reduce camera distance by ~30%
+    const zoomFactor = 0.7; // 30% closer (1.0 - 0.3 = 0.7)
+    const cameraRadius = 320 * zoomFactor; // Original: ~450
+    const cameraHeight = 180 * zoomFactor; // Original: ~250
+    
+    camera.position.set(cameraRadius, cameraHeight, cameraRadius);
     camera.lookAt(0, 0, 0);
 
     // Renderer setup
@@ -354,10 +360,10 @@ function initWorldVisualization() {
 
     // Setup camera rotation
     let angle = 0;
-    const radius = 450; // Distance from center
+    const radius = cameraRadius; // ZOOMED: Using the adjusted camera radius
     const centerX = 0;
     const centerZ = 0;
-    const height = 250; // Height of camera
+    const height = cameraHeight; // ZOOMED: Using the adjusted camera height
 
     // Animation loop
     const animate = () => {
