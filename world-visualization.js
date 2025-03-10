@@ -222,13 +222,63 @@ function initWorldVisualization() {
     scene.add(industrialAreaGroup);
     createLabel(industrialAreaGroup, "Industrial Area", 0x708090);
 
-    // Seaside Capital City
-    const seasideCapitalGeometry = new THREE.CylinderGeometry(25, 30, 20, 8);
-    const seasideCapitalMaterial = new THREE.MeshLambertMaterial({ color: 0xdaa520 }); // Goldenrod
-    const seasideCapital = new THREE.Mesh(seasideCapitalGeometry, seasideCapitalMaterial);
-    seasideCapital.position.set(100, 16, 60);
-    scene.add(seasideCapital);
-    createLabel(seasideCapital, "Seaside Capital", 0xdaa520);
+    // Seaside Capital City - Enhanced with more detail
+    const seasideCapitalGroup = new THREE.Group();
+    
+    // Main city base
+    const cityBaseGeometry = new THREE.CylinderGeometry(25, 30, 5, 8);
+    const cityBaseMaterial = new THREE.MeshLambertMaterial({ color: 0xdaa520 }); // Goldenrod
+    const cityBase = new THREE.Mesh(cityBaseGeometry, cityBaseMaterial);
+    cityBase.position.y = 2.5;
+    seasideCapitalGroup.add(cityBase);
+    
+    // Central tallest building/palace
+    const centralTowerGeometry = new THREE.CylinderGeometry(5, 8, 25, 6);
+    const centralTowerMaterial = new THREE.MeshLambertMaterial({ color: 0xf0e68c }); // Khaki
+    const centralTower = new THREE.Mesh(centralTowerGeometry, centralTowerMaterial);
+    centralTower.position.y = 17.5;
+    seasideCapitalGroup.add(centralTower);
+    
+    // Tower spire
+    const spireGeometry = new THREE.ConeGeometry(3, 10, 6);
+    const spireMaterial = new THREE.MeshLambertMaterial({ color: 0xffd700 }); // Gold
+    const spire = new THREE.Mesh(spireGeometry, spireMaterial);
+    spire.position.y = 35;
+    seasideCapitalGroup.add(spire);
+    
+    // Surrounding buildings
+    const createBuilding = (radius, angle, height, width) => {
+        const x = radius * Math.cos(angle);
+        const z = radius * Math.sin(angle);
+        
+        const buildingGeometry = new THREE.BoxGeometry(width, height, width);
+        const buildingMaterial = new THREE.MeshLambertMaterial({ color: 0xe6c899 }); // Lighter tan
+        const building = new THREE.Mesh(buildingGeometry, buildingMaterial);
+        building.position.set(x, height/2 + 5, z);
+        seasideCapitalGroup.add(building);
+    };
+    
+    // Create circular arrangement of buildings
+    const buildingCount = 8;
+    for (let i = 0; i < buildingCount; i++) {
+        const angle = (i / buildingCount) * Math.PI * 2;
+        const radius = 15;
+        const height = 10 + Math.random() * 8; // Random heights
+        const width = 5 + Math.random() * 3; // Random widths
+        createBuilding(radius, angle, height, width);
+    }
+    
+    // Create harbor/docks extending toward the sea (east)
+    const harborGeometry = new THREE.BoxGeometry(40, 2, 10);
+    const harborMaterial = new THREE.MeshLambertMaterial({ color: 0x8b4513 }); // Saddle brown
+    const harbor = new THREE.Mesh(harborGeometry, harborMaterial);
+    harbor.position.set(-30, 3, 0); // Extend toward the sea (west)
+    seasideCapitalGroup.add(harbor);
+    
+    // Position the entire city group
+    seasideCapitalGroup.position.set(100, 16, 60);
+    scene.add(seasideCapitalGroup);
+    createLabel(seasideCapitalGroup, "Seaside Capital", 0xdaa520);
 
     // Sky Palace (floating above seaside capital)
     const skyPalaceGeometry = new THREE.CylinderGeometry(18, 22, 15, 6);
