@@ -174,13 +174,53 @@ function initWorldVisualization() {
     scene.add(verticalFarmGroup);
     createLabel(verticalFarmGroup, "Vertical Farm Region", 0x7cfc00);
 
-    // Industrial Area (due east)
-    const industrialAreaGeometry = new THREE.BoxGeometry(60, 18, 70);
-    const industrialAreaMaterial = new THREE.MeshLambertMaterial({ color: 0x708090 }); // Slate gray
-    const industrialArea = new THREE.Mesh(industrialAreaGeometry, industrialAreaMaterial);
-    industrialArea.position.set(150, 15, 0);
-    scene.add(industrialArea);
-    createLabel(industrialArea, "Industrial Area", 0x708090);
+    // Industrial Area (due east) - Enhanced with more detail
+    const industrialAreaGroup = new THREE.Group();
+    
+    // Base industrial zone
+    const industrialBaseGeometry = new THREE.BoxGeometry(60, 6, 70);
+    const industrialBaseMaterial = new THREE.MeshLambertMaterial({ color: 0x505050 }); // Dark gray
+    const industrialBase = new THREE.Mesh(industrialBaseGeometry, industrialBaseMaterial);
+    industrialAreaGroup.add(industrialBase);
+    
+    // Factory buildings
+    const factoryGeometry = new THREE.BoxGeometry(15, 15, 20);
+    const factoryMaterial = new THREE.MeshLambertMaterial({ color: 0x708090 }); // Slate gray
+    
+    // First factory building
+    const factory1 = new THREE.Mesh(factoryGeometry, factoryMaterial);
+    factory1.position.set(-15, 10.5, -20);
+    industrialAreaGroup.add(factory1);
+    
+    // Second factory building
+    const factory2 = new THREE.Mesh(factoryGeometry, factoryMaterial);
+    factory2.position.set(10, 10.5, 0);
+    industrialAreaGroup.add(factory2);
+    
+    // Third factory building
+    const factory3 = new THREE.Mesh(factoryGeometry, factoryMaterial);
+    factory3.position.set(-5, 10.5, 25);
+    industrialAreaGroup.add(factory3);
+    
+    // Smoke stacks
+    const smokestackGeometry = new THREE.CylinderGeometry(2, 2.5, 25, 8);
+    const smokestackMaterial = new THREE.MeshLambertMaterial({ color: 0xa0a0a0 });
+    
+    // Add smokestacks to the factories
+    const addSmokestack = (x, z) => {
+        const smokestack = new THREE.Mesh(smokestackGeometry, smokestackMaterial);
+        smokestack.position.set(x, 23, z);
+        industrialAreaGroup.add(smokestack);
+    };
+    
+    addSmokestack(-15, -20);
+    addSmokestack(10, 0);
+    addSmokestack(-5, 25);
+    
+    // Position the entire industrial area group
+    industrialAreaGroup.position.set(150, 15, 0);
+    scene.add(industrialAreaGroup);
+    createLabel(industrialAreaGroup, "Industrial Area", 0x708090);
 
     // Seaside Capital City
     const seasideCapitalGeometry = new THREE.CylinderGeometry(25, 30, 20, 8);
