@@ -280,17 +280,93 @@ function initWorldVisualization() {
     scene.add(seasideCapitalGroup);
     createLabel(seasideCapitalGroup, "Seaside Capital", 0xdaa520);
 
-    // Sky Palace (floating above seaside capital)
-    const skyPalaceGeometry = new THREE.CylinderGeometry(18, 22, 15, 6);
-    const skyPalaceMaterial = new THREE.MeshLambertMaterial({ 
+    // Sky Palace (floating above seaside capital) - Enhanced with more detail
+    const skyPalaceGroup = new THREE.Group();
+    
+    // Main floating platform
+    const platformGeometry = new THREE.CylinderGeometry(18, 22, 6, 6);
+    const platformMaterial = new THREE.MeshLambertMaterial({ 
+        color: 0x00ffff, // Cyan
+        transparent: true,
+        opacity: 0.8
+    });
+    const platform = new THREE.Mesh(platformGeometry, platformMaterial);
+    platform.position.y = 0;
+    skyPalaceGroup.add(platform);
+    
+    // Central palace structure
+    const palaceGeometry = new THREE.CylinderGeometry(12, 15, 15, 6);
+    const palaceMaterial = new THREE.MeshLambertMaterial({ 
         color: 0x00ffff, // Cyan
         transparent: true,
         opacity: 0.9
     });
-    const skyPalace = new THREE.Mesh(skyPalaceGeometry, skyPalaceMaterial);
-    skyPalace.position.set(100, 80, 60);
-    scene.add(skyPalace);
-    createLabel(skyPalace, "Sky Palace", 0x00ffff);
+    const palace = new THREE.Mesh(palaceGeometry, palaceMaterial);
+    palace.position.y = 10.5;
+    skyPalaceGroup.add(palace);
+    
+    // Decorative ring around the platform
+    const ringGeometry = new THREE.TorusGeometry(20, 1, 16, 32);
+    const ringMaterial = new THREE.MeshLambertMaterial({ 
+        color: 0xadd8e6, // Light blue
+        transparent: true,
+        opacity: 0.7
+    });
+    const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+    ring.rotation.x = Math.PI / 2;
+    ring.position.y = 3;
+    skyPalaceGroup.add(ring);
+    
+    // Top central tower
+    const towerGeometry = new THREE.CylinderGeometry(4, 8, 12, 6);
+    const towerMaterial = new THREE.MeshLambertMaterial({ 
+        color: 0xb0e0e6, // Powder blue
+        transparent: true,
+        opacity: 0.9
+    });
+    const tower = new THREE.Mesh(towerGeometry, towerMaterial);
+    tower.position.y = 24;
+    skyPalaceGroup.add(tower);
+    
+    // Tower top dome
+    const domeGeometry = new THREE.SphereGeometry(5, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2);
+    const domeMaterial = new THREE.MeshLambertMaterial({ 
+        color: 0xe0ffff, // Light cyan
+        transparent: true,
+        opacity: 0.9
+    });
+    const dome = new THREE.Mesh(domeGeometry, domeMaterial);
+    dome.position.y = 30;
+    skyPalaceGroup.add(dome);
+    
+    // Small cloud-like structures around the platform
+    const createCloud = (radius, angle, size) => {
+        const x = radius * Math.cos(angle);
+        const z = radius * Math.sin(angle);
+        
+        const cloudGeometry = new THREE.SphereGeometry(size, 8, 8);
+        const cloudMaterial = new THREE.MeshLambertMaterial({ 
+            color: 0xf0f8ff, // Alice blue
+            transparent: true,
+            opacity: 0.4
+        });
+        const cloud = new THREE.Mesh(cloudGeometry, cloudMaterial);
+        cloud.position.set(x, -2, z);
+        skyPalaceGroup.add(cloud);
+    };
+    
+    // Create clouds around the palace
+    for (let i = 0; i < 6; i++) {
+        const angle = (i / 6) * Math.PI * 2;
+        const radius = 25;
+        const size = 3 + Math.random() * 2;
+        createCloud(radius, angle, size);
+    }
+    
+    // Position the entire sky palace group
+    skyPalaceGroup.position.set(100, 80, 60);
+    scene.add(skyPalaceGroup);
+    createLabel(skyPalaceGroup, "Sky Palace", 0x00ffff);
 
     // Space Farms (highest layer)
     const spaceFarmsGeometry = new THREE.TorusGeometry(80, 4, 16, 50);
