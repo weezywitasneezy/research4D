@@ -1,13 +1,86 @@
 // World Visualization
+
+// Fullscreen toggle function
+function toggleFullScreen(element) {
+    if (!document.fullscreenElement &&
+        !document.mozFullScreenElement &&
+        !document.webkitFullscreenElement &&
+        !document.msFullscreenElement) {
+        
+        if (element.requestFullscreen) {
+            element.requestFullscreen();
+        } else if (element.mozRequestFullScreen) {
+            element.mozRequestFullScreen();
+        } else if (element.webkitRequestFullscreen) {
+            element.webkitRequestFullscreen();
+        } else if (element.msRequestFullscreen) {
+            element.msRequestFullscreen();
+        }
+    } else {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        } else if (document.mozCancelFullScreen) {
+            document.mozCancelFullScreen();
+        } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+        } else if (document.msExitFullscreen) {
+            document.msExitFullscreen();
+        }
+    }
+}
+
 function initWorldVisualization() {
     // DOM elements
     const container = document.getElementById('visualization-mount');
     const toggleRotationButton = document.getElementById('toggle-rotation');
+    const visualizationContainer = document.querySelector('.visualization-container');
     
     if (!container) return; // Exit if container not found
     
     // State variables
     let isRotating = true;
+    
+    // Find the visualization controls div
+    const visualizationControls = document.querySelector('.visualization-controls');
+    
+    if (visualizationControls) {
+        // Create fullscreen button
+        const fullscreenButton = document.createElement('button');
+        fullscreenButton.id = 'toggle-fullscreen';
+        fullscreenButton.className = 'control-button';
+        fullscreenButton.textContent = 'Enter Fullscreen';
+        
+        // Insert fullscreen button after the toggle rotation button
+        if (toggleRotationButton) {
+            // Insert after the toggle rotation button
+            toggleRotationButton.insertAdjacentElement('afterend', fullscreenButton);
+        } else {
+            // If toggle rotation button doesn't exist, just append to controls
+            visualizationControls.appendChild(fullscreenButton);
+        }
+        
+        // Add click handler for fullscreen button
+        fullscreenButton.addEventListener('click', function() {
+            toggleFullScreen(visualizationContainer);
+        });
+        
+        // Add event listeners to update button text
+        const updateFullscreenButtonText = function() {
+            if (document.fullscreenElement || 
+                document.mozFullScreenElement || 
+                document.webkitFullscreenElement || 
+                document.msFullscreenElement) {
+                fullscreenButton.textContent = 'Exit Fullscreen';
+            } else {
+                fullscreenButton.textContent = 'Enter Fullscreen';
+            }
+        };
+        
+        document.addEventListener('fullscreenchange', updateFullscreenButtonText);
+        document.addEventListener('mozfullscreenchange', updateFullscreenButtonText);
+        document.addEventListener('webkitfullscreenchange', updateFullscreenButtonText);
+        document.addEventListener('MSFullscreenChange', updateFullscreenButtonText);
+    }
     
     // Scene setup
     const scene = new THREE.Scene();
@@ -671,7 +744,13 @@ function initWorldVisualization() {
         
         renderer.setSize(width, height);
     };
+    
+    // Add resize event listeners including fullscreen changes
     window.addEventListener('resize', handleResize);
+    document.addEventListener('fullscreenchange', handleResize);
+    document.addEventListener('mozfullscreenchange', handleResize);
+    document.addEventListener('webkitfullscreenchange', handleResize);
+    document.addEventListener('MSFullscreenChange', handleResize);
 
     // Setup camera rotation
     let angle = 0;
@@ -701,7 +780,7 @@ function initWorldVisualization() {
     };
     animate();
 
-    // Toggle rotation button
+    // Toggle rotation button event listener if it exists
     if (toggleRotationButton) {
         toggleRotationButton.addEventListener('click', function() {
             isRotating = !isRotating;
@@ -712,6 +791,10 @@ function initWorldVisualization() {
     // Return a cleanup function
     return function cleanup() {
         window.removeEventListener('resize', handleResize);
+        document.removeEventListener('fullscreenchange', handleResize);
+        document.removeEventListener('mozfullscreenchange', handleResize);
+        document.removeEventListener('webkitfullscreenchange', handleResize);
+        document.removeEventListener('MSFullscreenChange', handleResize);
         
         // Remove all label elements
         labelData.forEach(label => {
