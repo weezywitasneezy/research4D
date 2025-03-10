@@ -880,78 +880,230 @@
     </script>
     
     <script src="world-visualization.js"></script>
-    <!-- Add this code block right before the closing </body> tag in your HTML file -->
-<script>
-    // Add loading indicator for the visualization
+    // Add this script right before the end of your HTML body
     document.addEventListener('DOMContentLoaded', function() {
+      // Create loading indicator
       const vizContainer = document.getElementById('visualization-mount');
-      if (vizContainer) {
-        // Create loading indicator
-        const loader = document.createElement('div');
-        loader.id = 'viz-loader';
-        loader.style.cssText = `
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          background-color: rgba(0,0,0,0.2);
-          color: white;
-          font-size: 18px;
-          z-index: 100;
-        `;
-        
-        const spinnerContainer = document.createElement('div');
-        spinnerContainer.style.cssText = `
-          text-align: center;
-        `;
-        
-        const spinner = document.createElement('div');
-        spinner.style.cssText = `
-          width: 50px;
-          height: 50px;
-          margin: 0 auto 15px auto;
-          border: 5px solid rgba(255,255,255,0.3);
-          border-radius: 50%;
-          border-top-color: #fff;
-          animation: spin 1s ease-in-out infinite;
-        `;
-        
-        const loadingText = document.createElement('div');
-        loadingText.textContent = 'Loading 4D World Visualization...';
-        
-        // Add loading animation
-        const style = document.createElement('style');
-        style.textContent = `
-          @keyframes spin {
-            to { transform: rotate(360deg); }
-          }
-        `;
-        document.head.appendChild(style);
-        
-        spinnerContainer.appendChild(spinner);
-        spinnerContainer.appendChild(loadingText);
-        loader.appendChild(spinnerContainer);
-        vizContainer.appendChild(loader);
-        
-        // Remove loader when visualization is ready
-        window.addEventListener('vizLoaded', function() {
-          if (loader && loader.parentNode) {
-            loader.parentNode.removeChild(loader);
-          }
-        });
-        
-        // Fallback - remove loader after 10 seconds even if viz doesn't load
-        setTimeout(() => {
-          if (loader && loader.parentNode) {
-            loader.parentNode.removeChild(loader);
-          }
-        }, 10000);
+      if (!vizContainer) {
+        console.error('Visualization container not found');
+        return;
       }
+      
+      // Add loading indicator
+      const loader = document.createElement('div');
+      loader.id = 'viz-loader';
+      loader.style.cssText = `
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background-color: rgba(0,0,0,0.2);
+        color: white;
+        font-size: 18px;
+        z-index: 100;
+      `;
+      
+      const spinnerContainer = document.createElement('div');
+      spinnerContainer.style.textAlign = 'center';
+      
+      const spinner = document.createElement('div');
+      spinner.style.cssText = `
+        width: 50px;
+        height: 50px;
+        margin: 0 auto 15px auto;
+        border: 5px solid rgba(255,255,255,0.3);
+        border-radius: 50%;
+        border-top-color: #fff;
+        animation: spin 1s ease-in-out infinite;
+      `;
+      
+      const loadingText = document.createElement('div');
+      loadingText.textContent = 'Loading 4D World Visualization...';
+      
+      const statusDiv = document.createElement('div');
+      statusDiv.id = 'load-status';
+      statusDiv.style.cssText = `
+        margin-top: 20px;
+        font-size: 14px;
+        color: #ddd;
+      `;
+      statusDiv.textContent = 'Initializing...';
+      
+      // Add animation style
+      const style = document.createElement('style');
+      style.textContent = `
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `;
+      document.head.appendChild(style);
+      
+      spinnerContainer.appendChild(spinner);
+      spinnerContainer.appendChild(loadingText);
+      spinnerContainer.appendChild(statusDiv);
+      loader.appendChild(spinnerContainer);
+      vizContainer.appendChild(loader);
+      
+      // Function to update status
+      function updateStatus(message) {
+        const statusEl = document.getElementById('load-status');
+        if (statusEl) {
+          statusEl.textContent = message;
+        }
+        console.log('Visualization status:', message);
+      }
+      
+      // Load Three.js with error handling
+      function loadScript(url, callback, errorCallback) {
+        updateStatus(`Loading ${url.split('/').pop()}...`);
+        const script = document.createElement('script');
+        script.src = url;
+        
+        script.onload = function() {
+          updateStatus(`${url.split('/').pop()} loaded successfully`);
+          if (callback) callback();
+        };
+        
+        script.onerror = function() {
+          updateStatus(`Failed to load ${url.split('/').pop()} - trying alternative source`);
+          if (errorCallback) errorCallback();
+        };
+        
+        document.head.appendChild(script);
+        return script;
+      }
+      
+      // Define multiple CDN sources for fallback
+      const threeJsSources = [
+        'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js',
+        'https://threejs.org/build/three.min.js',
+        'https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js'
+      ];
+      
+      // Try loading from first source, with fallbacks
+      let currentSourceIndex = 0;
+      
+      function tryLoadThreeJs() {
+        if (currentSourceIndex >= threeJsSources.length) {
+          // All sources failed, show error
+          updateStatus('Failed to load Three.js. Please check your internet connection.');
+          showFallbackContent();
+          return;
+        }
+        
+        loadScript(threeJsSources[currentSourceIndex], initVisualization, function() {
+          // Try next source
+          currentSourceIndex++;
+          tryLoadThreeJs();
+        });
+      }
+      
+      // Start loading Three.js
+      tryLoadThreeJs();
+      
+      // Initialize visualization once Three.js is loaded
+      function initVisualization() {
+        updateStatus('Initializing visualization...');
+        
+        // Check if Three.js loaded properly
+        if (typeof THREE === 'undefined') {
+          updateStatus('Three.js not detected despite successful load. Showing fallback content.');
+          showFallbackContent();
+          return;
+        }
+        
+        try {
+          // Start visualization with error handling
+          window.initWorldVisualization();
+          updateStatus('Visualization running');
+          
+          // Remove loader after visualization starts
+          setTimeout(function() {
+            if (loader && loader.parentNode) {
+              loader.parentNode.removeChild(loader);
+            }
+          }, 1000);
+        } catch (error) {
+          updateStatus(`Error initializing visualization: ${error.message}`);
+          console.error('Visualization error:', error);
+          showFallbackContent();
+        }
+      }
+      
+      // Show fallback content if visualization fails
+      function showFallbackContent() {
+        if (loader) {
+          // Update loader to show error message
+          loader.innerHTML = `
+            <div style="text-align: center; padding: 20px;">
+              <h3 style="color: white; margin-bottom: 15px;">Unable to load 3D visualization</h3>
+              <p style="color: #ddd; margin-bottom: 15px;">
+                We're having trouble loading the 3D world visualization. 
+                This might be due to browser compatibility issues or network problems.
+              </p>
+              <div>
+                <button id="retry-viz-button" style="
+                  background-color: #1a2a3a;
+                  color: white;
+                  border: none;
+                  padding: 10px 15px;
+                  border-radius: 5px;
+                  cursor: pointer;
+                  margin-right: 10px;
+                ">Retry</button>
+                <button id="show-static-button" style="
+                  background-color: #2c3e50;
+                  color: white;
+                  border: none;
+                  padding: 10px 15px;
+                  border-radius: 5px;
+                  cursor: pointer;
+                ">Show Static Image</button>
+              </div>
+            </div>
+          `;
+          
+          // Add event listeners
+          document.getElementById('retry-viz-button').addEventListener('click', function() {
+            location.reload();
+          });
+          
+          document.getElementById('show-static-button').addEventListener('click', function() {
+            // Show static fallback image
+            vizContainer.innerHTML = `
+              <img src="/images/4d-world-static.jpg" alt="4D Research World Map" 
+                  style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px;">
+              <div style="
+                position: absolute;
+                bottom: 20px;
+                left: 20px;
+                background-color: rgba(0,0,0,0.7);
+                padding: 15px;
+                border-radius: 10px;
+                color: white;
+              ">
+                <h4 style="margin-top: 0;">Key Locations</h4>
+                <p><span style="color: #c39bd3;">●</span> Moon Palace</p>
+                <p><span style="color: #00ffff;">●</span> Sky Palace</p>
+                <p><span style="color: #ff7f50;">●</span> The Belt</p>
+              </div>
+            `;
+          });
+        }
+      }
+    
+      // Set a timeout to detect if visualization takes too long to load
+      setTimeout(function() {
+        const loadStatus = document.getElementById('load-status');
+        if (loadStatus && loadStatus.textContent !== 'Visualization running') {
+          updateStatus('Visualization is taking longer than expected. You may need to refresh the page.');
+        }
+      }, 10000);
     });
-  </script>
 </body>
 </html>
