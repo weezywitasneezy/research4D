@@ -137,13 +137,42 @@ function initWorldVisualization() {
     createLabel(eastContinentGroup, "Eastern Continent", 0xa9a9a9);
 
     // EASTERN REGIONS
-    // Vertical Farm Region (north east)
-    const verticalFarmGeometry = new THREE.BoxGeometry(60, 15, 60);
-    const verticalFarmMaterial = new THREE.MeshLambertMaterial({ color: 0x7cfc00 }); // Light green
-    const verticalFarm = new THREE.Mesh(verticalFarmGeometry, verticalFarmMaterial);
-    verticalFarm.position.set(110, 13.5, -60);
-    scene.add(verticalFarm);
-    createLabel(verticalFarm, "Vertical Farm Region", 0x7cfc00);
+    // Vertical Farm Region (north east) - Enhanced with more detail
+    const verticalFarmGroup = new THREE.Group();
+    
+    // Base land area
+    const farmBaseGeometry = new THREE.BoxGeometry(60, 8, 60);
+    const farmBaseMaterial = new THREE.MeshLambertMaterial({ color: 0x729f00 }); // Darker green base
+    const farmBase = new THREE.Mesh(farmBaseGeometry, farmBaseMaterial);
+    verticalFarmGroup.add(farmBase);
+    
+    // Creating multiple vertical farm towers
+    const createFarmTower = (x, z, height, radius) => {
+        const towerGeometry = new THREE.CylinderGeometry(radius, radius, height, 8);
+        const towerMaterial = new THREE.MeshLambertMaterial({ color: 0x7cfc00 }); // Light green
+        const tower = new THREE.Mesh(towerGeometry, towerMaterial);
+        tower.position.set(x, height/2 + 4, z);
+        verticalFarmGroup.add(tower);
+        
+        // Add a small dome on top
+        const domeGeometry = new THREE.SphereGeometry(radius, 8, 8, 0, Math.PI * 2, 0, Math.PI / 2);
+        const domeMaterial = new THREE.MeshLambertMaterial({ color: 0xaaffaa }); // Light green
+        const dome = new THREE.Mesh(domeGeometry, domeMaterial);
+        dome.position.set(x, height + 4, z);
+        verticalFarmGroup.add(dome);
+    };
+    
+    // Create several farm towers of varying heights
+    createFarmTower(-15, -15, 20, 5);
+    createFarmTower(0, 0, 24, 6);
+    createFarmTower(15, 10, 18, 5);
+    createFarmTower(-10, 15, 22, 4);
+    createFarmTower(12, -12, 26, 5);
+    
+    // Position the entire farm group
+    verticalFarmGroup.position.set(110, 13.5, -60);
+    scene.add(verticalFarmGroup);
+    createLabel(verticalFarmGroup, "Vertical Farm Region", 0x7cfc00);
 
     // Industrial Area (due east)
     const industrialAreaGeometry = new THREE.BoxGeometry(60, 18, 70);
