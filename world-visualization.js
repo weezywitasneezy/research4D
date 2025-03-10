@@ -11,7 +11,7 @@ function initWorldVisualization() {
     
     // Scene setup
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x87ceeb); // Sky blue background
+    scene.background = new THREE.Color(0x1a237e); // Dark blue background to match reference
 
     // Camera setup - adjusted for smaller viewport with zoom
     const camera = new THREE.PerspectiveCamera(
@@ -22,9 +22,9 @@ function initWorldVisualization() {
     );
     
     // ZOOM ADJUSTMENT: Reduce camera distance by ~30%
-    const zoomFactor = 0.7; // 30% closer (1.0 - 0.3 = 0.7)
-    const cameraRadius = 320 * zoomFactor; // Original: ~450
-    const cameraHeight = 180 * zoomFactor; // Original: ~250
+    const zoomFactor = 0.8; // 20% closer
+    const cameraRadius = 320 * zoomFactor;
+    const cameraHeight = 220 * zoomFactor; // Higher angle to see more of the isometric view
     
     camera.position.set(cameraRadius, cameraHeight, cameraRadius);
     camera.lookAt(0, 0, 0);
@@ -55,26 +55,31 @@ function initWorldVisualization() {
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
     scene.add(ambientLight);
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    directionalLight.position.set(50, 100, 50);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0);
+    directionalLight.position.set(150, 200, 150);
     directionalLight.castShadow = true;
     directionalLight.shadow.mapSize.width = 2048;
     directionalLight.shadow.mapSize.height = 2048;
     directionalLight.shadow.camera.near = 0.5;
     directionalLight.shadow.camera.far = 500;
+    directionalLight.shadow.camera.left = -200;
+    directionalLight.shadow.camera.right = 200;
+    directionalLight.shadow.camera.top = 200;
+    directionalLight.shadow.camera.bottom = -200;
     directionalLight.shadow.bias = -0.001;
     scene.add(directionalLight);
 
     // Create base plane (representing sea level)
-    const baseGeometry = new THREE.PlaneGeometry(300, 300);
-    const baseMaterial = new THREE.MeshLambertMaterial({ 
-        color: 0x4682b4, // Steel blue for water
-        side: THREE.DoubleSide,
+    const baseGeometry = new THREE.BoxGeometry(500, 5, 500); // Thicker water
+    const baseMaterial = new THREE.MeshStandardMaterial({ 
+        color: 0x4fc3f7, // Brighter blue
         transparent: true,
-        opacity: 0.8
+        opacity: 0.8,
+        roughness: 0.2,
+        metalness: 0.8, // More reflective
     });
     const basePlane = new THREE.Mesh(baseGeometry, baseMaterial);
-    basePlane.rotation.x = -Math.PI / 2;
+    basePlane.position.y = -2.5; // Slightly lower to create beach effect
     basePlane.receiveShadow = true;
     scene.add(basePlane);
 
@@ -113,6 +118,213 @@ function initWorldVisualization() {
         labelData.push(labelInfo);
         
         return labelInfo;
+    }
+
+    // Function to create stylized low-poly terrain continents
+    function createStylizedContinent(params) {
+        const {
+            position,
+            width,
+            depth,
+            name,
+            terrainType = 'grassland' // Options: 'grassland', 'desert', 'snow'
+        } = params;
+        
+        // Create a continent group to hold all parts
+        const continentGroup = new THREE.Group();
+        continentGroup.position.copy(position);
+        
+        // Define color palette based on terrain type
+        let grassColor, sandColor, rockColor, snowColor;
+        
+        switch (terrainType) {
+            case 'desert':
+                grassColor = 0xd9ad7c; // Light tan
+                sandColor = 0xe3c998;  // Sandy color
+                rockColor = 0xb38867;  // Brown rock
+                snowColor = 0xf7e7ce;  // Light sand
+                break;
+            case 'snow':
+                grassColor = 0xc9e9f6; // Light blue-white
+                sandColor = 0xe0e9ec;  // Off-white
+                rockColor = 0x9db2bd;  // Gray-blue
+                snowColor = 0xffffff;  // Pure white
+                break;
+            case 'grassland':
+            default:
+                grassColor = 0x4caf50; // Bright green
+                sandColor = 0xf0e68c;  // Khaki/sand
+                rockColor = 0x8d6e63;  // Brown
+                snowColor = 0xdcedc8;  // Light green
+                break;
+        }
+        
+        // Create an array of layers with different heights
+        const numLayers = 4;
+        const maxHeight = 30;
+        
+        for (let i = 0; i < numLayers; i++) {
+            // Calculate dimensions for this layer
+            const layerWidth = width * (1 - (i * 0.15));
+            const layerDepth = depth * (1 - (i * 0.15));
+            const layerHeight = (i + 1) * (maxHeight / numLayers);
+            
+            // Create this layer's shape with more angular vertices for low-poly look
+            const layerShape = new THREE.Shape();
+            const corners = 6; // Hexagonal base shape
+            const cornerOffset = 0.2; // Randomness for corners
+            
+            // Get the center point of this layer
+            const centerX = 0;
+            const centerZ = 0;
+            
+            // Generate angular points around a circle
+            for (let j = 0; j < corners; j++) {
+                const angle = (j / corners) * Math.PI * 2;
+                const radius = j % 2 === 0 ? 
+                              (layerWidth * 0.5) * (0.9 + Math.random() * cornerOffset) : 
+                              (layerWidth * 0.5) * (0.8 + Math.random() * cornerOffset);
+                
+                const x = centerX + Math.cos(angle) * radius;
+                const y = centerZ + Math.sin(angle) * radius;
+                
+                if (j === 0) {
+                    layerShape.moveTo(x, y);
+                } else {
+                    layerShape.lineTo(x, y);
+                }
+            }
+            
+            layerShape.closePath();
+            
+            // Choose color based on layer height
+            let layerColor;
+            if (i === 0) {
+                layerColor = sandColor; // Beach/shore
+            } else if (i === numLayers - 1) {
+                layerColor = snowColor; // Top/peak
+            } else if (i === numLayers - 2) {
+                layerColor = rockColor; // High areas/rock
+            } else {
+                layerColor = grassColor; // Main terrain
+            }
+            
+            // Create extruded geometry with beveled edges for the low-poly look
+            const extrudeSettings = {
+                steps: 1,
+                depth: layerHeight,
+                bevelEnabled: true,
+                bevelThickness: 2,
+                bevelSize: 2,
+                bevelOffset: 0,
+                bevelSegments: 1 // Low segments for angular look
+            };
+            
+            const geometry = new THREE.ExtrudeGeometry(layerShape, extrudeSettings);
+            geometry.rotateX(-Math.PI / 2); // Make it face upward
+            
+            // Create material with flat shading for the low-poly look
+            const material = new THREE.MeshStandardMaterial({
+                color: layerColor,
+                flatShading: true,
+                roughness: 0.8,
+                metalness: 0.1
+            });
+            
+            const layer = new THREE.Mesh(geometry, material);
+            layer.position.y = i > 0 ? ((i - 1) * (maxHeight / numLayers)) : 0;
+            layer.castShadow = true;
+            layer.receiveShadow = true;
+            
+            continentGroup.add(layer);
+            
+            // Add trees or details to higher layers (except the top one)
+            if (i > 0 && i < numLayers - 1 && terrainType === 'grassland') {
+                addTrees(layer, layerShape, layerHeight);
+            }
+        }
+        
+        // Add the continent to the scene
+        scene.add(continentGroup);
+        createLabel(continentGroup, name, grassColor);
+        
+        return continentGroup;
+        
+        // Helper function to add stylized trees
+        function addTrees(layer, layerShape, layerHeight) {
+            // Get points around the shape perimeter
+            const perimeterPoints = layerShape.getPoints(20);
+            
+            // Also add some random points inside the shape
+            const innerPoints = [];
+            const numInnerTrees = 10;
+            
+            for (let i = 0; i < numInnerTrees; i++) {
+                // Create a random point inside the shape
+                // This is a simplified approach - may place trees outside shape
+                const randomPoint = new THREE.Vector2(
+                    (Math.random() - 0.5) * layerWidth * 0.7,
+                    (Math.random() - 0.5) * layerDepth * 0.7
+                );
+                
+                innerPoints.push(randomPoint);
+            }
+            
+            // Combine perimeter and inner points
+            const treePoints = [...perimeterPoints, ...innerPoints];
+            
+            // Create trees at a subset of these points
+            for (let i = 0; i < treePoints.length; i += 3) { // Place at every 3rd point
+                const point = treePoints[i];
+                
+                // Skip some points randomly
+                if (Math.random() > 0.6) continue;
+                
+                // Create a simple stylized tree
+                const treeGroup = new THREE.Group();
+                
+                // Tree trunk - a simple cylinder
+                const trunkGeometry = new THREE.CylinderGeometry(1, 1.5, 5, 5);
+                const trunkMaterial = new THREE.MeshStandardMaterial({
+                    color: 0x8d6e63, // Brown
+                    flatShading: true
+                });
+                const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
+                trunk.position.y = 2.5;
+                treeGroup.add(trunk);
+                
+                // Tree foliage - using cones for a low-poly look
+                const foliageSize = 3 + Math.random() * 2;
+                const foliageGeometry = new THREE.ConeGeometry(foliageSize, foliageSize * 2, 6);
+                
+                // Vary the tree colors slightly
+                const foliageColorVariation = 0.2;
+                const baseColor = new THREE.Color(0x2e7d32); // Dark green
+                const foliageColor = new THREE.Color(
+                    baseColor.r * (1 - foliageColorVariation/2 + Math.random() * foliageColorVariation),
+                    baseColor.g * (1 - foliageColorVariation/2 + Math.random() * foliageColorVariation),
+                    baseColor.b * (1 - foliageColorVariation/2 + Math.random() * foliageColorVariation)
+                );
+                
+                const foliageMaterial = new THREE.MeshStandardMaterial({
+                    color: foliageColor,
+                    flatShading: true
+                });
+                
+                const foliage = new THREE.Mesh(foliageGeometry, foliageMaterial);
+                foliage.position.y = 7; // Place on top of trunk
+                treeGroup.add(foliage);
+                
+                // Position the tree
+                treeGroup.position.set(point.x, layerHeight, point.y);
+                
+                // Add some random rotation
+                treeGroup.rotation.y = Math.random() * Math.PI * 2;
+                
+                // Add tree to the layer
+                layer.add(treeGroup);
+            }
+        }
     }
 
     // Create the vertical layers
@@ -176,259 +388,45 @@ function initWorldVisualization() {
     // Western Belt
     const belt = createFloatingCity(-90, 40, 15, 0xff7f50, "The Belt");
 
-    // Create Island function
-    const createIsland = (x, z, size, height, color, name) => {
-        const islandGeometry = new THREE.CylinderGeometry(size, size * 1.2, height, 8);
-        const islandMaterial = new THREE.MeshLambertMaterial({ color });
-        const island = new THREE.Mesh(islandGeometry, islandMaterial);
-        island.position.set(x, height / 2, z);
-        scene.add(island);
-        
-        if (name) {
-            createLabel(island, name, color);
-        }
-        
-        return island;
-    };
-
-    // Magic Islands
-    const magicIsland = createIsland(0, 0, 30, 12, 0x228b22, "Magic Islands"); // Forest green
-    
-    // Smugglers Islands
-    const smugglersIsland = createIsland(0, 80, 25, 10, 0x8b4513, "Smugglers Islands"); // Saddle brown
-
-    // Helper function for texture loading with fallbacks
-    function loadTextureWithFallback(url, onLoad, onError) {
-        // Check if TextureLoader is available
-        if (!THREE.TextureLoader) {
-            console.warn('TextureLoader not available, using fallback material');
-            if (onError) onError();
-            return null;
-        }
-        
-        const loader = new THREE.TextureLoader();
-        
-        // Set cross-origin to anonymous to allow loading from CDNs
-        loader.crossOrigin = 'anonymous';
-        
-        // Load the texture
-        return loader.load(
-            url,
-            // onLoad callback
-            function(texture) {
-                if (onLoad) onLoad(texture);
-            },
-            // onProgress callback (not typically needed)
-            undefined,
-            // onError callback
-            function(err) {
-                console.warn('Failed to load texture:', url, err);
-                if (onError) onError();
-            }
-        );
-    }
-
-    // Create continents with more natural shape using ShapeGeometry
-    function createContinent(params) {
-        const {
-            position,
-            width,
-            depth,
-            height,
-            color,
-            name,
-            roughness = 0.7,
-            metalness = 0.1
-        } = params;
-        
-        // Create a continent group to hold all parts
-        const continentGroup = new THREE.Group();
-        continentGroup.position.copy(position);
-        
-        // Create base shape with irregular edges
-        const shape = new THREE.Shape();
-        
-        // Starting point
-        const startX = -width/2;
-        const startZ = -depth/2;
-        shape.moveTo(startX, startZ);
-        
-        // Top edge with randomization
-        const topPoints = createIrregularEdge(startX, startZ, width, 0, 10, 0.15);
-        topPoints.forEach(point => shape.lineTo(point.x, point.z));
-        
-        // Right edge with randomization
-        const rightPoints = createIrregularEdge(startX + width, startZ, 0, depth, 10, 0.15);
-        rightPoints.forEach(point => shape.lineTo(point.x, point.z));
-        
-        // Bottom edge with randomization
-        const bottomPoints = createIrregularEdge(startX + width, startZ + depth, -width, 0, 10, 0.15);
-        bottomPoints.forEach(point => shape.lineTo(point.x, point.z));
-        
-        // Left edge with randomization
-        const leftPoints = createIrregularEdge(startX, startZ + depth, 0, -depth, 10, 0.15);
-        leftPoints.forEach(point => shape.lineTo(point.x, point.z));
-        
-        // Create extruded geometry for the continent
-        const extrudeSettings = {
-            steps: 1,
-            depth: height,
-            bevelEnabled: true,
-            bevelThickness: 3,
-            bevelSize: 3,
-            bevelOffset: 0,
-            bevelSegments: 3
-        };
-        
-        const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
-        
-        // Rotate to make the extrusion go upward (y-axis)
-        geometry.rotateX(-Math.PI / 2);
-        
-        // Create material with better shading
-        const terrainMaterial = new THREE.MeshStandardMaterial({
-            color: color,
-            roughness: roughness,
-            metalness: metalness,
-            flatShading: true
-        });
-        
-        // Try to load textures with fallback
-        loadTextureWithFallback(
-            'https://threejs.org/examples/textures/terrain/grasslight-big.jpg',
-            function(texture) {
-                // Texture loaded successfully
-                terrainMaterial.bumpMap = texture;
-                terrainMaterial.bumpScale = 0.5;
-                terrainMaterial.needsUpdate = true;
-            },
-            function() {
-                // Texture failed to load - use non-textured material
-                console.log(`Using fallback (non-textured) material for ${name}`);
-                // Adjust the material to look better without textures
-                terrainMaterial.roughness = 0.9;
-                terrainMaterial.needsUpdate = true;
-            }
-        );
-        
-        const continent = new THREE.Mesh(geometry, terrainMaterial);
-        continent.castShadow = true;
-        continent.receiveShadow = true;
-        
-        // Add to group
-        continentGroup.add(continent);
-        
-        // Create coastline details
-        addCoastlineDetails(continentGroup, shape, color);
-        
-        scene.add(continentGroup);
-        createLabel(continentGroup, name, color);
-        
-        return continentGroup;
-    }
-
-    // Helper to create irregular edge points
-    function createIrregularEdge(startX, startZ, deltaX, deltaZ, steps, randomFactor) {
-        const points = [];
-        
-        for (let i = 1; i <= steps; i++) {
-            const ratio = i / steps;
-            
-            // Calculate position along straight edge
-            const straightX = startX + deltaX * ratio;
-            const straightZ = startZ + deltaZ * ratio;
-            
-            // Add randomness perpendicular to the edge direction
-            let perpX = 0;
-            let perpZ = 0;
-            
-            if (deltaX === 0) {
-                // Moving along Z axis, so randomize X
-                perpX = (Math.random() - 0.5) * 2 * Math.abs(deltaZ) * randomFactor;
-            } else {
-                // Moving along X axis, so randomize Z
-                perpZ = (Math.random() - 0.5) * 2 * Math.abs(deltaX) * randomFactor;
-            }
-            
-            points.push(new THREE.Vector2(straightX + perpX, straightZ + perpZ));
-        }
-        
-        return points;
-    }
-
-    // Add detailed features to coastline
-    function addCoastlineDetails(group, shape, color) {
-        // Add rocks and terrain features along the coastline
-        const coastPoints = shape.getPoints(50);
-        
-        for (let i = 0; i < coastPoints.length; i += 3) {
-            const point = coastPoints[i];
-            
-            // Randomly skip some points
-            if (Math.random() > 0.7) continue;
-            
-            // Create a small rock or terrain feature
-            const rockSize = 2 + Math.random() * 3;
-            const rockHeight = 1 + Math.random() * 3;
-            
-            let rockGeometry;
-            
-            // Vary the rock geometry
-            const rockType = Math.floor(Math.random() * 3);
-            if (rockType === 0) {
-                rockGeometry = new THREE.ConeGeometry(rockSize, rockHeight, 5);
-            } else if (rockType === 1) {
-                rockGeometry = new THREE.DodecahedronGeometry(rockSize, 0);
-            } else {
-                rockGeometry = new THREE.BoxGeometry(rockSize, rockHeight, rockSize);
-            }
-            
-            // Create rock material with slight variation from continent color
-            const colorVariation = 0.1;
-            const rockColor = new THREE.Color(color);
-            rockColor.r *= (1 - colorVariation/2) + Math.random() * colorVariation;
-            rockColor.g *= (1 - colorVariation/2) + Math.random() * colorVariation;
-            rockColor.b *= (1 - colorVariation/2) + Math.random() * colorVariation;
-            
-            const rockMaterial = new THREE.MeshStandardMaterial({
-                color: rockColor,
-                roughness: 0.9,
-                metalness: 0.1,
-                flatShading: true
-            });
-            
-            const rock = new THREE.Mesh(rockGeometry, rockMaterial);
-            rock.position.set(point.x, rockHeight/2, point.y);
-            rock.rotation.y = Math.random() * Math.PI;
-            rock.castShadow = true;
-            
-            group.add(rock);
-        }
-    }
-
-    // Eastern Continent - larger and stretching more to the edge of the plane
+    // Create stylized continents
+    // Eastern Continent - stylized grassland
     const eastContinentParams = {
-        position: new THREE.Vector3(120, 4, 0),
+        position: new THREE.Vector3(120, 2, 0),
         width: 150,
         depth: 120,
-        height: 8,
-        color: 0xa9a9a9,
         name: "Eastern Continent",
-        roughness: 0.8
+        terrainType: 'grassland'
     };
-    const eastContinent = createContinent(eastContinentParams);
+    const eastContinent = createStylizedContinent(eastContinentParams);
 
-    // Western Continent - larger and with more variation
+    // Western Continent - stylized desert
     const westContinentParams = {
-        position: new THREE.Vector3(-120, 7.5, 0),
+        position: new THREE.Vector3(-120, 2, 0),
         width: 140,
         depth: 130,
-        height: 15,
-        color: 0x8b0000,
         name: "Western Continent",
-        roughness: 0.9
+        terrainType: 'desert'
     };
-    const westContinent = createContinent(westContinentParams);
+    const westContinent = createStylizedContinent(westContinentParams);
+
+    // Create stylized islands
+    const magicIslandParams = {
+        position: new THREE.Vector3(0, 2, 0), 
+        width: 60,
+        depth: 60,
+        name: "Magic Islands",
+        terrainType: 'grassland'
+    };
+    const magicIsland = createStylizedContinent(magicIslandParams);
+
+    const smugglersIslandParams = {
+        position: new THREE.Vector3(0, 2, 80),
+        width: 50,
+        depth: 50,
+        name: "Smugglers Islands",
+        terrainType: 'desert'
+    };
+    const smugglersIsland = createStylizedContinent(smugglersIslandParams);
 
     // 4. Underground Layer
     // Create a wireframe to represent the underground caves
