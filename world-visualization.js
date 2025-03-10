@@ -368,86 +368,18 @@ function initWorldVisualization() {
     scene.add(skyPalaceGroup);
     createLabel(skyPalaceGroup, "Sky Palace", 0x00ffff);
 
-    // Space Farms (highest layer) - Enhanced with more detail
-    const spaceFarmsGroup = new THREE.Group();
-    
-    // Main orbital ring
-    const ringGeometry = new THREE.TorusGeometry(80, 4, 16, 50);
-    const ringMaterial = new THREE.MeshLambertMaterial({ 
+    // Space Farms (highest layer)
+    const spaceFarmsGeometry = new THREE.TorusGeometry(80, 4, 16, 50);
+    const spaceFarmsMaterial = new THREE.MeshLambertMaterial({ 
         color: 0xadd8e6, // Light blue
         transparent: true,
         opacity: 0.7
     });
-    const ring = new THREE.Mesh(ringGeometry, ringMaterial);
-    ring.rotation.x = Math.PI / 3;
-    spaceFarmsGroup.add(ring);
-    
-    // Add habitat modules along the ring
-    const moduleCount = 12;
-    for (let i = 0; i < moduleCount; i++) {
-        const angle = (i / moduleCount) * Math.PI * 2;
-        const x = 80 * Math.cos(angle);
-        const z = 80 * Math.sin(angle);
-        
-        // Transform coordinates due to ring rotation
-        const rotatedX = x;
-        const rotatedY = z * Math.sin(Math.PI / 3);
-        const rotatedZ = z * Math.cos(Math.PI / 3);
-        
-        // Create habitat module
-        const moduleGeometry = new THREE.CylinderGeometry(5, 5, 15, 8);
-        const moduleMaterial = new THREE.MeshLambertMaterial({ 
-            color: 0xe0ffff, // Light cyan
-            transparent: true,
-            opacity: 0.8
-        });
-        const module = new THREE.Mesh(moduleGeometry, moduleMaterial);
-        
-        // Position perpendicular to the ring
-        const moduleAngle = angle + Math.PI / 2;
-        const rotationMatrix = new THREE.Matrix4().makeRotationX(Math.PI / 3);
-        
-        module.position.set(rotatedX, rotatedY, rotatedZ);
-        module.rotation.z = -angle;
-        module.rotation.x = Math.PI / 3;
-        
-        spaceFarmsGroup.add(module);
-        
-        // Add greenhouse domes to alternating modules
-        if (i % 2 === 0) {
-            const domeGeometry = new THREE.SphereGeometry(7, 16, 8);
-            const domeMaterial = new THREE.MeshLambertMaterial({ 
-                color: 0xccffcc, // Very light green
-                transparent: true,
-                opacity: 0.6
-            });
-            const dome = new THREE.Mesh(domeGeometry, domeMaterial);
-            
-            // Position the dome at the end of the module
-            const domeDistance = 12; // Distance from center of module
-            const domeX = rotatedX + Math.cos(moduleAngle) * domeDistance;
-            const domeZ = rotatedZ + Math.sin(moduleAngle) * domeDistance;
-            const domeY = rotatedY + 5;
-            
-            dome.position.set(domeX, domeY, domeZ);
-            spaceFarmsGroup.add(dome);
-        }
-    }
-    
-    // Central hub
-    const hubGeometry = new THREE.SphereGeometry(15, 16, 16);
-    const hubMaterial = new THREE.MeshLambertMaterial({ 
-        color: 0xb0c4de, // Light steel blue
-        transparent: true,
-        opacity: 0.8
-    });
-    const hub = new THREE.Mesh(hubGeometry, hubMaterial);
-    spaceFarmsGroup.add(hub);
-    
-    // Position the entire space farms group
-    spaceFarmsGroup.position.set(120, 140, 0);
-    scene.add(spaceFarmsGroup);
-    createLabel(spaceFarmsGroup, "Space Farms", 0xadd8e6);
+    const spaceFarms = new THREE.Mesh(spaceFarmsGeometry, spaceFarmsMaterial);
+    spaceFarms.position.set(120, 140, 0);
+    spaceFarms.rotation.x = Math.PI / 3;
+    scene.add(spaceFarms);
+    createLabel(spaceFarms, "Space Farms", 0xadd8e6);
 
     // Eastern Mines (under industrial area)
     const mineGeometry = new THREE.SphereGeometry(30, 8, 8);
