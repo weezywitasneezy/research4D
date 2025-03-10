@@ -11,7 +11,7 @@ function initWorldVisualization() {
     
     // Scene setup
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x1a237e); // Dark blue background to match reference
+    scene.background = new THREE.Color(0x87ceeb); // Sky blue background
 
     // Camera setup - adjusted for smaller viewport with zoom
     const camera = new THREE.PerspectiveCamera(
@@ -22,9 +22,9 @@ function initWorldVisualization() {
     );
     
     // ZOOM ADJUSTMENT: Reduce camera distance by ~30%
-    const zoomFactor = 0.8; // 20% closer
-    const cameraRadius = 320 * zoomFactor;
-    const cameraHeight = 220 * zoomFactor; // Higher angle to see more of the isometric view
+    const zoomFactor = 0.7; // 30% closer (1.0 - 0.3 = 0.7)
+    const cameraRadius = 320 * zoomFactor; // Original: ~450
+    const cameraHeight = 180 * zoomFactor; // Original: ~250
     
     camera.position.set(cameraRadius, cameraHeight, cameraRadius);
     camera.lookAt(0, 0, 0);
@@ -55,8 +55,8 @@ function initWorldVisualization() {
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
     scene.add(ambientLight);
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.0);
-    directionalLight.position.set(150, 200, 150);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    directionalLight.position.set(100, 200, 100);
     directionalLight.castShadow = true;
     directionalLight.shadow.mapSize.width = 2048;
     directionalLight.shadow.mapSize.height = 2048;
@@ -66,20 +66,38 @@ function initWorldVisualization() {
     directionalLight.shadow.camera.right = 200;
     directionalLight.shadow.camera.top = 200;
     directionalLight.shadow.camera.bottom = -200;
-    directionalLight.shadow.bias = -0.001;
     scene.add(directionalLight);
 
-    // Create base plane (representing sea level)
-    const baseGeometry = new THREE.BoxGeometry(500, 5, 500); // Thicker water
-    const baseMaterial = new THREE.MeshStandardMaterial({ 
-        color: 0x4fc3f7, // Brighter blue
+    // Add a secondary light for better depth
+    const secondaryLight = new THREE.DirectionalLight(0xffffee, 0.4);
+    secondaryLight.position.set(-80, 120, -80);
+    scene.add(secondaryLight);
+
+    // Create base plane (representing sea level) - improved with texture
+    const waterGeometry = new THREE.PlaneGeometry(400, 400, 50, 50);
+    const waterMaterial = new THREE.MeshStandardMaterial({ 
+        color: 0x4682b4, // Steel blue for water
+        metalness: 0.1,
+        roughness: 0.7,
+        side: THREE.DoubleSide,
         transparent: true,
-        opacity: 0.8,
-        roughness: 0.2,
-        metalness: 0.8, // More reflective
+        opacity: 0.85
     });
-    const basePlane = new THREE.Mesh(baseGeometry, baseMaterial);
-    basePlane.position.y = -2.5; // Slightly lower to create beach effect
+    
+    // Add slight waves to water surface
+    const waterVertices = waterGeometry.attributes.position.array;
+    for (let i = 0; i < waterVertices.length; i += 3) {
+        const x = waterVertices[i];
+        const z = waterVertices[i + 2];
+        
+        // Create gentle wave pattern
+        waterVertices[i + 1] = Math.sin(x * 0.05) * Math.cos(z * 0.05) * 1.5;
+    }
+    waterGeometry.attributes.position.needsUpdate = true;
+    waterGeometry.computeVertexNormals();
+    
+    const basePlane = new THREE.Mesh(waterGeometry, waterMaterial);
+    basePlane.rotation.x = -Math.PI / 2;
     basePlane.receiveShadow = true;
     scene.add(basePlane);
 
@@ -120,225 +138,97 @@ function initWorldVisualization() {
         return labelInfo;
     }
 
-    // Function to create stylized low-poly terrain continents
-    function createStylizedContinent(params) {
-        const {
-            position,
-            width,
-            depth,
-            name,
-            terrainType = 'grassland' // Options: 'grassland', 'desert', 'snow'
-        } = params;
+    // Function to create low-poly terrain
+    function createLowPolyTerrain(width, depth, widthSegments, depthSegments, heightScale, baseColor, peakColor) {
+        // Create geometry with segments for the low-poly look
+        const geometry = new THREE.PlaneGeometry(width, depth, widthSegments, depthSegments);
         
-        // Create a continent group to hold all parts
-        const continentGroup = new THREE.Group();
-        continentGroup.position.copy(position);
+        // Generate height map
+        const positions = geometry.attributes.position.array;
         
-        // Define color palette based on terrain type
-        let grassColor, sandColor, rockColor, snowColor;
+        // SimplexNoise for natural-looking terrain
+        const simplex = new SimplexNoise();
         
-        switch (terrainType) {
-            case 'desert':
-                grassColor = 0xd9ad7c; // Light tan
-                sandColor = 0xe3c998;  // Sandy color
-                rockColor = 0xb38867;  // Brown rock
-                snowColor = 0xf7e7ce;  // Light sand
-                break;
-            case 'snow':
-                grassColor = 0xc9e9f6; // Light blue-white
-                sandColor = 0xe0e9ec;  // Off-white
-                rockColor = 0x9db2bd;  // Gray-blue
-                snowColor = 0xffffff;  // Pure white
-                break;
-            case 'grassland':
-            default:
-                grassColor = 0x4caf50; // Bright green
-                sandColor = 0xf0e68c;  // Khaki/sand
-                rockColor = 0x8d6e63;  // Brown
-                snowColor = 0xdcedc8;  // Light green
-                break;
+        // Create vertex colors for gradient effect
+        const colors = [];
+        
+        // Convert hex colors to RGB components
+        const baseColorRGB = {
+            r: (baseColor >> 16 & 255) / 255,
+            g: (baseColor >> 8 & 255) / 255,
+            b: (baseColor & 255) / 255
+        };
+        
+        const peakColorRGB = {
+            r: (peakColor >> 16 & 255) / 255,
+            g: (peakColor >> 8 & 255) / 255,
+            b: (peakColor & 255) / 255
+        };
+        
+        for (let i = 0; i < positions.length; i += 3) {
+            const x = positions[i];
+            const z = positions[i + 2];
+            
+            // Multi-layered noise for more interesting terrain
+            let elevation = 0;
+            // Large features
+            elevation += simplex.noise2D(x * 0.01, z * 0.01) * 0.6;
+            // Medium features
+            elevation += simplex.noise2D(x * 0.04, z * 0.04) * 0.3;
+            // Small features
+            elevation += simplex.noise2D(x * 0.1, z * 0.1) * 0.1;
+            
+            // Apply height to Y coordinate
+            positions[i + 1] = elevation * heightScale;
+            
+            // Calculate color based on height
+            const normalizedHeight = (elevation + 1) / 2; // Convert from [-1,1] to [0,1]
+            
+            // Interpolate between base and peak colors
+            const r = baseColorRGB.r + (peakColorRGB.r - baseColorRGB.r) * normalizedHeight;
+            const g = baseColorRGB.g + (peakColorRGB.g - baseColorRGB.g) * normalizedHeight;
+            const b = baseColorRGB.b + (peakColorRGB.b - baseColorRGB.b) * normalizedHeight;
+            
+            colors.push(r, g, b);
         }
         
-        // Create an array of layers with different heights
-        const numLayers = 4;
-        const maxHeight = 30;
+        // Assign colors to geometry
+        geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
         
-        for (let i = 0; i < numLayers; i++) {
-            // Calculate dimensions for this layer
-            const layerWidth = width * (1 - (i * 0.15));
-            const layerDepth = depth * (1 - (i * 0.15));
-            const layerHeight = (i + 1) * (maxHeight / numLayers);
-            
-            // Create this layer's shape with more angular vertices for low-poly look
-            const layerShape = new THREE.Shape();
-            const corners = 6; // Hexagonal base shape
-            const cornerOffset = 0.2; // Randomness for corners
-            
-            // Get the center point of this layer
-            const centerX = 0;
-            const centerZ = 0;
-            
-            // Generate angular points around a circle
-            for (let j = 0; j < corners; j++) {
-                const angle = (j / corners) * Math.PI * 2;
-                const radius = j % 2 === 0 ? 
-                              (layerWidth * 0.5) * (0.9 + Math.random() * cornerOffset) : 
-                              (layerWidth * 0.5) * (0.8 + Math.random() * cornerOffset);
-                
-                const x = centerX + Math.cos(angle) * radius;
-                const y = centerZ + Math.sin(angle) * radius;
-                
-                if (j === 0) {
-                    layerShape.moveTo(x, y);
-                } else {
-                    layerShape.lineTo(x, y);
-                }
-            }
-            
-            layerShape.closePath();
-            
-            // Choose color based on layer height
-            let layerColor;
-            if (i === 0) {
-                layerColor = sandColor; // Beach/shore
-            } else if (i === numLayers - 1) {
-                layerColor = snowColor; // Top/peak
-            } else if (i === numLayers - 2) {
-                layerColor = rockColor; // High areas/rock
-            } else {
-                layerColor = grassColor; // Main terrain
-            }
-            
-            // Create extruded geometry with beveled edges for the low-poly look
-            const extrudeSettings = {
-                steps: 1,
-                depth: layerHeight,
-                bevelEnabled: true,
-                bevelThickness: 2,
-                bevelSize: 2,
-                bevelOffset: 0,
-                bevelSegments: 1 // Low segments for angular look
-            };
-            
-            const geometry = new THREE.ExtrudeGeometry(layerShape, extrudeSettings);
-            geometry.rotateX(-Math.PI / 2); // Make it face upward
-            
-            // Create material with flat shading for the low-poly look
-            const material = new THREE.MeshStandardMaterial({
-                color: layerColor,
-                flatShading: true,
-                roughness: 0.8,
-                metalness: 0.1
-            });
-            
-            const layer = new THREE.Mesh(geometry, material);
-            layer.position.y = i > 0 ? ((i - 1) * (maxHeight / numLayers)) : 0;
-            layer.castShadow = true;
-            layer.receiveShadow = true;
-            
-            continentGroup.add(layer);
-            
-            // Add trees or details to higher layers (except the top one)
-            if (i > 0 && i < numLayers - 1 && terrainType === 'grassland') {
-                addTrees(layer, layerShape, layerHeight);
-            }
-        }
+        // Update geometry normals
+        geometry.computeVertexNormals();
         
-        // Add the continent to the scene
-        scene.add(continentGroup);
-        createLabel(continentGroup, name, grassColor);
+        // Create material with vertex colors
+        const material = new THREE.MeshStandardMaterial({
+            vertexColors: true,
+            flatShading: true, // This gives the low-poly look
+            metalness: 0.1,
+            roughness: 0.8
+        });
         
-        return continentGroup;
+        // Create mesh and enable shadows
+        const terrain = new THREE.Mesh(geometry, material);
+        terrain.castShadow = true;
+        terrain.receiveShadow = true;
         
-        // Helper function to add stylized trees
-        function addTrees(layer, layerShape, layerHeight) {
-            // Get points around the shape perimeter
-            const perimeterPoints = layerShape.getPoints(20);
-            
-            // Also add some random points inside the shape
-            const innerPoints = [];
-            const numInnerTrees = 10;
-            
-            for (let i = 0; i < numInnerTrees; i++) {
-                // Create a random point inside the shape
-                // This is a simplified approach - may place trees outside shape
-                const randomPoint = new THREE.Vector2(
-                    (Math.random() - 0.5) * layerWidth * 0.7,
-                    (Math.random() - 0.5) * layerDepth * 0.7
-                );
-                
-                innerPoints.push(randomPoint);
-            }
-            
-            // Combine perimeter and inner points
-            const treePoints = [...perimeterPoints, ...innerPoints];
-            
-            // Create trees at a subset of these points
-            for (let i = 0; i < treePoints.length; i += 3) { // Place at every 3rd point
-                const point = treePoints[i];
-                
-                // Skip some points randomly
-                if (Math.random() > 0.6) continue;
-                
-                // Create a simple stylized tree
-                const treeGroup = new THREE.Group();
-                
-                // Tree trunk - a simple cylinder
-                const trunkGeometry = new THREE.CylinderGeometry(1, 1.5, 5, 5);
-                const trunkMaterial = new THREE.MeshStandardMaterial({
-                    color: 0x8d6e63, // Brown
-                    flatShading: true
-                });
-                const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
-                trunk.position.y = 2.5;
-                treeGroup.add(trunk);
-                
-                // Tree foliage - using cones for a low-poly look
-                const foliageSize = 3 + Math.random() * 2;
-                const foliageGeometry = new THREE.ConeGeometry(foliageSize, foliageSize * 2, 6);
-                
-                // Vary the tree colors slightly
-                const foliageColorVariation = 0.2;
-                const baseColor = new THREE.Color(0x2e7d32); // Dark green
-                const foliageColor = new THREE.Color(
-                    baseColor.r * (1 - foliageColorVariation/2 + Math.random() * foliageColorVariation),
-                    baseColor.g * (1 - foliageColorVariation/2 + Math.random() * foliageColorVariation),
-                    baseColor.b * (1 - foliageColorVariation/2 + Math.random() * foliageColorVariation)
-                );
-                
-                const foliageMaterial = new THREE.MeshStandardMaterial({
-                    color: foliageColor,
-                    flatShading: true
-                });
-                
-                const foliage = new THREE.Mesh(foliageGeometry, foliageMaterial);
-                foliage.position.y = 7; // Place on top of trunk
-                treeGroup.add(foliage);
-                
-                // Position the tree
-                treeGroup.position.set(point.x, layerHeight, point.y);
-                
-                // Add some random rotation
-                treeGroup.rotation.y = Math.random() * Math.PI * 2;
-                
-                // Add tree to the layer
-                layer.add(treeGroup);
-            }
-        }
+        return terrain;
     }
 
     // Create the vertical layers
     
     // 1. Space Farms Layer (highest)
     const spaceFarmsGeometry = new THREE.TorusGeometry(150, 3, 16, 50);
-    const spaceFarmsMaterial = new THREE.MeshLambertMaterial({ 
+    const spaceFarmsMaterial = new THREE.MeshStandardMaterial({ 
         color: 0xd3d3d3, // Light gray
+        metalness: 0.3,
+        roughness: 0.7,
         transparent: true,
         opacity: 0.7
     });
     const spaceFarms = new THREE.Mesh(spaceFarmsGeometry, spaceFarmsMaterial);
     spaceFarms.position.y = 120;
     spaceFarms.rotation.x = Math.PI / 2;
+    spaceFarms.castShadow = true;
     scene.add(spaceFarms);
     createLabel(spaceFarms, "Space Farms", 0xd3d3d3);
 
@@ -346,26 +236,123 @@ function initWorldVisualization() {
     const createFloatingCity = (x, z, size, color, name) => {
         const cityGroup = new THREE.Group();
         
-        // Base platform
-        const baseGeom = new THREE.CylinderGeometry(size, size * 1.2, size * 0.3, 6);
-        const baseMat = new THREE.MeshLambertMaterial({ color });
+        // Base platform - more interesting shape
+        const baseShape = new THREE.Shape();
+        const sides = 6;
+        const innerRadius = size * 0.8;
+        const outerRadius = size * 1.2;
+        
+        for (let i = 0; i < sides; i++) {
+            const angle = (i / sides) * Math.PI * 2;
+            const nextAngle = ((i + 1) / sides) * Math.PI * 2;
+            
+            const x1 = Math.cos(angle) * innerRadius;
+            const y1 = Math.sin(angle) * innerRadius;
+            
+            const x2 = Math.cos(angle) * outerRadius;
+            const y2 = Math.sin(angle) * outerRadius;
+            
+            const x3 = Math.cos(nextAngle) * outerRadius;
+            const y3 = Math.sin(nextAngle) * outerRadius;
+            
+            const x4 = Math.cos(nextAngle) * innerRadius;
+            const y4 = Math.sin(nextAngle) * innerRadius;
+            
+            if (i === 0) {
+                baseShape.moveTo(x1, y1);
+            } else {
+                baseShape.lineTo(x1, y1);
+            }
+            
+            baseShape.lineTo(x2, y2);
+            baseShape.lineTo(x3, y3);
+            baseShape.lineTo(x4, y4);
+        }
+        
+        const baseExtrudeSettings = {
+            depth: size * 0.3,
+            bevelEnabled: true,
+            bevelThickness: size * 0.1,
+            bevelSize: size * 0.05,
+            bevelSegments: 3
+        };
+        
+        const baseGeom = new THREE.ExtrudeGeometry(baseShape, baseExtrudeSettings);
+        const baseMat = new THREE.MeshStandardMaterial({ 
+            color, 
+            metalness: 0.3,
+            roughness: 0.7
+        });
         const base = new THREE.Mesh(baseGeom, baseMat);
+        base.rotation.x = -Math.PI / 2;
+        base.position.y = -size * 0.15;
+        base.castShadow = true;
+        base.receiveShadow = true;
         cityGroup.add(base);
         
         // Buildings
-        for (let i = 0; i < 5; i++) {
+        for (let i = 0; i < 8; i++) {
             const buildingHeight = size * (0.5 + Math.random() * 1.5);
-            const buildingSize = size * 0.2;
-            const buildingGeom = new THREE.BoxGeometry(buildingSize, buildingHeight, buildingSize);
-            const buildingMat = new THREE.MeshLambertMaterial({ 
-                color: new THREE.Color(color).multiplyScalar(0.8)
+            const buildingWidth = size * (0.1 + Math.random() * 0.2);
+            const buildingDepth = size * (0.1 + Math.random() * 0.2);
+            
+            // Use different shapes for buildings
+            let buildingGeom;
+            const buildingType = Math.floor(Math.random() * 4);
+            
+            if (buildingType === 0) {
+                // Tower
+                buildingGeom = new THREE.CylinderGeometry(
+                    buildingWidth * 0.5, 
+                    buildingWidth * 0.7, 
+                    buildingHeight, 
+                    5 + Math.floor(Math.random() * 3)
+                );
+            } else if (buildingType === 1) {
+                // Pyramid
+                buildingGeom = new THREE.ConeGeometry(
+                    buildingWidth, 
+                    buildingHeight, 
+                    4
+                );
+            } else {
+                // Box building
+                buildingGeom = new THREE.BoxGeometry(
+                    buildingWidth, 
+                    buildingHeight, 
+                    buildingDepth
+                );
+            }
+            
+            // Slightly different color for each building
+            const colorVariation = 0.2;
+            const variationFactor = 1 - colorVariation / 2 + Math.random() * colorVariation;
+            
+            const buildingMat = new THREE.MeshStandardMaterial({ 
+                color: new THREE.Color(color).multiplyScalar(variationFactor),
+                metalness: 0.2 + Math.random() * 0.3,
+                roughness: 0.6 + Math.random() * 0.3
             });
+            
             const building = new THREE.Mesh(buildingGeom, buildingMat);
+            
+            // Position within the base platform
+            const angle = Math.random() * Math.PI * 2;
+            const distance = Math.random() * size * 0.6;
+            
             building.position.set(
-                (Math.random() - 0.5) * size * 0.8,
-                buildingHeight / 2 + size * 0.15,
-                (Math.random() - 0.5) * size * 0.8
+                Math.cos(angle) * distance,
+                buildingHeight / 2,
+                Math.sin(angle) * distance
             );
+            
+            // Random rotation for non-circular buildings
+            if (buildingType !== 0) {
+                building.rotation.y = Math.random() * Math.PI * 2;
+            }
+            
+            building.castShadow = true;
+            building.receiveShadow = true;
             cityGroup.add(building);
         }
         
@@ -388,121 +375,334 @@ function initWorldVisualization() {
     // Western Belt
     const belt = createFloatingCity(-90, 40, 15, 0xff7f50, "The Belt");
 
-    // Create stylized continents
-    // Eastern Continent - stylized grassland
-    const eastContinentParams = {
-        position: new THREE.Vector3(120, 2, 0),
-        width: 150,
-        depth: 120,
-        name: "Eastern Continent",
-        terrainType: 'grassland'
-    };
-    const eastContinent = createStylizedContinent(eastContinentParams);
-
-    // Western Continent - stylized desert
-    const westContinentParams = {
-        position: new THREE.Vector3(-120, 2, 0),
-        width: 140,
-        depth: 130,
-        name: "Western Continent",
-        terrainType: 'desert'
-    };
-    const westContinent = createStylizedContinent(westContinentParams);
-
-    // Create stylized islands
-    const magicIslandParams = {
-        position: new THREE.Vector3(0, 2, 0), 
-        width: 60,
-        depth: 60,
-        name: "Magic Islands",
-        terrainType: 'grassland'
-    };
-    const magicIsland = createStylizedContinent(magicIslandParams);
-
-    const smugglersIslandParams = {
-        position: new THREE.Vector3(0, 2, 80),
-        width: 50,
-        depth: 50,
-        name: "Smugglers Islands",
-        terrainType: 'desert'
-    };
-    const smugglersIsland = createStylizedContinent(smugglersIslandParams);
+    // 3. Surface Layer (continents) - Using low poly terrain instead of boxes
+    
+    // Load SimplexNoise from CDN
+    function loadSimplexNoise() {
+        return new Promise((resolve) => {
+            const script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/simplex-noise/2.4.0/simplex-noise.min.js';
+            script.onload = () => resolve();
+            document.head.appendChild(script);
+        });
+    }
+    
+    // Wait for SimplexNoise to load before creating terrains
+    loadSimplexNoise().then(() => {
+        // Eastern Continent - Tech themed with blue-gray colors
+        const eastContinent = createLowPolyTerrain(
+            120, 90,          // width, depth
+            25, 20,           // width segments, depth segments
+            12,               // height scale
+            0x607d8b,         // base color (blue gray)
+            0xa5c6d9          // peak color (lighter blue)
+        );
+        eastContinent.rotation.x = -Math.PI / 2;
+        eastContinent.position.set(100, 0, 0);
+        scene.add(eastContinent);
+        createLabel(eastContinent, "Eastern Continent", 0x607d8b);
+        
+        // Create Magic Islands - Lush green
+        const magicIsland = createLowPolyTerrain(
+            60, 60,           // width, depth
+            15, 15,           // width segments, depth segments
+            15,               // height scale
+            0x2e7d32,         // base color (deep green)
+            0x81c784          // peak color (lighter green)
+        );
+        magicIsland.rotation.x = -Math.PI / 2;
+        magicIsland.position.set(0, 0, 0);
+        scene.add(magicIsland);
+        createLabel(magicIsland, "Magic Islands", 0x2e7d32);
+        
+        // Smugglers Islands - Sandy brown colors
+        const smugglersIsland = createLowPolyTerrain(
+            50, 50,           // width, depth
+            12, 12,           // width segments, depth segments
+            10,               // height scale
+            0x8b4513,         // base color (saddle brown)
+            0xd2b48c          // peak color (tan)
+        );
+        smugglersIsland.rotation.x = -Math.PI / 2;
+        smugglersIsland.position.set(0, 0, 80);
+        scene.add(smugglersIsland);
+        createLabel(smugglersIsland, "Smugglers Islands", 0x8b4513);
+        
+        // Western Continent - Demon world with red/dark colors
+        const westContinent = createLowPolyTerrain(
+            110, 90,          // width, depth
+            25, 20,           // width segments, depth segments
+            20,               // height scale - more dramatic heights
+            0x8b0000,         // base color (dark red)
+            0xff5252          // peak color (brighter red)
+        );
+        westContinent.rotation.x = -Math.PI / 2;
+        westContinent.position.set(-110, 0, 0);
+        scene.add(westContinent);
+        createLabel(westContinent, "Western Continent", 0x8b0000);
+    });
 
     // 4. Underground Layer
-    // Create a wireframe to represent the underground caves
-    const caveGeometry = new THREE.SphereGeometry(45, 8, 8);
+    // Create a wireframe to represent the underground caves - improved
+    const caveGeometry = new THREE.SphereGeometry(45, 12, 12);
     const caveMaterial = new THREE.MeshBasicMaterial({ 
         color: 0xffd700, // Gold for mines/caves
         wireframe: true,
         transparent: true,
-        opacity: 0.3
+        opacity: 0.4
     });
     const caveSystem = new THREE.Mesh(caveGeometry, caveMaterial);
     caveSystem.position.set(20, -30, 60);
     scene.add(caveSystem);
     createLabel(caveSystem, "Cave System", 0xffd700);
 
-    // Eastern mines
-    const mineGeometry = new THREE.SphereGeometry(25, 8, 8);
-    const mineMaterial = new THREE.MeshBasicMaterial({ 
-        color: 0x696969, // Dim gray for industrial mines
-        wireframe: true,
-        transparent: true,
-        opacity: 0.3
-    });
-    const mineSystem = new THREE.Mesh(mineGeometry, mineMaterial);
-    mineSystem.position.set(120, -25, -40);
-    scene.add(mineSystem);
-    createLabel(mineSystem, "Eastern Mines", 0x696969);
+    // Eastern mines - improved with crystalline shapes
+    const createCrystallineMines = () => {
+        const mineGroup = new THREE.Group();
+        mineGroup.position.set(120, -25, -40);
+        
+        // Add base wireframe sphere
+        const baseSphereGeom = new THREE.SphereGeometry(25, 10, 10);
+        const baseSphereMat = new THREE.MeshBasicMaterial({ 
+            color: 0x696969, 
+            wireframe: true,
+            transparent: true,
+            opacity: 0.3
+        });
+        const baseSphere = new THREE.Mesh(baseSphereGeom, baseSphereMat);
+        mineGroup.add(baseSphere);
+        
+        // Add crystal formations inside
+        const crystalColors = [0x7986cb, 0x64b5f6, 0x4fc3f7, 0x4dd0e1];
+        
+        for (let i = 0; i < 15; i++) {
+            const crystalSize = 2 + Math.random() * 8;
+            
+            // Create a crystal geometry - several options
+            let crystalGeom;
+            const crystalType = Math.floor(Math.random() * 3);
+            
+            if (crystalType === 0) {
+                // Octahedron crystal
+                crystalGeom = new THREE.OctahedronGeometry(crystalSize, 0);
+            } else if (crystalType === 1) {
+                // Tetrahedron crystal
+                crystalGeom = new THREE.TetrahedronGeometry(crystalSize, 0);
+            } else {
+                // Custom crystal (elongated shape)
+                const points = [];
+                points.push(new THREE.Vector3(0, -crystalSize, 0));
+                points.push(new THREE.Vector3(crystalSize * 0.3, 0, crystalSize * 0.3));
+                points.push(new THREE.Vector3(crystalSize * 0.2, crystalSize * 0.6, crystalSize * 0.2));
+                points.push(new THREE.Vector3(0, crystalSize, 0));
+                
+                crystalGeom = new THREE.LatheGeometry(points, 5);
+            }
+            
+            // Crystal material with slight transparency and glow
+            const crystalMat = new THREE.MeshStandardMaterial({
+                color: crystalColors[Math.floor(Math.random() * crystalColors.length)],
+                metalness: 0.9,
+                roughness: 0.2,
+                transparent: true,
+                opacity: 0.8
+            });
+            
+            const crystal = new THREE.Mesh(crystalGeom, crystalMat);
+            
+            // Place crystal within sphere volume
+            const radius = 20 * Math.random();
+            const theta = Math.random() * Math.PI * 2;
+            const phi = Math.random() * Math.PI;
+            
+            crystal.position.set(
+                radius * Math.sin(phi) * Math.cos(theta),
+                radius * Math.cos(phi),
+                radius * Math.sin(phi) * Math.sin(theta)
+            );
+            
+            // Random rotation
+            crystal.rotation.set(
+                Math.random() * Math.PI * 2,
+                Math.random() * Math.PI * 2,
+                Math.random() * Math.PI * 2
+            );
+            
+            crystal.castShadow = true;
+            mineGroup.add(crystal);
+        }
+        
+        scene.add(mineGroup);
+        createLabel(mineGroup, "Eastern Mines", 0x696969);
+        
+        return mineGroup;
+    };
+    
+    const mineSystem = createCrystallineMines();
 
-    // 5. Underwater Layer (Atlantis)
-    const atlantisGeometry = new THREE.DodecahedronGeometry(30, 1);
-    const atlantisMaterial = new THREE.MeshLambertMaterial({ 
-        color: 0x40e0d0, // Turquoise
-        transparent: true,
-        opacity: 0.7
-    });
-    const atlantis = new THREE.Mesh(atlantisGeometry, atlantisMaterial);
-    atlantis.position.set(0, -60, 40);
-    scene.add(atlantis);
-    createLabel(atlantis, "Atlantis", 0x40e0d0);
+    // 5. Underwater Layer (Atlantis) - improved with more architectural detail
+    const createAtlantis = () => {
+        const atlantisGroup = new THREE.Group();
+        atlantisGroup.position.set(0, -60, 40);
+        
+        // Main dome structure
+        const domeGeometry = new THREE.DodecahedronGeometry(30, 1);
+        const domeMaterial = new THREE.MeshStandardMaterial({ 
+            color: 0x40e0d0, // Turquoise
+            metalness: 0.4,
+            roughness: 0.5,
+            transparent: true,
+            opacity: 0.8
+        });
+        const dome = new THREE.Mesh(domeGeometry, domeMaterial);
+        dome.castShadow = true;
+        atlantisGroup.add(dome);
+        
+        // Add pillars around the dome
+        const pillarCount = 8;
+        
+        for (let i = 0; i < pillarCount; i++) {
+            const angle = (i / pillarCount) * Math.PI * 2;
+            const radius = 38;
+            
+            const pillarGeometry = new THREE.CylinderGeometry(2, 2, 40, 6);
+            const pillarMaterial = new THREE.MeshStandardMaterial({
+                color: 0x4dd0e1,
+                metalness: 0.3,
+                roughness: 0.7
+            });
+            
+            const pillar = new THREE.Mesh(pillarGeometry, pillarMaterial);
+            pillar.position.set(
+                Math.cos(angle) * radius,
+                0,
+                Math.sin(angle) * radius
+            );
+            
+            pillar.castShadow = true;
+            atlantisGroup.add(pillar);
+        }
+        
+        // Add smaller domes (buildings)
+        for (let i = 0; i < 5; i++) {
+            const angle = (i / 5) * Math.PI * 2 + Math.PI / 5;
+            const radius = 20;
+            
+            const smallDomeGeometry = new THREE.IcosahedronGeometry(5, 0);
+            const smallDomeMaterial = new THREE.MeshStandardMaterial({
+                color: 0x80deea,
+                metalness: 0.6,
+                roughness: 0.4,
+                transparent: true,
+                opacity: 0.85
+            });
+            
+            const smallDome = new THREE.Mesh(smallDomeGeometry, smallDomeMaterial);
+            smallDome.position.set(
+                Math.cos(angle) * radius,
+                -10,
+                Math.sin(angle) * radius
+            );
+            
+            smallDome.castShadow = true;
+            atlantisGroup.add(smallDome);
+        }
+        
+        scene.add(atlantisGroup);
+        createLabel(atlantisGroup, "Atlantis", 0x40e0d0);
+        
+        return atlantisGroup;
+    };
+    
+    const atlantis = createAtlantis();
 
-    // Add vertical connectors between layers
+    // Add vertical connectors between layers - improved with energy effect
     const createVerticalConnector = (startX, startY, startZ, endX, endY, endZ, color) => {
-        const points = [
+        const connectorGroup = new THREE.Group();
+        
+        // Create a curve for the path
+        const curve = new THREE.CatmullRomCurve3([
             new THREE.Vector3(startX, startY, startZ),
+            new THREE.Vector3(
+                startX + (endX - startX) * 0.25 + (Math.random() * 10 - 5),
+                startY + (endY - startY) * 0.25,
+                startZ + (endZ - startZ) * 0.25 + (Math.random() * 10 - 5)
+            ),
+            new THREE.Vector3(
+                startX + (endX - startX) * 0.75 + (Math.random() * 10 - 5),
+                startY + (endY - startY) * 0.75,
+                startZ + (endZ - startZ) * 0.75 + (Math.random() * 10 - 5)
+            ),
             new THREE.Vector3(endX, endY, endZ)
-        ];
-        const geometry = new THREE.BufferGeometry().setFromPoints(points);
-        const material = new THREE.LineBasicMaterial({ 
-            color, 
-            linewidth: 2,
+        ]);
+        
+        // Create tube geometry along the curve
+        const tubeGeometry = new THREE.TubeGeometry(curve, 20, 0.8, 8, false);
+        const tubeMaterial = new THREE.MeshStandardMaterial({
+            color,
+            emissive: color,
+            emissiveIntensity: 0.5,
             transparent: true,
             opacity: 0.7
         });
-        return new THREE.Line(geometry, material);
+        
+        const tube = new THREE.Mesh(tubeGeometry, tubeMaterial);
+        connectorGroup.add(tube);
+        
+        // Add particle effect along the path
+        const particlesCount = 20;
+        const particleGeometry = new THREE.SphereGeometry(1, 8, 8);
+        const particleMaterial = new THREE.MeshBasicMaterial({
+            color: new THREE.Color(color).multiplyScalar(1.5),
+            transparent: true,
+            opacity: 0.8
+        });
+        
+        for (let i = 0; i < particlesCount; i++) {
+            const particle = new THREE.Mesh(particleGeometry, particleMaterial);
+            
+            // Position along the curve
+            const t = i / particlesCount;
+            const position = curve.getPoint(t);
+            particle.position.copy(position);
+            
+            // Randomize size slightly
+            const scale = 0.3 + Math.random() * 0.4;
+            particle.scale.set(scale, scale, scale);
+            
+            // Store original position for animation
+            particle.userData = {
+                t: t,
+                curve: curve,
+                speed: 0.001 + Math.random() * 0.002,
+                direction: Math.random() > 0.5 ? 1 : -1
+            };
+            
+            connectorGroup.add(particle);
+        }
+        
+        scene.add(connectorGroup);
+        return connectorGroup;
     };
 
-    // Add connectors with updated positions
+    // Add connectors with updated positions and colors
     const connectors = [
         // Space to Sky
-        createVerticalConnector(100, 120, -60, 100, 60, -60, 0x00ffff), // East
-        createVerticalConnector(0, 120, 0, 0, 60, 0, 0xc39bd3), // Central
+        createVerticalConnector(100, 120, -60, 100, 60, -60, 0x00ffff), // East - Cyan
+        createVerticalConnector(0, 120, 0, 0, 60, 0, 0xc39bd3), // Central - Purple
         
         // Sky to Surface
-        createVerticalConnector(100, 60, -60, 100, 8, -60, 0x00ffff), // East
-        createVerticalConnector(0, 60, 0, 0, 12, 0, 0xc39bd3), // Central
-        createVerticalConnector(-90, 60, 40, -90, 15, 40, 0xff7f50), // West
+        createVerticalConnector(100, 60, -60, 100, 8, -60, 0x64b5f6), // East - Light Blue
+        createVerticalConnector(0, 60, 0, 0, 12, 0, 0xba68c8), // Central - Purple
+        createVerticalConnector(-90, 60, 40, -90, 15, 40, 0xff9e80), // West - Orange
         
         // Surface to Underground
-        createVerticalConnector(120, 8, -40, 120, -25, -40, 0x696969), // Eastern mines
-        createVerticalConnector(0, 12, 80, 20, -30, 60, 0xffd700), // Cave system
+        createVerticalConnector(120, 8, -40, 120, -25, -40, 0x4db6ac), // Eastern mines - Teal
+        createVerticalConnector(0, 12, 80, 20, -30, 60, 0xffd54f), // Cave system - Amber
         
         // Underground to Underwater
-        createVerticalConnector(20, -30, 60, 0, -60, 40, 0x40e0d0) // To Atlantis
+        createVerticalConnector(20, -30, 60, 0, -60, 40, 0x4fc3f7) // To Atlantis - Light Blue
     ];
-    
-    connectors.forEach(connector => scene.add(connector));
 
     // Add grid helper for context
     const gridHelper = new THREE.GridHelper(300, 30, 0x000000, 0x000000);
@@ -510,6 +710,9 @@ function initWorldVisualization() {
     gridHelper.material.opacity = 0.2;
     gridHelper.material.transparent = true;
     scene.add(gridHelper);
+    
+    // Add fog for atmosphere
+    scene.fog = new THREE.FogExp2(0x87ceeb, 0.0015);
 
     // Function to update label positions
     function updateLabels() {
@@ -600,6 +803,46 @@ function initWorldVisualization() {
             camera.lookAt(0, 0, 0);
         }
         
+        // Animate water with gentle waves
+        if (basePlane.geometry.attributes && basePlane.geometry.attributes.position) {
+            const positions = basePlane.geometry.attributes.position.array;
+            const time = Date.now() * 0.0003;
+            
+            for (let i = 0; i < positions.length; i += 3) {
+                const x = positions[i];
+                const z = positions[i + 2];
+                positions[i + 1] = Math.sin(x * 0.05 + time) * Math.cos(z * 0.05 + time) * 1.5;
+            }
+            
+            basePlane.geometry.attributes.position.needsUpdate = true;
+            basePlane.geometry.computeVertexNormals();
+        }
+        
+        // Animate connector particles
+        connectors.forEach(connector => {
+            connector.children.forEach(child => {
+                if (child.userData && child.userData.curve) {
+                    // Update particle position along the curve
+                    child.userData.t += child.userData.speed * child.userData.direction;
+                    
+                    // Loop the particle when it reaches the end
+                    if (child.userData.t >= 1) {
+                        child.userData.t = 0;
+                    } else if (child.userData.t <= 0) {
+                        child.userData.t = 1;
+                    }
+                    
+                    // Set position along the curve
+                    const newPos = child.userData.curve.getPoint(child.userData.t);
+                    child.position.copy(newPos);
+                    
+                    // Pulse the size
+                    const pulseScale = 0.3 + 0.2 * Math.sin(Date.now() * 0.01 * child.userData.speed);
+                    child.scale.set(pulseScale, pulseScale, pulseScale);
+                }
+            });
+        });
+        
         // Update label positions
         updateLabels();
         
@@ -640,14 +883,3 @@ function initWorldVisualization() {
         });
     };
 }
-
-// Initialize the visualization when the document is loaded
-document.addEventListener('DOMContentLoaded', function() {
-    // Load Three.js dynamically
-    const threeScript = document.createElement('script');
-    threeScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r132/three.min.js';
-    threeScript.onload = function() {
-        initWorldVisualization();
-    };
-    document.head.appendChild(threeScript);
-});
