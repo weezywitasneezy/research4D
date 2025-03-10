@@ -33,6 +33,8 @@ function initWorldVisualization() {
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(container.clientWidth, container.clientHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     container.appendChild(renderer.domElement);
 
     // Create a container for our custom HTML labels
@@ -56,6 +58,11 @@ function initWorldVisualization() {
     const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
     directionalLight.position.set(50, 100, 50);
     directionalLight.castShadow = true;
+    directionalLight.shadow.mapSize.width = 2048;
+    directionalLight.shadow.mapSize.height = 2048;
+    directionalLight.shadow.camera.near = 0.5;
+    directionalLight.shadow.camera.far = 500;
+    directionalLight.shadow.bias = -0.001;
     scene.add(directionalLight);
 
     // Create base plane (representing sea level)
@@ -68,6 +75,7 @@ function initWorldVisualization() {
     });
     const basePlane = new THREE.Mesh(baseGeometry, baseMaterial);
     basePlane.rotation.x = -Math.PI / 2;
+    basePlane.receiveShadow = true;
     scene.add(basePlane);
 
     // Function to create and add a label to a 3D object
@@ -168,15 +176,6 @@ function initWorldVisualization() {
     // Western Belt
     const belt = createFloatingCity(-90, 40, 15, 0xff7f50, "The Belt");
 
-    // 3. Surface Layer (continents)
-    // Eastern Continent
-    const eastContinentGeometry = new THREE.BoxGeometry(120, 8, 90);
-    const eastContinentMaterial = new THREE.MeshLambertMaterial({ color: 0xa9a9a9 }); // Dark gray for tech world
-    const eastContinent = new THREE.Mesh(eastContinentGeometry, eastContinentMaterial);
-    eastContinent.position.set(100, 4, 0);
-    scene.add(eastContinent);
-    createLabel(eastContinent, "Eastern Continent", 0xa9a9a9);
-
     // Create Island function
     const createIsland = (x, z, size, height, color, name) => {
         const islandGeometry = new THREE.CylinderGeometry(size, size * 1.2, height, 8);
@@ -198,13 +197,238 @@ function initWorldVisualization() {
     // Smugglers Islands
     const smugglersIsland = createIsland(0, 80, 25, 10, 0x8b4513, "Smugglers Islands"); // Saddle brown
 
-    // Western Continent
-    const westContinentGeometry = new THREE.BoxGeometry(110, 15, 90);
-    const westContinentMaterial = new THREE.MeshLambertMaterial({ color: 0x8b0000 }); // Dark red for demon world
-    const westContinent = new THREE.Mesh(westContinentGeometry, westContinentMaterial);
-    westContinent.position.set(-110, 7.5, 0);
-    scene.add(westContinent);
-    createLabel(westContinent, "Western Continent", 0x8b0000);
+    // Helper function for texture loading with fallbacks
+    function loadTextureWithFallback(url, onLoad, onError) {
+        // Check if TextureLoader is available
+        if (!THREE.TextureLoader) {
+            console.warn('TextureLoader not available, using fallback material');
+            if (onError) onError();
+            return null;
+        }
+        
+        const loader = new THREE.TextureLoader();
+        
+        // Set cross-origin to anonymous to allow loading from CDNs
+        loader.crossOrigin = 'anonymous';
+        
+        // Load the texture
+        return loader.load(
+            url,
+            // onLoad callback
+            function(texture) {
+                if (onLoad) onLoad(texture);
+            },
+            // onProgress callback (not typically needed)
+            undefined,
+            // onError callback
+            function(err) {
+                console.warn('Failed to load texture:', url, err);
+                if (onError) onError();
+            }
+        );
+    }
+
+    // Create continents with more natural shape using ShapeGeometry
+    function createContinent(params) {
+        const {
+            position,
+            width,
+            depth,
+            height,
+            color,
+            name,
+            roughness = 0.7,
+            metalness = 0.1
+        } = params;
+        
+        // Create a continent group to hold all parts
+        const continentGroup = new THREE.Group();
+        continentGroup.position.copy(position);
+        
+        // Create base shape with irregular edges
+        const shape = new THREE.Shape();
+        
+        // Starting point
+        const startX = -width/2;
+        const startZ = -depth/2;
+        shape.moveTo(startX, startZ);
+        
+        // Top edge with randomization
+        const topPoints = createIrregularEdge(startX, startZ, width, 0, 10, 0.15);
+        topPoints.forEach(point => shape.lineTo(point.x, point.z));
+        
+        // Right edge with randomization
+        const rightPoints = createIrregularEdge(startX + width, startZ, 0, depth, 10, 0.15);
+        rightPoints.forEach(point => shape.lineTo(point.x, point.z));
+        
+        // Bottom edge with randomization
+        const bottomPoints = createIrregularEdge(startX + width, startZ + depth, -width, 0, 10, 0.15);
+        bottomPoints.forEach(point => shape.lineTo(point.x, point.z));
+        
+        // Left edge with randomization
+        const leftPoints = createIrregularEdge(startX, startZ + depth, 0, -depth, 10, 0.15);
+        leftPoints.forEach(point => shape.lineTo(point.x, point.z));
+        
+        // Create extruded geometry for the continent
+        const extrudeSettings = {
+            steps: 1,
+            depth: height,
+            bevelEnabled: true,
+            bevelThickness: 3,
+            bevelSize: 3,
+            bevelOffset: 0,
+            bevelSegments: 3
+        };
+        
+        const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+        
+        // Rotate to make the extrusion go upward (y-axis)
+        geometry.rotateX(-Math.PI / 2);
+        
+        // Create material with better shading
+        const terrainMaterial = new THREE.MeshStandardMaterial({
+            color: color,
+            roughness: roughness,
+            metalness: metalness,
+            flatShading: true
+        });
+        
+        // Try to load textures with fallback
+        loadTextureWithFallback(
+            'https://threejs.org/examples/textures/terrain/grasslight-big.jpg',
+            function(texture) {
+                // Texture loaded successfully
+                terrainMaterial.bumpMap = texture;
+                terrainMaterial.bumpScale = 0.5;
+                terrainMaterial.needsUpdate = true;
+            },
+            function() {
+                // Texture failed to load - use non-textured material
+                console.log(`Using fallback (non-textured) material for ${name}`);
+                // Adjust the material to look better without textures
+                terrainMaterial.roughness = 0.9;
+                terrainMaterial.needsUpdate = true;
+            }
+        );
+        
+        const continent = new THREE.Mesh(geometry, terrainMaterial);
+        continent.castShadow = true;
+        continent.receiveShadow = true;
+        
+        // Add to group
+        continentGroup.add(continent);
+        
+        // Create coastline details
+        addCoastlineDetails(continentGroup, shape, color);
+        
+        scene.add(continentGroup);
+        createLabel(continentGroup, name, color);
+        
+        return continentGroup;
+    }
+
+    // Helper to create irregular edge points
+    function createIrregularEdge(startX, startZ, deltaX, deltaZ, steps, randomFactor) {
+        const points = [];
+        
+        for (let i = 1; i <= steps; i++) {
+            const ratio = i / steps;
+            
+            // Calculate position along straight edge
+            const straightX = startX + deltaX * ratio;
+            const straightZ = startZ + deltaZ * ratio;
+            
+            // Add randomness perpendicular to the edge direction
+            let perpX = 0;
+            let perpZ = 0;
+            
+            if (deltaX === 0) {
+                // Moving along Z axis, so randomize X
+                perpX = (Math.random() - 0.5) * 2 * Math.abs(deltaZ) * randomFactor;
+            } else {
+                // Moving along X axis, so randomize Z
+                perpZ = (Math.random() - 0.5) * 2 * Math.abs(deltaX) * randomFactor;
+            }
+            
+            points.push(new THREE.Vector2(straightX + perpX, straightZ + perpZ));
+        }
+        
+        return points;
+    }
+
+    // Add detailed features to coastline
+    function addCoastlineDetails(group, shape, color) {
+        // Add rocks and terrain features along the coastline
+        const coastPoints = shape.getPoints(50);
+        
+        for (let i = 0; i < coastPoints.length; i += 3) {
+            const point = coastPoints[i];
+            
+            // Randomly skip some points
+            if (Math.random() > 0.7) continue;
+            
+            // Create a small rock or terrain feature
+            const rockSize = 2 + Math.random() * 3;
+            const rockHeight = 1 + Math.random() * 3;
+            
+            let rockGeometry;
+            
+            // Vary the rock geometry
+            const rockType = Math.floor(Math.random() * 3);
+            if (rockType === 0) {
+                rockGeometry = new THREE.ConeGeometry(rockSize, rockHeight, 5);
+            } else if (rockType === 1) {
+                rockGeometry = new THREE.DodecahedronGeometry(rockSize, 0);
+            } else {
+                rockGeometry = new THREE.BoxGeometry(rockSize, rockHeight, rockSize);
+            }
+            
+            // Create rock material with slight variation from continent color
+            const colorVariation = 0.1;
+            const rockColor = new THREE.Color(color);
+            rockColor.r *= (1 - colorVariation/2) + Math.random() * colorVariation;
+            rockColor.g *= (1 - colorVariation/2) + Math.random() * colorVariation;
+            rockColor.b *= (1 - colorVariation/2) + Math.random() * colorVariation;
+            
+            const rockMaterial = new THREE.MeshStandardMaterial({
+                color: rockColor,
+                roughness: 0.9,
+                metalness: 0.1,
+                flatShading: true
+            });
+            
+            const rock = new THREE.Mesh(rockGeometry, rockMaterial);
+            rock.position.set(point.x, rockHeight/2, point.y);
+            rock.rotation.y = Math.random() * Math.PI;
+            rock.castShadow = true;
+            
+            group.add(rock);
+        }
+    }
+
+    // Eastern Continent - larger and stretching more to the edge of the plane
+    const eastContinentParams = {
+        position: new THREE.Vector3(120, 4, 0),
+        width: 150,
+        depth: 120,
+        height: 8,
+        color: 0xa9a9a9,
+        name: "Eastern Continent",
+        roughness: 0.8
+    };
+    const eastContinent = createContinent(eastContinentParams);
+
+    // Western Continent - larger and with more variation
+    const westContinentParams = {
+        position: new THREE.Vector3(-120, 7.5, 0),
+        width: 140,
+        depth: 130,
+        height: 15,
+        color: 0x8b0000,
+        name: "Western Continent",
+        roughness: 0.9
+    };
+    const westContinent = createContinent(westContinentParams);
 
     // 4. Underground Layer
     // Create a wireframe to represent the underground caves
@@ -423,7 +647,7 @@ function initWorldVisualization() {
 document.addEventListener('DOMContentLoaded', function() {
     // Load Three.js dynamically
     const threeScript = document.createElement('script');
-    threeScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+    threeScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r132/three.min.js';
     threeScript.onload = function() {
         initWorldVisualization();
     };
