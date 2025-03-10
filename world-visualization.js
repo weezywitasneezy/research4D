@@ -137,409 +137,78 @@ function initWorldVisualization() {
     createLabel(eastContinentGroup, "Eastern Continent", 0xa9a9a9);
 
     // EASTERN REGIONS
-    // Vertical Farm Region (north east) - Enhanced with more detail
-    const verticalFarmGroup = new THREE.Group();
-    
-    // Base land area
-    const farmBaseGeometry = new THREE.BoxGeometry(60, 8, 60);
-    const farmBaseMaterial = new THREE.MeshLambertMaterial({ color: 0x729f00 }); // Darker green base
-    const farmBase = new THREE.Mesh(farmBaseGeometry, farmBaseMaterial);
-    verticalFarmGroup.add(farmBase);
-    
-    // Creating multiple vertical farm towers
-    const createFarmTower = (x, z, height, radius) => {
-        const towerGeometry = new THREE.CylinderGeometry(radius, radius, height, 8);
-        const towerMaterial = new THREE.MeshLambertMaterial({ color: 0x7cfc00 }); // Light green
-        const tower = new THREE.Mesh(towerGeometry, towerMaterial);
-        tower.position.set(x, height/2 + 4, z);
-        verticalFarmGroup.add(tower);
-        
-        // Add a small dome on top
-        const domeGeometry = new THREE.SphereGeometry(radius, 8, 8, 0, Math.PI * 2, 0, Math.PI / 2);
-        const domeMaterial = new THREE.MeshLambertMaterial({ color: 0xaaffaa }); // Light green
-        const dome = new THREE.Mesh(domeGeometry, domeMaterial);
-        dome.position.set(x, height + 4, z);
-        verticalFarmGroup.add(dome);
-    };
-    
-    // Create several farm towers of varying heights
-    createFarmTower(-15, -15, 20, 5);
-    createFarmTower(0, 0, 24, 6);
-    createFarmTower(15, 10, 18, 5);
-    createFarmTower(-10, 15, 22, 4);
-    createFarmTower(12, -12, 26, 5);
-    
-    // Position the entire farm group
-    verticalFarmGroup.position.set(110, 13.5, -60);
-    scene.add(verticalFarmGroup);
-    createLabel(verticalFarmGroup, "Vertical Farm Region", 0x7cfc00);
+    // Vertical Farm Region (north east)
+    const verticalFarmGeometry = new THREE.BoxGeometry(60, 15, 60);
+    const verticalFarmMaterial = new THREE.MeshLambertMaterial({ color: 0x7cfc00 }); // Light green
+    const verticalFarm = new THREE.Mesh(verticalFarmGeometry, verticalFarmMaterial);
+    verticalFarm.position.set(110, 13.5, -60);
+    scene.add(verticalFarm);
+    createLabel(verticalFarm, "Vertical Farm Region", 0x7cfc00);
 
-    // Industrial Area (due east) - Enhanced with more detail
-    const industrialAreaGroup = new THREE.Group();
-    
-    // Base industrial zone
-    const industrialBaseGeometry = new THREE.BoxGeometry(60, 6, 70);
-    const industrialBaseMaterial = new THREE.MeshLambertMaterial({ color: 0x505050 }); // Dark gray
-    const industrialBase = new THREE.Mesh(industrialBaseGeometry, industrialBaseMaterial);
-    industrialAreaGroup.add(industrialBase);
-    
-    // Factory buildings
-    const factoryGeometry = new THREE.BoxGeometry(15, 15, 20);
-    const factoryMaterial = new THREE.MeshLambertMaterial({ color: 0x708090 }); // Slate gray
-    
-    // First factory building
-    const factory1 = new THREE.Mesh(factoryGeometry, factoryMaterial);
-    factory1.position.set(-15, 10.5, -20);
-    industrialAreaGroup.add(factory1);
-    
-    // Second factory building
-    const factory2 = new THREE.Mesh(factoryGeometry, factoryMaterial);
-    factory2.position.set(10, 10.5, 0);
-    industrialAreaGroup.add(factory2);
-    
-    // Third factory building
-    const factory3 = new THREE.Mesh(factoryGeometry, factoryMaterial);
-    factory3.position.set(-5, 10.5, 25);
-    industrialAreaGroup.add(factory3);
-    
-    // Smoke stacks
-    const smokestackGeometry = new THREE.CylinderGeometry(2, 2.5, 25, 8);
-    const smokestackMaterial = new THREE.MeshLambertMaterial({ color: 0xa0a0a0 });
-    
-    // Add smokestacks to the factories
-    const addSmokestack = (x, z) => {
-        const smokestack = new THREE.Mesh(smokestackGeometry, smokestackMaterial);
-        smokestack.position.set(x, 23, z);
-        industrialAreaGroup.add(smokestack);
-    };
-    
-    addSmokestack(-15, -20);
-    addSmokestack(10, 0);
-    addSmokestack(-5, 25);
-    
-    // Position the entire industrial area group
-    industrialAreaGroup.position.set(150, 15, 0);
-    scene.add(industrialAreaGroup);
-    createLabel(industrialAreaGroup, "Industrial Area", 0x708090);
+    // Industrial Area (due east)
+    const industrialAreaGeometry = new THREE.BoxGeometry(60, 18, 70);
+    const industrialAreaMaterial = new THREE.MeshLambertMaterial({ color: 0x708090 }); // Slate gray
+    const industrialArea = new THREE.Mesh(industrialAreaGeometry, industrialAreaMaterial);
+    industrialArea.position.set(150, 15, 0);
+    scene.add(industrialArea);
+    createLabel(industrialArea, "Industrial Area", 0x708090);
 
-    // Seaside Capital City - Enhanced with more detail
-    const seasideCapitalGroup = new THREE.Group();
-    
-    // Main city base
-    const cityBaseGeometry = new THREE.CylinderGeometry(25, 30, 5, 8);
-    const cityBaseMaterial = new THREE.MeshLambertMaterial({ color: 0xdaa520 }); // Goldenrod
-    const cityBase = new THREE.Mesh(cityBaseGeometry, cityBaseMaterial);
-    cityBase.position.y = 2.5;
-    seasideCapitalGroup.add(cityBase);
-    
-    // Central tallest building/palace
-    const centralTowerGeometry = new THREE.CylinderGeometry(5, 8, 25, 6);
-    const centralTowerMaterial = new THREE.MeshLambertMaterial({ color: 0xf0e68c }); // Khaki
-    const centralTower = new THREE.Mesh(centralTowerGeometry, centralTowerMaterial);
-    centralTower.position.y = 17.5;
-    seasideCapitalGroup.add(centralTower);
-    
-    // Tower spire
-    const spireGeometry = new THREE.ConeGeometry(3, 10, 6);
-    const spireMaterial = new THREE.MeshLambertMaterial({ color: 0xffd700 }); // Gold
-    const spire = new THREE.Mesh(spireGeometry, spireMaterial);
-    spire.position.y = 35;
-    seasideCapitalGroup.add(spire);
-    
-    // Surrounding buildings
-    const createBuilding = (radius, angle, height, width) => {
-        const x = radius * Math.cos(angle);
-        const z = radius * Math.sin(angle);
-        
-        const buildingGeometry = new THREE.BoxGeometry(width, height, width);
-        const buildingMaterial = new THREE.MeshLambertMaterial({ color: 0xe6c899 }); // Lighter tan
-        const building = new THREE.Mesh(buildingGeometry, buildingMaterial);
-        building.position.set(x, height/2 + 5, z);
-        seasideCapitalGroup.add(building);
-    };
-    
-    // Create circular arrangement of buildings
-    const buildingCount = 8;
-    for (let i = 0; i < buildingCount; i++) {
-        const angle = (i / buildingCount) * Math.PI * 2;
-        const radius = 15;
-        const height = 10 + Math.random() * 8; // Random heights
-        const width = 5 + Math.random() * 3; // Random widths
-        createBuilding(radius, angle, height, width);
-    }
-    
-    // Create harbor/docks extending toward the sea (east)
-    const harborGeometry = new THREE.BoxGeometry(40, 2, 10);
-    const harborMaterial = new THREE.MeshLambertMaterial({ color: 0x8b4513 }); // Saddle brown
-    const harbor = new THREE.Mesh(harborGeometry, harborMaterial);
-    harbor.position.set(-30, 3, 0); // Extend toward the sea (west)
-    seasideCapitalGroup.add(harbor);
-    
-    // Position the entire city group
-    seasideCapitalGroup.position.set(100, 16, 60);
-    scene.add(seasideCapitalGroup);
-    createLabel(seasideCapitalGroup, "Seaside Capital", 0xdaa520);
+    // Seaside Capital City
+    const seasideCapitalGeometry = new THREE.CylinderGeometry(25, 30, 20, 8);
+    const seasideCapitalMaterial = new THREE.MeshLambertMaterial({ color: 0xdaa520 }); // Goldenrod
+    const seasideCapital = new THREE.Mesh(seasideCapitalGeometry, seasideCapitalMaterial);
+    seasideCapital.position.set(100, 16, 60);
+    scene.add(seasideCapital);
+    createLabel(seasideCapital, "Seaside Capital", 0xdaa520);
 
-    // Sky Palace (floating above seaside capital) - Enhanced with more detail
-    const skyPalaceGroup = new THREE.Group();
-    
-    // Main floating platform
-    const platformGeometry = new THREE.CylinderGeometry(18, 22, 6, 6);
-    const platformMaterial = new THREE.MeshLambertMaterial({ 
-        color: 0x00ffff, // Cyan
-        transparent: true,
-        opacity: 0.8
-    });
-    const platform = new THREE.Mesh(platformGeometry, platformMaterial);
-    platform.position.y = 0;
-    skyPalaceGroup.add(platform);
-    
-    // Central palace structure
-    const palaceGeometry = new THREE.CylinderGeometry(12, 15, 15, 6);
-    const palaceMaterial = new THREE.MeshLambertMaterial({ 
+    // Sky Palace (floating above seaside capital)
+    const skyPalaceGeometry = new THREE.CylinderGeometry(18, 22, 15, 6);
+    const skyPalaceMaterial = new THREE.MeshLambertMaterial({ 
         color: 0x00ffff, // Cyan
         transparent: true,
         opacity: 0.9
     });
-    const palace = new THREE.Mesh(palaceGeometry, palaceMaterial);
-    palace.position.y = 10.5;
-    skyPalaceGroup.add(palace);
-    
-    // Decorative ring around the platform
-    const ringGeometry = new THREE.TorusGeometry(20, 1, 16, 32);
-    const ringMaterial = new THREE.MeshLambertMaterial({ 
+    const skyPalace = new THREE.Mesh(skyPalaceGeometry, skyPalaceMaterial);
+    skyPalace.position.set(100, 80, 60);
+    scene.add(skyPalace);
+    createLabel(skyPalace, "Sky Palace", 0x00ffff);
+
+    // Space Farms (highest layer)
+    const spaceFarmsGeometry = new THREE.TorusGeometry(80, 4, 16, 50);
+    const spaceFarmsMaterial = new THREE.MeshLambertMaterial({ 
         color: 0xadd8e6, // Light blue
         transparent: true,
         opacity: 0.7
     });
-    const ring = new THREE.Mesh(ringGeometry, ringMaterial);
-    ring.rotation.x = Math.PI / 2;
-    ring.position.y = 3;
-    skyPalaceGroup.add(ring);
-    
-    // Top central tower
-    const towerGeometry = new THREE.CylinderGeometry(4, 8, 12, 6);
-    const towerMaterial = new THREE.MeshLambertMaterial({ 
-        color: 0xb0e0e6, // Powder blue
-        transparent: true,
-        opacity: 0.9
-    });
-    const tower = new THREE.Mesh(towerGeometry, towerMaterial);
-    tower.position.y = 24;
-    skyPalaceGroup.add(tower);
-    
-    // Tower top dome
-    const domeGeometry = new THREE.SphereGeometry(5, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2);
-    const domeMaterial = new THREE.MeshLambertMaterial({ 
-        color: 0xe0ffff, // Light cyan
-        transparent: true,
-        opacity: 0.9
-    });
-    const dome = new THREE.Mesh(domeGeometry, domeMaterial);
-    dome.position.y = 30;
-    skyPalaceGroup.add(dome);
-    
-    // Small cloud-like structures around the platform
-    const createCloud = (radius, angle, size) => {
-        const x = radius * Math.cos(angle);
-        const z = radius * Math.sin(angle);
-        
-        const cloudGeometry = new THREE.SphereGeometry(size, 8, 8);
-        const cloudMaterial = new THREE.MeshLambertMaterial({ 
-            color: 0xf0f8ff, // Alice blue
-            transparent: true,
-            opacity: 0.4
-        });
-        const cloud = new THREE.Mesh(cloudGeometry, cloudMaterial);
-        cloud.position.set(x, -2, z);
-        skyPalaceGroup.add(cloud);
-    };
-    
-    // Create clouds around the palace
-    for (let i = 0; i < 6; i++) {
-        const angle = (i / 6) * Math.PI * 2;
-        const radius = 25;
-        const size = 3 + Math.random() * 2;
-        createCloud(radius, angle, size);
-    }
-    
-    // Position the entire sky palace group
-    skyPalaceGroup.position.set(100, 80, 60);
-    scene.add(skyPalaceGroup);
-    createLabel(skyPalaceGroup, "Sky Palace", 0x00ffff);
+    const spaceFarms = new THREE.Mesh(spaceFarmsGeometry, spaceFarmsMaterial);
+    spaceFarms.position.set(120, 140, 0);
+    spaceFarms.rotation.x = Math.PI / 3;
+    scene.add(spaceFarms);
+    createLabel(spaceFarms, "Space Farms", 0xadd8e6);
 
-    // Space Farms (highest layer) - Enhanced with more detail
-    const spaceFarmsGroup = new THREE.Group();
-    
-    // Main orbital ring
-    const ringGeometry = new THREE.TorusGeometry(80, 4, 16, 50);
-    const ringMaterial = new THREE.MeshLambertMaterial({ 
-        color: 0xadd8e6, // Light blue
-        transparent: true,
-        opacity: 0.7
-    });
-    const ring = new THREE.Mesh(ringGeometry, ringMaterial);
-    ring.rotation.x = Math.PI / 3;
-    spaceFarmsGroup.add(ring);
-    
-    // Add habitat modules along the ring
-    const moduleCount = 12;
-    for (let i = 0; i < moduleCount; i++) {
-        const angle = (i / moduleCount) * Math.PI * 2;
-        const x = 80 * Math.cos(angle);
-        const z = 80 * Math.sin(angle);
-        
-        // Transform coordinates due to ring rotation
-        const rotatedX = x;
-        const rotatedY = z * Math.sin(Math.PI / 3);
-        const rotatedZ = z * Math.cos(Math.PI / 3);
-        
-        // Create habitat module
-        const moduleGeometry = new THREE.CylinderGeometry(5, 5, 15, 8);
-        const moduleMaterial = new THREE.MeshLambertMaterial({ 
-            color: 0xe0ffff, // Light cyan
-            transparent: true,
-            opacity: 0.8
-        });
-        const module = new THREE.Mesh(moduleGeometry, moduleMaterial);
-        
-        // Position perpendicular to the ring
-        const moduleAngle = angle + Math.PI / 2;
-        const rotationMatrix = new THREE.Matrix4().makeRotationX(Math.PI / 3);
-        
-        module.position.set(rotatedX, rotatedY, rotatedZ);
-        module.rotation.z = -angle;
-        module.rotation.x = Math.PI / 3;
-        
-        spaceFarmsGroup.add(module);
-        
-        // Add greenhouse domes to alternating modules
-        if (i % 2 === 0) {
-            const domeGeometry = new THREE.SphereGeometry(7, 16, 8);
-            const domeMaterial = new THREE.MeshLambertMaterial({ 
-                color: 0xccffcc, // Very light green
-                transparent: true,
-                opacity: 0.6
-            });
-            const dome = new THREE.Mesh(domeGeometry, domeMaterial);
-            
-            // Position the dome at the end of the module
-            const domeDistance = 12; // Distance from center of module
-            const domeX = rotatedX + Math.cos(moduleAngle) * domeDistance;
-            const domeZ = rotatedZ + Math.sin(moduleAngle) * domeDistance;
-            const domeY = rotatedY + 5;
-            
-            dome.position.set(domeX, domeY, domeZ);
-            spaceFarmsGroup.add(dome);
-        }
-    }
-    
-    // Central hub
-    const hubGeometry = new THREE.SphereGeometry(15, 16, 16);
-    const hubMaterial = new THREE.MeshLambertMaterial({ 
-        color: 0xb0c4de, // Light steel blue
-        transparent: true,
-        opacity: 0.8
-    });
-    const hub = new THREE.Mesh(hubGeometry, hubMaterial);
-    spaceFarmsGroup.add(hub);
-    
-    // Position the entire space farms group
-    spaceFarmsGroup.position.set(120, 140, 0);
-    scene.add(spaceFarmsGroup);
-    createLabel(spaceFarmsGroup, "Space Farms", 0xadd8e6);
-
-    // Eastern Mines (under industrial area) - Enhanced with more detail
-    const minesGroup = new THREE.Group();
-    
-    // Main cavern system
-    const cavernGeometry = new THREE.SphereGeometry(30, 12, 8);
-    const cavernMaterial = new THREE.MeshBasicMaterial({ 
-        color: 0x696969, // Dim gray
+    // Eastern Mines (under industrial area)
+    const mineGeometry = new THREE.SphereGeometry(30, 8, 8);
+    const mineMaterial = new THREE.MeshBasicMaterial({ 
+        color: 0x696969, // Dim gray for mines
         wireframe: true,
         transparent: true,
         opacity: 0.3
     });
-    const cavern = new THREE.Mesh(cavernGeometry, cavernMaterial);
-    minesGroup.add(cavern);
-    
-    // Add mining tunnels extending from the main cavern
-    const createTunnel = (direction, length, width) => {
-        const tunnelGeometry = new THREE.CylinderGeometry(width, width, length, 8);
-        const tunnelMaterial = new THREE.MeshBasicMaterial({ 
-            color: 0x808080, // Gray
-            wireframe: true,
-            transparent: true,
-            opacity: 0.3
-        });
-        const tunnel = new THREE.Mesh(tunnelGeometry, tunnelMaterial);
-        
-        // Rotate to point in the right direction
-        tunnel.rotation.z = Math.PI / 2;
-        tunnel.rotation.y = direction;
-        
-        // Position halfway along the length
-        tunnel.position.x = Math.cos(direction) * length / 2;
-        tunnel.position.z = Math.sin(direction) * length / 2;
-        
-        minesGroup.add(tunnel);
-        
-        // Add small caverns at the ends of tunnels
-        const smallCavernGeometry = new THREE.SphereGeometry(width * 2, 8, 8);
-        const smallCavernMaterial = new THREE.MeshBasicMaterial({ 
-            color: 0xa0a0a0, // Light gray
-            wireframe: true,
-            transparent: true,
-            opacity: 0.3
-        });
-        const smallCavern = new THREE.Mesh(smallCavernGeometry, smallCavernMaterial);
-        
-        // Position at the end of the tunnel
-        smallCavern.position.x = Math.cos(direction) * length;
-        smallCavern.position.z = Math.sin(direction) * length;
-        
-        minesGroup.add(smallCavern);
-    };
-    
-    // Create tunnels in different directions
-    const tunnelCount = 5;
-    for (let i = 0; i < tunnelCount; i++) {
-        const angle = (i / tunnelCount) * Math.PI * 2;
-        const length = 40 + Math.random() * 20;
-        const width = 5 + Math.random() * 3;
-        createTunnel(angle, length, width);
-    }
-    
-    // Add vertical shaft connecting to the surface
-    const shaftGeometry = new THREE.CylinderGeometry(8, 8, 40, 8);
-    const shaftMaterial = new THREE.MeshBasicMaterial({ 
-        color: 0x505050, // Dark gray
-        wireframe: true,
-        transparent: true,
-        opacity: 0.4
-    });
-    const shaft = new THREE.Mesh(shaftGeometry, shaftMaterial);
-    shaft.position.y = 20; // Position halfway up to the surface
-    minesGroup.add(shaft);
-    
-    // Add mining equipment inside main cavern
-    const equipmentGeometry = new THREE.BoxGeometry(10, 5, 10);
-    const equipmentMaterial = new THREE.MeshBasicMaterial({ 
-        color: 0xff0000, // Red
+    const mineSystem = new THREE.Mesh(mineGeometry, mineMaterial);
+    mineSystem.position.set(150, -25, 0);
+    scene.add(mineSystem);
+    createLabel(mineSystem, "Eastern Mines", 0x696969);
+
+    // Sewers (under seaside capital)
+    const sewerGeometry = new THREE.CylinderGeometry(20, 25, 10, 8, 1, true);
+    const sewerMaterial = new THREE.MeshBasicMaterial({ 
+        color: 0x556b2f, // Dark olive green
         wireframe: true,
         transparent: true,
         opacity: 0.5
     });
-    const equipment = new THREE.Mesh(equipmentGeometry, equipmentMaterial);
-    equipment.position.y = -10;
-    minesGroup.add(equipment);
-    
-    // Position the entire mines group
-    minesGroup.position.set(150, -25, 0);
-    scene.add(minesGroup);
-    createLabel(minesGroup, "Eastern Mines", 0x696969);
-
-);
+    const sewers = new THREE.Mesh(sewerGeometry, sewerMaterial);
+    sewers.position.set(100, -15, 60);
     scene.add(sewers);
     createLabel(sewers, "Mutant Sewers", 0x556b2f);
 
