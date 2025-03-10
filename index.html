@@ -1,881 +1,1767 @@
 <!DOCTYPE html>
+
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>4D Research Institutes - Civilization Research Topics</title>
+
     <style>
+
         body {
+
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
             line-height: 1.6;
+
             color: #333;
+
             max-width: 1100px;
+
             margin: 0 auto;
+
             padding: 20px;
+
             background-color: #f9f9f9;
+
         }
+
         header {
+
             text-align: center;
+
             padding: 30px 0;
+
             background-color: #1a2a3a;
+
             color: white;
+
             border-radius: 10px;
+
             margin-bottom: 30px;
+
         }
+
         h1 {
+
             margin: 0;
+
             font-size: 2.5em;
+
         }
+
         h2 {
+
             color: #1a2a3a;
+
             border-bottom: 2px solid #1a2a3a;
+
             padding-bottom: 10px;
+
             margin-top: 40px;
+
         }
+
         h3 {
+
             color: #2c3e50;
+
             margin-top: 25px;
+
         }
+
         .institute-container {
+
             display: flex;
+
             justify-content: space-between;
+
             margin-bottom: 30px;
+
             flex-wrap: wrap;
+
         }
+
         .institute {
+
             flex: 1;
+
             min-width: 300px;
+
             margin: 10px;
+
             padding: 20px;
+
             border-radius: 10px;
+
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+
         }
+
         .moon-palace {
+
             background-color: #e8f4f8;
+
             border-left: 5px solid #3498db;
+
         }
+
         .sky-palace {
+
             background-color: #f4f8e8;
+
             border-left: 5px solid #2ecc71;
+
         }
+
         .metaxis {
+
             background-color: #f8e8f4;
+
             border-left: 5px solid #9b59b6;
+
         }
+
         .research-topic {
+
             background-color: white;
+
             padding: 20px;
+
             margin-bottom: 30px;
+
             border-radius: 10px;
+
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+
         }
+
         .paper {
+
             background-color: white;
+
             padding: 20px;
+
             margin-bottom: 20px;
+
             border-radius: 10px;
+
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+
             transition: transform 0.2s;
+
         }
+
         .paper:hover {
+
             transform: translateY(-5px);
+
         }
+
         .paper-moon {
+
             border-left: 5px solid #3498db;
+
         }
+
         .paper-sky {
+
             border-left: 5px solid #2ecc71;
+
         }
+
         .paper-metaxis {
+
             border-left: 5px solid #9b59b6;
+
         }
+
         .papers-container {
+
             margin-top: 20px;
+
         }
+
         .paper h4 {
+
             margin-top: 0;
+
             color: #2c3e50;
+
         }
+
         .paper-link {
+
             display: inline-block;
+
             margin-top: 10px;
+
             padding: 8px 15px;
+
             background-color: #1a2a3a;
+
             color: white;
+
             text-decoration: none;
+
             border-radius: 5px;
+
             font-weight: bold;
+
             transition: background-color 0.2s;
+
         }
+
         .paper-link:hover {
+
             background-color: #2c3e50;
+
         }
+
         ul {
+
             padding-left: 25px;
+
         }
+
         li {
+
             margin-bottom: 10px;
+
         }
+
         .progress-summary {
+
             background-color: #f1f1f1;
+
             padding: 20px;
+
             border-radius: 10px;
+
             margin-top: 40px;
+
         }
+
         footer {
+
             text-align: center;
+
             margin-top: 50px;
+
             padding: 20px;
+
             color: #7f8c8d;
+
             font-size: 0.9em;
+
         }
+
         .paper-abstract {
+
             font-style: italic;
+
             color: #555;
+
             margin-bottom: 15px;
+
         }
+
         .newest-section {
+
             background-color: #fffae8;
+
             border-radius: 10px;
+
             padding: 20px;
+
             margin-top: 30px;
+
             border: 1px dashed #e6b422;
+
         }
+
         .section-badge {
+
             display: inline-block;
+
             background-color: #e6b422;
+
             color: #fff;
+
             padding: 3px 8px;
+
             border-radius: 4px;
+
             font-size: 0.8em;
+
             margin-left: 10px;
+
             vertical-align: middle;
+
         }
+
+
 
         /* Music Player Styles */
+
         .music-player-section {
+
             background-color: #f0f7ff;
+
             border-radius: 10px;
+
             padding: 20px;
+
             margin-top: 30px;
+
             border: 1px dashed #3498db;
+
         }
+
         
+
         .music-player {
+
             background-color: #fff;
+
             border-radius: 10px;
+
             padding: 20px;
+
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+
             margin: 20px 0;
+
             border-left: 5px solid #e74c3c;
+
         }
+
         
+
         .player-header {
+
             display: flex;
+
             align-items: center;
+
             margin-bottom: 20px;
+
         }
+
         
+
         .album-art {
+
             width: 80px;
+
             height: 80px;
+
             border-radius: 5px;
+
             margin-right: 15px;
+
             object-fit: cover;
+
             background-color: #ddd;
+
         }
+
         
+
         .song-info {
+
             flex-grow: 1;
+
         }
+
         
+
         .song-title {
+
             font-size: 18px;
+
             font-weight: bold;
+
             margin: 0 0 5px 0;
+
         }
+
         
+
         .song-artist {
+
             font-size: 14px;
+
             color: #666;
+
             margin: 0;
+
         }
+
         
+
         .controls {
+
             display: flex;
+
             align-items: center;
+
             justify-content: space-between;
+
             margin-bottom: 15px;
+
         }
+
         
+
         .control-buttons {
+
             display: flex;
+
             gap: 15px;
+
         }
+
         
+
         .control-button {
+
             background: none;
+
             border: none;
+
             cursor: pointer;
+
             color: #333;
+
             font-size: 20px;
+
             padding: 5px;
+
             transition: color 0.2s;
+
         }
+
         
+
         .control-button:hover {
+
             color: #e74c3c;
+
         }
+
         
+
         .play-button {
+
             width: 40px;
+
             height: 40px;
+
             border-radius: 50%;
+
             background-color: #e74c3c;
+
             color: white;
+
             display: flex;
+
             align-items: center;
+
             justify-content: center;
+
             font-size: 16px;
+
             border: none;
+
             cursor: pointer;
+
             transition: background-color 0.2s;
+
         }
+
         
+
         .play-button:hover {
+
             background-color: #c0392b;
+
         }
+
         
+
         .progress-container {
+
             width: 100%;
+
             background-color: #eee;
+
             border-radius: 5px;
+
             height: 5px;
+
             cursor: pointer;
+
             margin-bottom: 5px;
+
         }
+
         
+
         .progress-bar {
+
             height: 100%;
+
             border-radius: 5px;
+
             background-color: #e74c3c;
+
             width: 0%;
+
             transition: width 0.1s linear;
+
         }
+
         
+
         .time-info {
+
             display: flex;
+
             justify-content: space-between;
+
             font-size: 12px;
+
             color: #666;
+
         }
+
         
+
         .playlist {
+
             background-color: #fff;
+
             border-radius: 10px;
+
             padding: 15px;
+
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+
             margin-top: 15px;
+
         }
+
         
+
         .playlist-header {
+
             font-size: 16px;
+
             font-weight: bold;
+
             margin: 0 0 10px 0;
+
             color: #2c3e50;
+
         }
+
         
+
         .playlist-item {
+
             display: flex;
+
             align-items: center;
+
             padding: 8px 10px;
+
             border-radius: 5px;
+
             cursor: pointer;
+
             transition: background-color 0.2s;
+
         }
+
         
+
         .playlist-item:hover {
+
             background-color: #f0f0f0;
+
         }
+
         
+
         .playlist-item.active {
+
             background-color: #ffe6e6;
+
         }
+
         
+
         .playlist-number {
+
             width: 25px;
+
             font-size: 14px;
+
             color: #666;
+
         }
+
         
+
         .playlist-info {
+
             flex-grow: 1;
+
         }
+
         
+
         .playlist-title {
+
             font-size: 14px;
+
             margin: 0 0 3px 0;
+
         }
+
         
+
         .playlist-artist {
+
             font-size: 12px;
+
             color: #666;
+
             margin: 0;
+
         }
+
         
+
         .playlist-duration {
+
             font-size: 14px;
+
             color: #666;
+
         }
+
+
 
         .player-section-title {
+
             color: #1a2a3a;
+
             padding-bottom: 10px;
+
             display: flex;
+
             align-items: center;
+
         }
+
+
 
         .player-section-title i {
+
             margin-right: 10px;
+
             color: #e74c3c;
+
         }
+
+
 
         .playlist-toggle {
+
             font-size: 14px;
+
             background: #f9f9f9;
+
             border: 1px solid #ddd;
+
             padding: 5px 10px;
+
             border-radius: 15px;
+
             cursor: pointer;
+
             margin-left: 15px;
+
             transition: all 0.2s;
+
         }
+
+
 
         .playlist-toggle:hover {
+
             background: #e74c3c;
+
             color: white;
+
             border-color: #e74c3c;
+
         }
+
+
 
         /* Toggle for playlist visibility */
+
         .playlist-container {
+
             max-height: 0;
+
             overflow: hidden;
+
             transition: max-height 0.3s ease-out;
+
         }
+
+
 
         .playlist-container.show {
+
             max-height: 500px;
+
         }
+
         
+
         /* Visualization Section Styles */
+
         .visualization-section {
+
             background-color: #f1f8ff;
+
             border-radius: 10px;
+
             padding: 20px;
+
             margin: 30px 0;
+
             border: 1px solid #d1e6ff;
+
         }
+
         
+
         .visualization-container {
+
             position: relative;
+
             width: 100%;
+
             height: 500px;
+
             margin: 20px 0;
+
             border-radius: 10px;
+
             overflow: hidden;
+
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+
         }
+
         
+
         #visualization-mount {
+
             position: absolute;
+
             top: 0;
+
             left: 0;
+
             width: 100%;
+
             height: 100%;
+
             background-color: #87ceeb;
+
         }
+
         
+
         .visualization-controls {
+
             position: absolute;
+
             bottom: 20px;
+
             left: 20px;
+
             background-color: rgba(255, 255, 255, 0.8);
+
             padding: 15px;
+
             border-radius: 10px;
+
             z-index: 100;
+
             max-width: 200px;
+
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+
         }
+
         
+
         .control-button {
+
             background-color: #1a2a3a;
+
             color: white;
+
             border: none;
+
             padding: 8px 15px;
+
             border-radius: 5px;
+
             cursor: pointer;
+
             font-weight: bold;
+
             transition: background-color 0.2s;
+
             margin-bottom: 10px;
+
         }
+
         
+
         .control-button:hover {
+
             background-color: #2c3e50;
+
         }
+
         
+
         .location-legend {
+
             margin-top: 10px;
+
         }
+
         
+
         .location-legend h4 {
+
             margin: 0 0 8px 0;
+
             font-size: 14px;
+
         }
+
         
+
         .location-legend p {
+
             margin: 4px 0;
+
             font-size: 12px;
+
         }
+
         
+
         /* Label styles for 3D objects */
+
         .label3d {
+
             position: absolute;
+
             background-color: rgba(0, 0, 0, 0.7);
+
             color: white;
+
             padding: 4px 8px;
+
             border-radius: 4px;
+
             font-size: 14px;
+
             font-weight: bold;
+
             pointer-events: none;
+
             z-index: 10;
+
             box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+
             white-space: nowrap;
+
             transform: translate(-50%, -50%);
+
         }
+
     </style>
-    <!-- Pre-load Three.js and SimplexNoise libraries -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/simplex-noise/2.4.0/simplex-noise.min.js"></script>
+
 </head>
+
 <body>
+
     <header>
+
         <h1>4D Research Institutes</h1>
+
         <p>Exploring the Fourth Spatial Dimension Through Multiple Epistemological Frameworks</p>
+
     </header>
 
+
+
     <div class="institute-container">
+
         <div class="institute moon-palace">
+
             <h3>The Moon Palace</h3>
+
             <p>Studies the spiritual, religious, and metaphysical history and application of 4th dimensional space</p>
+
         </div>
+
         <div class="institute sky-palace">
+
             <h3>The Sky Palace</h3>
+
             <p>Studies the scientific history, mathematics and applied sciences of 4th dimensional space</p>
+
         </div>
+
         <div class="institute metaxis">
+
             <h3>The Metaxis Institute</h3>
+
             <p>Looks for areas where the Sky and Moon Palace studies intersect</p>
+
         </div>
+
     </div>
+
+
 
     <div class="visualization-section">
+
         <h2>World Map Visualization <span class="section-badge">NEW</span></h2>
+
         <p>Explore our interactive 3D visualization of the research world that includes multiple vertical layers from space farms to underwater realms. This visualization shows the spatial relationships between our research institutes and the various dimensional layers of our world.</p>
+
         
+
         <div class="visualization-container">
+
             <div id="visualization-mount"></div>
+
             <div class="visualization-controls">
+
                 <button id="toggle-rotation" class="control-button">Pause Rotation</button>
+
                 <div class="location-legend">
+
                     <h4>Key Locations</h4>
+
                     <p><span style="color: #c39bd3;">●</span> Moon Palace</p>
+
                     <p><span style="color: #00ffff;">●</span> Sky Palace</p>
+
                     <p><span style="color: #ff7f50;">●</span> The Belt</p>
+
                 </div>
+
             </div>
+
         </div>
+
     </div>
+
+
 
     <div class="music-player-section">
+
         <h2 class="player-section-title">
+
             <i>♫</i> 4D Dimensional Audio Experience <span class="section-badge">NEW</span>
+
             <button class="playlist-toggle" id="playlistToggle">Show Playlist</button>
+
         </h2>
+
         <p>Enhance your exploration of the fourth dimension with our curated selection of music designed to stimulate dimensional thinking and facilitate deeper understanding of the concepts in our research papers.</p>
+
         
+
         <div class="music-player">
+
             <div class="player-header">
+
                 <img src="images/dimensional-harmony.jpg" alt="Album Art" class="album-art" id="currentAlbumArt">
+
                 <div class="song-info">
+
                     <p class="song-title" id="currentSongTitle">Dimensional Harmony</p>
+
                     <p class="song-artist" id="currentArtist">The 4D Ensemble</p>
+
                 </div>
+
             </div>
+
             
+
             <div class="controls">
+
                 <div class="control-buttons">
+
                     <button class="control-button" id="prevButton">⏮</button>
+
                     <button class="play-button" id="playButton">▶</button>
+
                     <button class="control-button" id="nextButton">⏭</button>
+
                 </div>
+
                 <div class="volume-control">
+
                     <button class="control-button" id="volumeButton">🔊</button>
+
                 </div>
+
             </div>
+
             
+
             <div class="progress-container" id="progressContainer">
+
                 <div class="progress-bar" id="progressBar"></div>
+
             </div>
+
             <div class="time-info">
+
                 <span id="currentTime">0:00</span>
+
                 <span id="totalTime">0:00</span>
+
             </div>
+
+
 
             <div class="playlist-container" id="playlistContainer">
+
                 <div class="playlist">
+
                     <h3 class="playlist-header">Dimensional Audio Collection</h3>
+
                     <div id="playlistItems">
+
                         <!-- Playlist items will be added here dynamically -->
+
                     </div>
+
                 </div>
+
             </div>
+
         </div>
+
     </div>
+
+
 
     <div class="newest-section">
+
         <h2>Published Research Papers <span class="section-badge">NEW</span></h2>
+
         <p>We are pleased to present our first published research papers focusing on Mesopotamian ziggurats as dimensional bridges. Each paper explores this concept through a different epistemological framework, demonstrating our multi-perspective approach to understanding the fourth spatial dimension.</p>
+
         
+
         <div class="papers-container">
+
             <div class="paper paper-moon">
+
                 <h4>Transcending Planes: Ziggurats as Sacred Gateways to Higher Dimensions in Mesopotamian Spiritual Cosmology</h4>
+
                 <p class="paper-abstract">This paper explores the compelling evidence that ziggurats were intentionally designed as functional gateways between dimensional planes within the Mesopotamian spiritual worldview, examining their role as technologies for facilitating movement or awareness between dimensional planes.</p>
+
                 <p><strong>Authors:</strong> Moon Palace Research Institute, Department of Spiritual Cosmology</p>
+
                 <a href="moon-palace-ziggurat-paper.html" class="paper-link">Read Paper</a>
+
             </div>
+
             
+
             <div class="paper paper-sky">
+
                 <h4>Geometric Analysis of Mesopotamian Ziggurats: Mathematical Frameworks for Higher Spatial Dimensions</h4>
+
                 <p class="paper-abstract">This paper presents evidence that Mesopotamian ziggurats may have embodied sophisticated mathematical concepts potentially relevant to understanding higher spatial dimensions, analyzing their geometric properties and proportional relationships through the lens of higher-dimensional mathematics.</p>
+
                 <p><strong>Authors:</strong> Sky Palace Research Institute, Department of 4D Mathematics</p>
+
                 <a href="sky-palace-ziggurat-paper.html" class="paper-link">Read Paper</a>
+
             </div>
+
             
+
             <div class="paper paper-metaxis">
+
                 <h4>Between Heaven and Earth: Integrating Spiritual and Mathematical Approaches to Dimensional Bridging in Mesopotamian Ziggurats</h4>
+
                 <p class="paper-abstract">This paper proposes that a more complete understanding of ziggurats emerges when we integrate spiritual and mathematical perspectives, recognizing these structures as existing at the intersection of spiritual and mathematical understanding of higher dimensions.</p>
+
                 <p><strong>Authors:</strong> Metaxis Institute, Department of Onto-Scientific Synthesis</p>
+
                 <a href="metaxis-ziggurat-paper.html" class="paper-link">Read Paper</a>
+
             </div>
+
         </div>
+
     </div>
+
+
 
     <h2>Civilization Research Topics</h2>
+
     <p>Based on our pre-2000 BCE historical survey, we've identified the following promising research topics for each ancient civilization that show potential for advancing our understanding of the fourth spatial dimension:</p>
 
+
+
     <div class="research-topic">
+
         <h3>Mesopotamian Civilization</h3>
+
         <h4>Research Topic: Ziggurats as Dimensional Bridges</h4>
+
         <ul>
+
             <li>Investigate the architectural and symbolic significance of ziggurats as potential conceptual bridges between dimensions</li>
+
             <li>Analyze Sumerian cosmology texts describing multiple heavens/celestial regions</li>
+
             <li>Connect the sexagesimal number system to potential mathematical frameworks for understanding higher dimensions</li>
+
             <li>Examine cylinder seals for rotational symmetries that might represent 4D projections</li>
+
         </ul>
+
     </div>
 
+
+
     <div class="research-topic">
+
         <h3>Ancient Egypt</h3>
+
         <h4>Research Topic: Pyramid Texts and Duat as 4D Conceptual Frameworks</h4>
+
         <ul>
+
             <li>Study the Pyramid Texts' references to realms beyond ordinary space</li>
+
             <li>Analyze the concept of Duat as a realm with non-standard spatial properties</li>
+
             <li>Connect pyramid construction geometry to potential encoded knowledge of higher spatial mathematics</li>
+
             <li>Investigate how the concepts of Ba and Ka might represent non-physical essences occupying spaces beyond normal perception</li>
+
         </ul>
+
     </div>
 
+
+
     <div class="research-topic">
+
         <h3>Indus Valley Civilization</h3>
+
         <h4>Research Topic: Proto-Shiva Seals and Mandala Designs as 4D Representations</h4>
+
         <ul>
+
             <li>Examine proto-Shiva seals for evidence of meditative states aimed at perceiving higher dimensions</li>
+
             <li>Analyze early mandala-like designs as potential projections of higher-dimensional objects</li>
+
             <li>Connect advanced urban planning principles to possible higher-dimensional mathematical concepts</li>
+
             <li>Study artifacts showing integration of mathematical precision with metaphysical significance</li>
+
         </ul>
+
     </div>
 
+
+
     <div class="research-topic">
+
         <h3>Early Chinese Civilization</h3>
+
         <h4>Research Topic: I Ching as a System for Mapping Multidimensional States</h4>
+
         <ul>
+
             <li>Research early I Ching concepts as potential systems representing multidimensional states</li>
+
             <li>Analyze Five Elements philosophy as a framework for understanding how different properties can exist in the same space</li>
+
             <li>Investigate proto-Feng Shui practices for mathematical spatial arrangements connected to unseen dimensions</li>
+
             <li>Examine the concept of Qi/Chi as energy moving through spaces beyond ordinary perception</li>
+
         </ul>
+
     </div>
 
+
+
     <div class="research-topic">
+
         <h3>Megalithic European Cultures</h3>
+
         <h4>Research Topic: Stonehenge and Megalithic Art as 4D Projections</h4>
+
         <ul>
+
             <li>Analyze Stonehenge's geometric arrangement for mathematical principles applicable to higher dimensions</li>
+
             <li>Study spiral and geometric petroglyphs as possible depictions of four-dimensional rotations</li>
+
             <li>Investigate acoustic properties of megalithic chambers as technologies for creating experiences of transitional dimensional spaces</li>
+
             <li>Examine cup and ring marks as geometric patterns representing projections of higher-dimensional objects</li>
+
         </ul>
+
     </div>
+
+
 
     <div class="progress-summary">
+
         <h2>Project Progress Summary</h2>
+
         <h3>Work Completed</h3>
+
         <ul>
+
             <li>Established foundational structure for three 4D spatial research institutes</li>
+
             <li>Created comprehensive organizational framework for each institute</li>
+
             <li>Compiled historical survey of pre-2000 BCE elements relevant to fourth spatial dimension</li>
+
             <li>Made important conceptual clarification focusing specifically on fourth spatial dimension</li>
+
             <li>Published three research papers on Mesopotamian ziggurats as dimensional bridges</li>
+
             <li>Developed dimensional audio experience to enhance research understanding</li>
+
             <li>Created interactive 3D visualization of our research world's vertical layers</li>
+
         </ul>
+
         
+
         <h3>Next Steps</h3>
+
         <ul>
+
             <li>Develop additional research projects for each institute based on other civilization research topics</li>
+
             <li>Create character profiles for key researchers</li>
+
             <li>Expand historical timeline to include more recent developments</li>
+
             <li>Design virtual environments for each institution</li>
+
             <li>Develop cross-institute collaboration scenarios</li>
+
             <li>Create educational curriculum for student characters</li>
+
         </ul>
+
     </div>
 
+
+
     <footer>
+
         <p>© 2025 4D Research Institutes. This is a conceptual research project exploring the fourth spatial dimension.</p>
+
     </footer>
 
+
+
     <script>
+
         document.addEventListener('DOMContentLoaded', function() {
+
             // Sample playlist - replace with your actual songs
+
             const playlist = [
+
                 {
+
                     title: "Cosmic Drift",
+
                     artist: "The 4D Ensemble",
+
                     file: "music/Cosmic-Drift.mp3",
+
                     albumArt: "images/Cosmic-Drift.webp",
+
                     duration: "4:00"
+
                 },
+
                 {
+
                     title: "Celestial Reflections",
+
                     artist: "Mesopotamian Echoes",
+
                     file: "music/Celestial-Reflections.mp3",
+
                     albumArt: "images/Celestial-Reflections.webp",
+
                     duration: "2:11"
+
                 }
+
             ];
+
             
+
             // Player elements
+
             const playButton = document.getElementById('playButton');
+
             const prevButton = document.getElementById('prevButton');
+
             const nextButton = document.getElementById('nextButton');
+
             const volumeButton = document.getElementById('volumeButton');
+
             const progressBar = document.getElementById('progressBar');
+
             const progressContainer = document.getElementById('progressContainer');
+
             const currentTimeEl = document.getElementById('currentTime');
+
             const totalTimeEl = document.getElementById('totalTime');
+
             const currentSongTitle = document.getElementById('currentSongTitle');
+
             const currentArtist = document.getElementById('currentArtist');
+
             const currentAlbumArt = document.getElementById('currentAlbumArt');
+
             const playlistItems = document.getElementById('playlistItems');
+
             const playlistToggle = document.getElementById('playlistToggle');
+
             const playlistContainer = document.getElementById('playlistContainer');
+
             
+
             // Create audio element
+
             const audio = new Audio();
+
             
+
             // Player state
+
             let currentSongIndex = 0;
+
             let isPlaying = false;
+
             let isMuted = false;
+
             
+
             // Initialize player
+
             function initPlayer() {
+
                 // Load first song
+
                 loadSong(currentSongIndex);
+
                 
+
                 // Create playlist items
+
                 createPlaylist();
+
                 
+
                 // Add event listeners
+
                 playButton.addEventListener('click', togglePlay);
+
                 prevButton.addEventListener('click', playPrevious);
+
                 nextButton.addEventListener('click', playNext);
+
                 volumeButton.addEventListener('click', toggleMute);
+
                 audio.addEventListener('timeupdate', updateProgress);
+
                 audio.addEventListener('ended', playNext);
+
                 progressContainer.addEventListener('click', setProgress);
+
                 playlistToggle.addEventListener('click', togglePlaylist);
+
             }
+
             
+
             // Load song
+
             function loadSong(index) {
+
                 const song = playlist[index];
+
                 
+
                 currentSongTitle.textContent = song.title;
+
                 currentArtist.textContent = song.artist;
+
                 
+
                 // Only update the album art src if it exists
+
                 if (song.albumArt) {
+
                     currentAlbumArt.src = song.albumArt;
+
                 }
+
                 
+
                 audio.src = song.file;
+
                 
+
                 // Highlight active song in playlist
+
                 const playlistItems = document.querySelectorAll('.playlist-item');
+
                 playlistItems.forEach(item => item.classList.remove('active'));
+
                 
+
                 if (playlistItems[index]) {
+
                     playlistItems[index].classList.add('active');
+
                     
+
                     // Scroll to the active item
+
                     playlistItems[index].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
                 }
+
             }
+
             
+
             // Toggle play/pause
+
             function togglePlay() {
+
                 if (isPlaying) {
+
                     pauseSong();
+
                 } else {
+
                     playSong();
+
                 }
+
             }
+
             
+
             // Play song
+
             function playSong() {
+
                 isPlaying = true;
+
                 playButton.innerHTML = '⏸';
+
                 audio.play();
+
             }
+
             
+
             // Pause song
+
             function pauseSong() {
+
                 isPlaying = false;
+
                 playButton.innerHTML = '▶';
+
                 audio.pause();
+
             }
+
             
+
             // Toggle mute
+
             function toggleMute() {
+
                 isMuted = !isMuted;
+
                 audio.muted = isMuted;
+
                 volumeButton.innerHTML = isMuted ? '🔇' : '🔊';
+
             }
+
             
+
             // Play previous song
+
             function playPrevious() {
+
                 currentSongIndex--;
+
                 if (currentSongIndex < 0) {
+
                     currentSongIndex = playlist.length - 1;
+
                 }
+
                 
+
                 loadSong(currentSongIndex);
+
                 
+
                 if (isPlaying) {
+
                     playSong();
+
                 }
+
             }
+
             
+
             // Play next song
+
             function playNext() {
+
                 currentSongIndex++;
+
                 if (currentSongIndex >= playlist.length) {
+
                     currentSongIndex = 0;
+
                 }
+
                 
+
                 loadSong(currentSongIndex);
+
                 
+
                 if (isPlaying) {
+
                     playSong();
+
                 }
+
             }
+
             
+
             // Update progress bar
+
             function updateProgress(e) {
+
                 const { duration, currentTime } = e.srcElement;
+
                 
+
                 if (duration) {
+
                     // Update progress bar
+
                     const progressPercent = (currentTime / duration) * 100;
+
                     progressBar.style.width = `${progressPercent}%`;
+
                     
+
                     // Update time displays
+
                     currentTimeEl.textContent = formatTime(currentTime);
+
                     totalTimeEl.textContent = formatTime(duration);
+
                 }
+
             }
+
             
+
             // Set progress bar on click
+
             function setProgress(e) {
+
                 const width = this.clientWidth;
+
                 const clickX = e.offsetX;
+
                 const duration = audio.duration;
+
                 
+
                 audio.currentTime = (clickX / width) * duration;
+
             }
+
             
+
             // Format time in minutes and seconds
+
             function formatTime(seconds) {
+
                 const min = Math.floor(seconds / 60);
+
                 const sec = Math.floor(seconds % 60);
 
+
+
                 return `${min}:${sec < 10 ? '0' + sec : sec}`;
+
             }
+
             
+
             // Toggle playlist visibility
+
             function togglePlaylist() {
+
                 playlistContainer.classList.toggle('show');
+
                 playlistToggle.textContent = playlistContainer.classList.contains('show') ? 'Hide Playlist' : 'Show Playlist';
+
             }
+
             
+
             // Create playlist items
+
             function createPlaylist() {
+
                 playlistItems.innerHTML = '';
+
                 
+
                 playlist.forEach((song, index) => {
+
                     const playlistItem = document.createElement('div');
+
                     playlistItem.classList.add('playlist-item');
+
                     if (index === currentSongIndex) {
+
                         playlistItem.classList.add('active');
+
                     }
+
                     
+
                     playlistItem.innerHTML = `
+
                         <div class="playlist-number">${index + 1}</div>
+
                         <div class="playlist-info">
+
                             <p class="playlist-title">${song.title}</p>
+
                             <p class="playlist-artist">${song.artist}</p>
+
                         </div>
+
                         <div class="playlist-duration">${song.duration}</div>
+
                     `;
+
                     
+
                     playlistItem.addEventListener('click', () => {
+
                         currentSongIndex = index;
+
                         loadSong(currentSongIndex);
+
                         
+
                         if (isPlaying) {
+
                             playSong();
+
                         } else {
+
                             playSong(); // Auto-play when selecting a new track
+
                         }
+
                     });
+
                     
+
                     playlistItems.appendChild(playlistItem);
+
                 });
+
             }
+
             
+
             // Initialize the player
+
             initPlayer();
+
+        });
+
+    </script>
+
+    
+
+    <script src="world-visualization.js"></script>
+
+</body>
+
+</html>
