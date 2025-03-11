@@ -4,6 +4,7 @@
 window.CONFIG = {
     // Current state tracking (used for scaling labels, etc.)
     currentZoom: 1.0, // Default zoom level
+    labelSize: 1.0,  // Default label size multiplier
     
     // Scene settings
     scene: {

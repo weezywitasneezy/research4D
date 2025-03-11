@@ -99,8 +99,14 @@ export function setupLabelSystem(container) {
         
         // Get the current zoom level from CONFIG - moved to outer scope
         let currentZoom = 1.0;
-        if (window.CONFIG && window.CONFIG.currentZoom) {
-            currentZoom = window.CONFIG.currentZoom;
+        let labelSize = 1.0;
+        if (window.CONFIG) {
+            if (window.CONFIG.currentZoom) {
+                currentZoom = window.CONFIG.currentZoom;
+            }
+            if (window.CONFIG.labelSize) {
+                labelSize = window.CONFIG.labelSize;
+            }
         }
         
         // Apply different base sizes when not in fullscreen
@@ -108,7 +114,7 @@ export function setupLabelSystem(container) {
         const fullscreenMultiplier = isFullscreen ? 1.0 : 0.5;
         
         // Add debug info to console
-        console.log(`Label scaling - Fullscreen: ${isFullscreen}, Zoom: ${currentZoom}, Multiplier: ${fullscreenMultiplier}`);
+        console.log(`Label scaling - Fullscreen: ${isFullscreen}, Zoom: ${currentZoom}, LabelSize: ${labelSize}, Multiplier: ${fullscreenMultiplier}`);
         
         // Loop through all labels
         labelData.forEach(label => {
@@ -165,15 +171,15 @@ export function setupLabelSystem(container) {
                     if (currentZoom <= 0.3) {
                         // Scale down proportionally for zooms below 30%
                         const zoomRatio = currentZoom / 0.3; // Becomes 1.0 at 30% zoom
-                        fontSize = baseFontSize * distanceScale * 0.25 * zoomRatio;
+                        fontSize = baseFontSize * distanceScale * 0.25 * zoomRatio * labelSize;
                     } else {
                         // Cap at the 30% zoom size for anything higher
-                        fontSize = baseFontSize * distanceScale * 0.25;
+                        fontSize = baseFontSize * distanceScale * 0.25 * labelSize;
                     }
                 } else {
                     // In fullscreen mode, use regular scaling
                     const zoomScale = Math.pow(currentZoom, 2); // Squared for dramatic effect
-                    fontSize = baseFontSize * distanceScale * zoomScale;
+                    fontSize = baseFontSize * distanceScale * zoomScale * labelSize;
                     
                     // Apply extreme zoom adjustments
                     if (currentZoom <= 0.4) {

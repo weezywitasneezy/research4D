@@ -921,7 +921,13 @@ document.addEventListener('DOMContentLoaded', function() {
     
     threeScript.onload = function() {
         console.log('THREE.js loaded, initializing visualization');
-        cleanup = initWorldVisualization();
+        // Also load other components before initializing
+        const zoomScript = document.createElement('script');
+        zoomScript.src = 'js/components/zoom.js';
+        zoomScript.onload = function() {
+            cleanup = initWorldVisualization();
+        };
+        document.head.appendChild(zoomScript);
     };
     threeScript.onerror = function() {
         console.error('Failed to load THREE.js library');
