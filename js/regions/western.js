@@ -59,7 +59,7 @@ function createFireIslands(scene, labelSystem) {
 // Create Hell's End Continent
 function createHellsEnd(scene, labelSystem) {
     // Hell's End Continent
-    const hellsEndGeometry = new THREE.BoxGeometry(120, 15, 180);
+    const hellsEndGeometry = new THREE.BoxGeometry(100, 15, 400);
     const hellsEndMaterial = new THREE.MeshLambertMaterial({ 
         color: CONFIG.colors.hellsEnd
     });
@@ -70,8 +70,8 @@ function createHellsEnd(scene, labelSystem) {
     
     // Create volcanic mountains
     for (let i = 0; i < 8; i++) {
-        const x = (Math.random() - 0.5) * 100;
-        const z = (Math.random() - 0.5) * 160;
+        const x = (Math.random() - 0.5) * 80;
+        const z = (Math.random() - 0.5) * 380;
         const height = 10 + Math.random() * 15;
         const radius = 5 + Math.random() * 10;
         
@@ -210,9 +210,11 @@ const createVolcano = (x, z, height, radius) => {
 };
 
 // Create several volcanoes on Hell's End
-createVolcano(-180, -40, 30, 15);
-createVolcano(-130, 40, 25, 12);
-createVolcano(-160, 0, 35, 18);
+createVolcano(-40, -150, 30, 15);
+createVolcano(-40, 0, 25, 12);
+createVolcano(-40, 150, 35, 18);
+createVolcano(40, -180, 28, 14);
+createVolcano(40, 50, 32, 16);
 
 // Position the entire group
 const position = CONFIG.positions.western.hellsEnd;
