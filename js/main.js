@@ -605,6 +605,9 @@ function loadCoreModules() {
         // Initialize label system
         const labelSystem = labelsModule.setupLabelSystem(labelContainer);
         
+        // Store labelSystem reference in visualization mount for direct access
+        container._labelSystem = labelSystem;
+        
         resolve({
             scene,
             camera,
@@ -800,6 +803,13 @@ function setupAnimations(camera, controls, labelSystem, renderer, scene, zoomCon
         if (typeof initAnimations === 'function' && typeof startAnimationLoop === 'function') {
             const animations = initAnimations(camera, controls.isRotating, zoomControls.zoomLevel, zoomControls.elevationOffset);
             startAnimationLoop(renderer, scene, camera, animations, labelSystem);
+            
+            // Add event listener for label size changes
+            window.addEventListener('labelSizeChanged', function(event) {
+                console.log('Label size change detected by animation loop:', event.detail.size);
+                // Force a redraw
+                labelSystem.updateLabels(camera);
+            });
         } else {
             console.warn('Animation functions not found, creating fallback');
             

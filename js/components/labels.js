@@ -1,8 +1,8 @@
 // Label management system
-import { CONFIG } from '../core/config.js';
+// Modified for direct script loading
 
 // Setup the label system
-export function setupLabelSystem(container) {
+function setupLabelSystem(container) {
     // Store label data
     const labelData = [];
     
@@ -263,3 +263,8 @@ export function setupLabelSystem(container) {
         labelData
     };
 }
+
+// Make function available globally
+window.setupLabelSystem = setupLabelSystem;
+
+console.log('Label system module loaded!');

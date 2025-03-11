@@ -86,3 +86,13 @@ window.CONFIG = {
 };
 
 console.log('CONFIG loaded');
+
+// Check URL parameters for initial label size
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.has('labelSize')) {
+    const labelSizeParam = parseFloat(urlParams.get('labelSize'));
+    if (!isNaN(labelSizeParam) && labelSizeParam >= 0.5 && labelSizeParam <= 2.0) {
+        window.CONFIG.labelSize = labelSizeParam;
+        console.log('Set label size from URL parameter:', labelSizeParam);
+    }
+}

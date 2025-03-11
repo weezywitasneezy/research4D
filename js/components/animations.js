@@ -14,6 +14,12 @@ function initAnimations(camera, isRotatingFn, zoomLevelFn, elevationOffsetFn) {
     // Animation frame ID for cleanup
     let animationFrameId = null;
     
+    // Listen for label size changes
+    window.addEventListener('labelSizeChanged', function(event) {
+        console.log('Label size change detected by animation module:', event.detail.size);
+    });
+    
+    
     // Mouse drag control variables
     let isDragging = false;
     let previousMousePosition = { x: 0, y: 0 };

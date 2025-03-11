@@ -1,4 +1,94 @@
-    // Get elements for updating the label size indicator
+    styleElement.textContent += `
+        /* Style for the label size buttons */
+        .label-size-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 6px;
+        }
+        
+        #label-size-smaller, #label-size-bigger {
+            display: inline-block;
+            width: calc(50% - 5px);
+            text-align: center;
+            margin-bottom: 6px;
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        #label-size-smaller:hover, #label-size-bigger:hover {
+            background-color: #3e8e41;
+        }
+        
+        #label-size-smaller {
+            margin-right: 5px;
+        }
+        
+        #label-size-bigger {
+            margin-left: 5px;
+        }
+    `;        /* Style for the label size buttons */
+        .label-size-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 6px;
+        }
+        
+        #label-size-smaller, #label-size-bigger {
+            display: inline-block;
+            width: calc(50% - 5px);
+            text-align: center;
+            margin-bottom: 6px;
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        #label-size-smaller:hover, #label-size-bigger:hover {
+            background-color: #3e8e41;
+        }
+        
+        #label-size-smaller {
+            margin-right: 5px;
+        }
+        
+        #label-size-bigger {
+            margin-left: 5px;
+        }    // Get button elements for label size
+    const labelSizeSmallerButton = document.getElementById('label-size-smaller');
+    const labelSizeBiggerButton = document.getElementById('label-size-bigger');
+    
+    // Label size smaller handler
+    function handleLabelSizeSmaller() {
+        state.labelSize = Math.max(state.minLabelSize, state.labelSize - 0.1);
+        updateLabelSizeIndicator();
+        
+        // Make sure CONFIG is updated
+        if (window.CONFIG) {
+            window.CONFIG.labelSize = state.labelSize;
+            console.log('Label size decreased to:', state.labelSize);
+            
+            // Force an immediate update by refreshing the page with parameter
+            const currentUrl = new URL(window.location.href);
+            currentUrl.searchParams.set('labelSize', state.labelSize);
+            window.location.href = currentUrl.toString();
+        }
+    }
+    
+    // Label size bigger handler
+    function handleLabelSizeBigger() {
+        state.labelSize = Math.min(state.maxLabelSize, state.labelSize + 0.1);
+        updateLabelSizeIndicator();
+        
+        // Make sure CONFIG is updated
+        if (window.CONFIG) {
+            window.CONFIG.labelSize = state.labelSize;
+            console.log('Label size increased to:', state.labelSize);
+            
+            // Force an immediate update by refreshing the page with parameter
+            const currentUrl = new URL(window.location.href);
+            currentUrl.searchParams.set('labelSize', state.labelSize);
+            window.location.href = currentUrl.toString();
+        }
+    }    // Get elements for updating the label size indicator
     const labelSizeValueElement = document.getElementById('label-size-value');
     const labelSizeSlider = document.getElementById('label-size-slider');
     
@@ -28,6 +118,10 @@
         <div class="label-size-label">Label Size: <span id="label-size-value">100%</span></div>
         <div class="label-size-slider-container">
             <input type="range" id="label-size-slider" min="0.5" max="2.0" step="0.1" value="1.0" style="width: 100%">
+        </div>
+        <div class="label-size-buttons">
+            <button id="label-size-smaller" class="control-button">Smaller</button>
+            <button id="label-size-bigger" class="control-button">Bigger</button>
         </div>
     `;
     
@@ -128,6 +222,10 @@ function initZoomControls(container, camera) {
         <div class="label-size-label">Label Size: <span id="label-size-value">100%</span></div>
         <div class="label-size-slider-container">
             <input type="range" id="label-size-slider" min="0.5" max="2.0" step="0.1" value="1.0" style="width: 100%">
+        </div>
+        <div class="label-size-buttons">
+            <button id="label-size-smaller" class="control-button">Smaller</button>
+            <button id="label-size-bigger" class="control-button">Bigger</button>
         </div>
     `;
     
@@ -334,11 +432,68 @@ function initZoomControls(container, camera) {
     elevateDownButton.addEventListener('click', handleElevateDown);
     container.addEventListener('wheel', handleMouseWheel, { passive: false });
     
+    // Label size buttons event handlers
+    function handleLabelSizeSmaller() {
+        state.labelSize = Math.max(state.minLabelSize, state.labelSize - 0.1);
+        updateLabelSizeIndicator();
+        
+        // Make sure CONFIG is updated
+        if (window.CONFIG) {
+            window.CONFIG.labelSize = state.labelSize;
+            console.log('Label size decreased to:', state.labelSize);
+            
+            // Force an immediate update
+            const labelSizeEvent = new CustomEvent('labelSizeChanged', { detail: { size: state.labelSize } });
+            window.dispatchEvent(labelSizeEvent);
+        }
+    }
+    
+    function handleLabelSizeBigger() {
+        state.labelSize = Math.min(state.maxLabelSize, state.labelSize + 0.1);
+        updateLabelSizeIndicator();
+        
+        // Make sure CONFIG is updated
+        if (window.CONFIG) {
+            window.CONFIG.labelSize = state.labelSize;
+            console.log('Label size increased to:', state.labelSize);
+            
+            // Force an immediate update
+            const labelSizeEvent = new CustomEvent('labelSizeChanged', { detail: { size: state.labelSize } });
+            window.dispatchEvent(labelSizeEvent);
+        }
+    }
+    
+    // Get button elements for label size
+    const labelSizeSmallerButton = document.getElementById('label-size-smaller');
+    const labelSizeBiggerButton = document.getElementById('label-size-bigger');
+    
+    // Add label size button event listeners
+    if (labelSizeSmallerButton) {
+        labelSizeSmallerButton.addEventListener('click', handleLabelSizeSmaller);
+    }
+    
+    if (labelSizeBiggerButton) {
+        labelSizeBiggerButton.addEventListener('click', handleLabelSizeBigger);
+    }
+    
     // Label size slider event handler
     function handleLabelSizeChange(event) {
         state.labelSize = parseFloat(event.target.value);
         updateLabelSizeIndicator();
-        console.log('Label size changed to:', state.labelSize);
+        
+        // Make sure CONFIG is updated
+        if (window.CONFIG) {
+            // Force a redraw of labels when the size changes
+            window.CONFIG.labelSize = state.labelSize;
+            console.log('Label size changed to:', state.labelSize, 'CONFIG updated:', window.CONFIG.labelSize);
+            
+            // Force an immediate update by refreshing the page with parameter
+            const currentUrl = new URL(window.location.href);
+            currentUrl.searchParams.set('labelSize', state.labelSize);
+            window.location.href = currentUrl.toString();
+        } else {
+            console.warn('CONFIG object not available for label size update');
+        }
     }
     
     // Add label size slider event listener
@@ -353,7 +508,9 @@ function initZoomControls(container, camera) {
         { element: elevateUpButton, event: 'click', handler: handleElevateUp },
         { element: elevateDownButton, event: 'click', handler: handleElevateDown },
         { element: container, event: 'wheel', handler: handleMouseWheel },
-        { element: labelSizeSlider, event: 'input', handler: handleLabelSizeChange }
+        { element: labelSizeSlider, event: 'input', handler: handleLabelSizeChange },
+        { element: labelSizeSmallerButton, event: 'click', handler: handleLabelSizeSmaller },
+        { element: labelSizeBiggerButton, event: 'click', handler: handleLabelSizeBigger }
     );
     
     // Return API
@@ -520,6 +677,34 @@ function addZoomStyles() {
             cursor: pointer;
             border-radius: 50%;
             border: none;
+        }
+        
+        /* Style for the label size buttons */
+        .label-size-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 6px;
+        }
+        
+        #label-size-smaller, #label-size-bigger {
+            display: inline-block;
+            width: calc(50% - 5px);
+            text-align: center;
+            margin-bottom: 6px;
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        #label-size-smaller:hover, #label-size-bigger:hover {
+            background-color: #3e8e41;
+        }
+        
+        #label-size-smaller {
+            margin-right: 5px;
+        }
+        
+        #label-size-bigger {
+            margin-left: 5px;
         }
     `;
     
