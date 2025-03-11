@@ -86,7 +86,7 @@ function loadCoreModules() {
                 
                 // Position camera
                 const zoomFactor = 0.7;
-                const cameraRadius = 320 * zoomFactor;
+                const cameraRadius = 480 * zoomFactor;
                 const cameraHeight = 180 * zoomFactor;
                 
                 camera.position.set(cameraRadius, cameraHeight, cameraRadius);
@@ -119,7 +119,7 @@ function loadCoreModules() {
                 scene.add(directionalLight);
                 
                 // Add base plane (sea level)
-                const baseGeometry = new THREE.PlaneGeometry(400, 400);
+                const baseGeometry = new THREE.PlaneGeometry(600, 400);
                 const baseMaterial = new THREE.MeshLambertMaterial({ 
                     color: 0x4682b4, // Steel blue
                     side: THREE.DoubleSide,
@@ -131,7 +131,7 @@ function loadCoreModules() {
                 scene.add(basePlane);
                 
                 // Add grid helper
-                const gridHelper = new THREE.GridHelper(400, 40, 0x000000, 0x000000);
+                const gridHelper = new THREE.GridHelper(600, 60, 0x000000, 0x000000);
                 gridHelper.position.y = 0.1;
                 gridHelper.material.opacity = 0.2;
                 gridHelper.material.transparent = true;
@@ -588,7 +588,7 @@ function loadRegionModules(scene, labelSystem) {
                                     new THREE.MeshLambertMaterial({ color: 0xa9a9a9 })
                                 );
                                 easternGroup.add(box);
-                                easternGroup.position.set(130, 6, 0);
+                                easternGroup.position.set(240, 6, 0);
                                 scene.add(easternGroup);
                                 
                                 labelSystem.addLabel(easternGroup, "Eastern Continent", 0xa9a9a9);
@@ -632,7 +632,7 @@ function loadRegionModules(scene, labelSystem) {
                                     new THREE.MeshLambertMaterial({ color: 0xff4500 })
                                 );
                                 westernGroup.add(cylinder);
-                                westernGroup.position.set(-90, 10, 0);
+                                westernGroup.position.set(-135, 10, 0);
                                 scene.add(westernGroup);
                                 
                                 labelSystem.addLabel(westernGroup, "Fire Islands", 0xff4500);
@@ -684,7 +684,7 @@ function loadRegionModules(scene, labelSystem) {
                                     })
                                 );
                                 skyGroup.add(cylinder);
-                                skyGroup.position.set(100, 80, 60);
+                                skyGroup.position.set(150, 80, 60);
                                 scene.add(skyGroup);
                                 
                                 labelSystem.addLabel(skyGroup, "Sky Palace", 0x00ffff);
@@ -740,7 +740,7 @@ function setupAnimations(camera, controls, labelSystem, renderer, scene, zoomCon
             
             // Fallback animation implementation
             let angle = 0;
-            let radius = 320 * 0.7;
+            let radius = 480 * 0.7;
             let height = 180 * 0.7;
             let animationFrameId = null;
             
@@ -752,7 +752,7 @@ function setupAnimations(camera, controls, labelSystem, renderer, scene, zoomCon
                 const elevationOffset = zoomControls ? zoomControls.elevationOffset() : 0;
                 
                 // Update camera position based on zoom and elevation
-                radius = (320 * 0.7) / zoomLevel;
+                radius = (480 * 0.7) / zoomLevel;
                 height = ((180 * 0.7) / zoomLevel) + elevationOffset;
                 
                 // Rotate camera if needed

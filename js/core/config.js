@@ -17,7 +17,7 @@ window.CONFIG = {
         near: 0.1,
         far: 2000,
         zoomFactor: 0.7,
-        radius: 320,
+        radius: 480,
         height: 180,
         rotationSpeed: 0.002
     },
@@ -25,26 +25,26 @@ window.CONFIG = {
     // Region positions
     positions: {
         eastern: {
-            continent: { x: 160, y: 6, z: 0 },
-            farms: { x: 180, y: 13.5, z: -120 },
-            industrial: { x: 240, y: 15, z: 30 },
-            capital: { x: 90, y: 16, z: 120 },
-            skyPalace: { x: 90, y: 80, z: 120 },
-            spaceFarms: { x: 160, y: 140, z: 20 },
-            mines: { x: 250, y: -25, z: -40 },
-            sewers: { x: 120, y: -15, z: 90 }
+            continent: { x: 240, y: 6, z: 0 },
+            farms: { x: 270, y: 13.5, z: -120 },
+            industrial: { x: 360, y: 15, z: 30 },
+            capital: { x: 135, y: 16, z: 120 },
+            skyPalace: { x: 135, y: 80, z: 120 },
+            spaceFarms: { x: 240, y: 140, z: 20 },
+            mines: { x: 375, y: -25, z: -40 },
+            sewers: { x: 180, y: -15, z: 90 }
         },
         central: {
             magicIslands: { x: 0, y: 7.5, z: 0 },
             moonPalace: { x: 0, y: 80, z: 0 },
-            smugglersIsland: { x: 0, y: 6, z: 90 },
-            belt: { x: 0, y: 70, z: 90 },
+            smugglersIsland: { x: 60, y: 6, z: 90 },
+            belt: { x: 60, y: 70, z: 90 },
             atlantis: { x: 0, y: -50, z: 45 }
         },
         western: {
-            fireIslands: { x: -90, y: 10, z: 0 },
-            hellsEnd: { x: -150, y: 7.5, z: 0 },
-            hellsGate: { x: -150, y: 20, z: 0 }
+            fireIslands: { x: -135, y: 10, z: 0 },
+            hellsEnd: { x: -240, y: 7.5, z: 0 },
+            hellsGate: { x: -240, y: 20, z: 0 }
         }
     },
     
