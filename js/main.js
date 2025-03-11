@@ -135,6 +135,11 @@ function initModules() {
             // Toggle fullscreen handler
             const handleToggleFullscreen = function() {
                 toggleFullScreen(visualizationContainer);
+                
+                // Force a resize after a short delay to ensure proper rendering
+                setTimeout(() => {
+                    window.dispatchEvent(new Event('resize'));
+                }, 100);
             };
             
             // Update fullscreen button text based on fullscreen state
@@ -186,18 +191,24 @@ function initModules() {
             !document.webkitFullscreenElement &&
             !document.msFullscreenElement) {
             
+            // Enter fullscreen mode
             if (element.requestFullscreen) {
-                element.requestFullscreen();
+                element.requestFullscreen().catch(err => {
+                    console.warn(`Error attempting to enable fullscreen: ${err.message}`);
+                });
             } else if (element.mozRequestFullScreen) {
                 element.mozRequestFullScreen();
             } else if (element.webkitRequestFullscreen) {
-                element.webkitRequestFullscreen();
+                element.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
             } else if (element.msRequestFullscreen) {
                 element.msRequestFullscreen();
             }
         } else {
+            // Exit fullscreen mode
             if (document.exitFullscreen) {
-                document.exitFullscreen();
+                document.exitFullscreen().catch(err => {
+                    console.warn(`Error attempting to exit fullscreen: ${err.message}`);
+                });
             } else if (document.mozCancelFullScreen) {
                 document.mozCancelFullScreen();
             } else if (document.webkitExitFullscreen) {
