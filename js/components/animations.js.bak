@@ -6,22 +6,25 @@ function initAnimations(camera, isRotatingFn, zoomLevelFn, elevationOffsetFn) {
     
     // Camera rotation variables
     let angle = 0;
-    let radius = (window.CONFIG && window.CONFIG.camera) ? 
-        window.CONFIG.camera.radius * window.CONFIG.camera.zoomFactor : 
-        480 * 0.7;
-    let height = (window.CONFIG && window.CONFIG.camera) ? 
-        window.CONFIG.camera.height * window.CONFIG.camera.zoomFactor : 
-        180 * 0.7;
+    let radius = CONFIG.camera.radius * CONFIG.camera.zoomFactor;
+    let height = CONFIG.camera.height * CONFIG.camera.zoomFactor;
     const centerX = 0;
     const centerZ = 0;
     
     // Animation frame ID for cleanup
     let animationFrameId = null;
     
+    // Listen for label size changes
+    window.addEventListener('labelSizeChanged', function(event) {
+        console.log('Label size change detected by animation module:', event.detail.size);
+    });
+    
+    
     // Mouse drag control variables
     let isDragging = false;
     let previousMousePosition = { x: 0, y: 0 };
     let dragSensitivity = 0.01; // Adjust this for faster/slower rotation
+    let manualRotationX = 0; // User-controlled horizontal rotation
     
     // Get the container element
     const container = document.getElementById('visualization-mount');
@@ -29,7 +32,7 @@ function initAnimations(camera, isRotatingFn, zoomLevelFn, elevationOffsetFn) {
     // Mouse event handlers for drag control
     function onMouseDown(event) {
         // Only enable dragging if it's allowed in the config
-        if (window.CONFIG && window.CONFIG.animation && window.CONFIG.animation.dragEnabled === false) {
+        if (!window.CONFIG || window.CONFIG.animation.dragEnabled === false) {
             return;
         }
         
@@ -40,15 +43,13 @@ function initAnimations(camera, isRotatingFn, zoomLevelFn, elevationOffsetFn) {
         };
         
         // Pause auto-rotation when user starts dragging
-        if (window.CONFIG && window.CONFIG.animation) {
-            window.CONFIG._wasRotating = isRotatingFn && isRotatingFn();
+        if (window.CONFIG && window.CONFIG.dragPausesRotation !== false) {
+            window.CONFIG._wasRotating = isRotatingFn();
             window.CONFIG.animation.enabled = false;
         }
         
         // Add class to container for visual feedback
-        if (container) {
-            container.classList.add('dragging');
-        }
+        container.classList.add('dragging');
     }
     
     function onMouseMove(event) {
@@ -81,9 +82,7 @@ function initAnimations(camera, isRotatingFn, zoomLevelFn, elevationOffsetFn) {
         }
         
         // Remove class from container
-        if (container) {
-            container.classList.remove('dragging');
-        }
+        container.classList.remove('dragging');
     }
     
     // Add mouse event listeners
@@ -94,7 +93,8 @@ function initAnimations(camera, isRotatingFn, zoomLevelFn, elevationOffsetFn) {
         
         // Also handle touch events for mobile
         container.addEventListener('touchstart', (e) => {
-            if (window.CONFIG && window.CONFIG.animation && window.CONFIG.animation.dragEnabled === false) {
+            // Only enable dragging if it's allowed in the config
+            if (!window.CONFIG || window.CONFIG.animation.dragEnabled === false) {
                 return;
             }
             
@@ -115,57 +115,41 @@ function initAnimations(camera, isRotatingFn, zoomLevelFn, elevationOffsetFn) {
     
     // Camera rotation function
     function updateCameraPosition() {
-        // Get current zoom level with fallback
+        // Get current zoom level - ensure we have a fallback if the function is unavailable
         let zoomLevel = 1.0;
-        if (zoomLevelFn && typeof zoomLevelFn === 'function') {
-            try {
+        try {
+            if (zoomLevelFn && typeof zoomLevelFn === 'function') {
                 zoomLevel = zoomLevelFn();
-            } catch (e) {
-                console.warn('Error getting zoom level:', e);
             }
+        } catch (e) {
+            console.warn('Error getting zoom level:', e);
         }
         
         // Get current elevation offset with fallback
         let elevationOffset = 0;
-        if (elevationOffsetFn && typeof elevationOffsetFn === 'function') {
-            try {
+        try {
+            if (elevationOffsetFn && typeof elevationOffsetFn === 'function') {
                 elevationOffset = elevationOffsetFn();
-            } catch (e) {
-                console.warn('Error getting elevation offset:', e);
             }
+        } catch (e) {
+            console.warn('Error getting elevation offset:', e);
         }
         
-        // Get base values from CONFIG with fallbacks
-        const baseRadius = (window.CONFIG && window.CONFIG.camera) ? 
-            window.CONFIG.camera.radius * window.CONFIG.camera.zoomFactor : 
-            480 * 0.7;
-            
-        const baseHeight = (window.CONFIG && window.CONFIG.camera) ? 
-            window.CONFIG.camera.height * window.CONFIG.camera.zoomFactor : 
-            180 * 0.7;
+        // Adjust camera position based on zoom level
+        radius = CONFIG.camera.radius * CONFIG.camera.zoomFactor / zoomLevel;
+        height = (CONFIG.camera.height * CONFIG.camera.zoomFactor / zoomLevel) + elevationOffset;
         
-        // Update camera values based on zoom and elevation
-        radius = baseRadius / zoomLevel;
-        height = (baseHeight / zoomLevel) + elevationOffset;
-        
-        // Update angle from automatic rotation if enabled and not dragging
-        if (isRotatingFn && isRotatingFn() && !isDragging) {
-            const rotationSpeed = (window.CONFIG && window.CONFIG.camera) ? 
-                window.CONFIG.camera.rotationSpeed : 0.002;
-            angle += rotationSpeed;
+        // Update angle from automatic rotation if enabled
+        if (isRotatingFn() && !isDragging) {
+            angle += CONFIG.camera.rotationSpeed;
         }
         
-        // Update camera position using calculated values
+        // Update camera position using calculated values and manual rotation
         camera.position.x = centerX + radius * Math.cos(angle);
         camera.position.z = centerZ + radius * Math.sin(angle);
         camera.position.y = height;
-        camera.lookAt(centerX, 0, centerZ);
+        camera.lookAt(0, 0, 0);
     }
-    
-    // Listen for label size changes
-    window.addEventListener('labelSizeChanged', function(event) {
-        console.log('Label size change detected by animation module:', event.detail.size);
-    });
     
     return {
         angle,
@@ -187,9 +171,6 @@ function initAnimations(camera, isRotatingFn, zoomLevelFn, elevationOffsetFn) {
                 window.removeEventListener('touchmove', onMouseMove);
                 window.removeEventListener('touchend', onMouseUp);
             }
-            
-            // Remove label size change listener
-            window.removeEventListener('labelSizeChanged', null);
         }
     };
 }
@@ -204,9 +185,7 @@ function startAnimationLoop(renderer, scene, camera, animations, labelSystem) {
         animations.updateCameraPosition();
         
         // Update label positions
-        if (labelSystem && labelSystem.updateLabels) {
-            labelSystem.updateLabels(camera);
-        }
+        labelSystem.updateLabels(camera);
         
         // Render the scene
         renderer.render(scene, camera);
