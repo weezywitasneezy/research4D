@@ -1,8 +1,13 @@
 // Sky regions implementation
-import { CONFIG } from '../core/config.js';
 
 // Create all sky structures
-export function createSkyStructures(scene, labelSystem) {
+function createSkyStructures(scene, labelSystem) {
+    // Need to check if CONFIG is available
+    if (typeof CONFIG === 'undefined') {
+        console.error('CONFIG is not defined. Make sure config.js is loaded first.');
+        return {};
+    }
+    
     const elements = {
         skyPalace: createSkyPalace(scene, labelSystem),
         spaceFarms: createSpaceFarms(scene, labelSystem)
@@ -129,11 +134,11 @@ function createSpaceFarms(scene, labelSystem) {
     spaceFarms.rotation.x = Math.PI / 3;
     scene.add(spaceFarms);
     
-    // Add label
-    labelSystem.addLabel(spaceFarms, "Space Farms", CONFIG.colors.spaceFarms);
-    
     // Add orbital platforms
     addOrbitalPlatforms(scene, spaceFarms, labelSystem);
+    
+    // Add label
+    labelSystem.addLabel(spaceFarms, "Space Farms", CONFIG.colors.spaceFarms);
     
     return spaceFarms;
 }
@@ -186,3 +191,6 @@ function addOrbitalPlatforms(scene, spaceFarms, labelSystem) {
     
     return platformsGroup;
 }
+
+// Make functions available globally
+window.createSkyStructures = createSkyStructures;

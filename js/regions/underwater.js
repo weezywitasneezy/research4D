@@ -1,8 +1,13 @@
 // Underwater regions implementation
-import { CONFIG } from '../core/config.js';
 
 // Create all underwater structures
-export function createUnderwaterStructures(scene, labelSystem) {
+function createUnderwaterStructures(scene, labelSystem) {
+    // Need to check if CONFIG is available
+    if (typeof CONFIG === 'undefined') {
+        console.error('CONFIG is not defined. Make sure config.js is loaded first.');
+        return {};
+    }
+    
     const elements = {
         atlantis: createAtlantis(scene, labelSystem)
     };
@@ -25,22 +30,6 @@ function createAtlantis(scene, labelSystem) {
     const dome = new THREE.Mesh(domeGeometry, domeMaterial);
     atlantisGroup.add(dome);
     
-    // Add details to Atlantis
-    addAtlantisDetails(atlantisGroup);
-    
-    // Position Atlantis
-    const position = CONFIG.positions.central.atlantis;
-    atlantisGroup.position.set(position.x, position.y, position.z);
-    scene.add(atlantisGroup);
-    
-    // Add label
-    labelSystem.addLabel(atlantisGroup, "Atlantis", CONFIG.colors.atlantis);
-    
-    return atlantisGroup;
-}
-
-// Add detailed structures to Atlantis
-function addAtlantisDetails(group) {
     // Add central tower
     const towerGeometry = new THREE.CylinderGeometry(3, 5, 35, 6);
     const towerMaterial = new THREE.MeshLambertMaterial({
@@ -50,7 +39,7 @@ function addAtlantisDetails(group) {
     });
     const tower = new THREE.Mesh(towerGeometry, towerMaterial);
     tower.position.y = 15;
-    group.add(tower);
+    atlantisGroup.add(tower);
     
     // Add smaller domes
     const addSmallDome = (x, z, size) => {
@@ -62,7 +51,7 @@ function addAtlantisDetails(group) {
         });
         const smallDome = new THREE.Mesh(smallDomeGeometry, smallDomeMaterial);
         smallDome.position.set(x, size/2 - 10, z);
-        group.add(smallDome);
+        atlantisGroup.add(smallDome);
     };
     
     // Add several small domes around the main structure
@@ -92,7 +81,7 @@ function addAtlantisDetails(group) {
             opacity: 0.5
         });
         const tube = new THREE.Mesh(tubeGeometry, tubeMaterial);
-        group.add(tube);
+        atlantisGroup.add(tube);
     };
     
     // Add connecting tubes between domes
@@ -112,7 +101,7 @@ function addAtlantisDetails(group) {
         });
         const seafloorElement = new THREE.Mesh(seafloorGeometry, seafloorMaterial);
         seafloorElement.position.set(x, -30, z);
-        group.add(seafloorElement);
+        atlantisGroup.add(seafloorElement);
     };
     
     // Add various seafloor elements
@@ -126,35 +115,16 @@ function addAtlantisDetails(group) {
         addSeafloorElement(x, z, height, radius);
     }
     
-    // Add water effect (subtle particles or bubbles)
-    const addBubble = () => {
-        const bubbleGeometry = new THREE.SphereGeometry(0.5, 8, 8);
-        const bubbleMaterial = new THREE.MeshBasicMaterial({
-            color: 0xffffff,
-            transparent: true,
-            opacity: 0.3
-        });
-        const bubble = new THREE.Mesh(bubbleGeometry, bubbleMaterial);
-        
-        // Random position within the Atlantis area
-        const angle = Math.random() * Math.PI * 2;
-        const distance = Math.random() * 40;
-        const x = Math.cos(angle) * distance;
-        const z = Math.sin(angle) * distance;
-        const y = Math.random() * 40 - 20;
-        
-        bubble.position.set(x, y, z);
-        group.add(bubble);
-        
-        return bubble;
-    };
+    // Position Atlantis
+    const position = CONFIG.positions.central.atlantis;
+    atlantisGroup.position.set(position.x, position.y, position.z);
+    scene.add(atlantisGroup);
     
-    // Add a bunch of bubbles
-    const bubbles = [];
-    for (let i = 0; i < 30; i++) {
-        bubbles.push(addBubble());
-    }
+    // Add label
+    labelSystem.addLabel(atlantisGroup, "Atlantis", CONFIG.colors.atlantis);
     
-    // Note: In a real implementation, you'd animate these bubbles in the animation loop
-    // Here we're just adding them as static elements
+    return atlantisGroup;
 }
+
+// Make functions available globally
+window.createUnderwaterStructures = createUnderwaterStructures;

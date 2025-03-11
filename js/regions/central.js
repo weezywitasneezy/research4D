@@ -1,8 +1,13 @@
 // Central regions implementation
-import { CONFIG } from '../core/config.js';
 
 // Create Central islands and all related structures
-export function createCentralIslands(scene, labelSystem) {
+function createCentralIslands(scene, labelSystem) {
+    // Need to check if CONFIG is available
+    if (typeof CONFIG === 'undefined') {
+        console.error('CONFIG is not defined. Make sure config.js is loaded first.');
+        return {};
+    }
+    
     const elements = {
         magicIslands: createMagicIslands(scene, labelSystem),
         moonPalace: createMoonPalace(scene, labelSystem),
@@ -29,6 +34,28 @@ function createMagicIslands(scene, labelSystem) {
     magicIsland.position.set(position.x, position.y, position.z);
     scene.add(magicIsland);
     
+    // Add some magical features
+    const crystalGeometry = new THREE.ConeGeometry(3, 12, 5);
+    const crystalMaterial = new THREE.MeshLambertMaterial({
+        color: 0xcc99ff,
+        transparent: true,
+        opacity: 0.8
+    });
+    
+    // Create a ring of crystals on the island
+    for (let i = 0; i < 6; i++) {
+        const angle = (i / 6) * Math.PI * 2;
+        const radius = 25;
+        const x = Math.cos(angle) * radius;
+        const z = Math.sin(angle) * radius;
+        
+        const crystal = new THREE.Mesh(crystalGeometry, crystalMaterial);
+        crystal.position.set(x, 10, z);
+        crystal.rotation.x = Math.PI * 0.1;
+        crystal.rotation.z = angle;
+        magicIsland.add(crystal);
+    }
+    
     // Add label
     labelSystem.addLabel(magicIsland, "Magic Islands Capital", CONFIG.colors.magicIslands);
     
@@ -45,6 +72,26 @@ function createMoonPalace(scene, labelSystem) {
         opacity: 0.9
     });
     const moonPalace = new THREE.Mesh(moonPalaceGeometry, moonPalaceMaterial);
+    
+    // Add spires to the moon palace
+    const spireGeometry = new THREE.ConeGeometry(4, 15, 6);
+    const spireMaterial = new THREE.MeshLambertMaterial({ 
+        color: 0xd8bfd8, // Thistle
+        transparent: true,
+        opacity: 0.9
+    });
+    
+    // Create spires around the palace
+    for (let i = 0; i < 6; i++) {
+        const angle = (i / 6) * Math.PI * 2;
+        const radius = 15;
+        const x = Math.cos(angle) * radius;
+        const z = Math.sin(angle) * radius;
+        
+        const spire = new THREE.Mesh(spireGeometry, spireMaterial);
+        spire.position.set(x, 15, z);
+        moonPalace.add(spire);
+    }
     
     // Position the moon palace
     const position = CONFIG.positions.central.moonPalace;
@@ -78,7 +125,7 @@ function createForestedIslands(scene, labelSystem) {
         forest.position.y = size * 0.8;
         islandGroup.add(forest);
         
-        islandGroup.position.set(x, 0, z);
+        islandGroup.position.set(x, CONFIG.positions.central.magicIslands.y, z);
         scene.add(islandGroup);
         
         return islandGroup;
@@ -108,6 +155,24 @@ function createSmugglersIsland(scene, labelSystem) {
     });
     const smugglersIsland = new THREE.Mesh(smugglersIslandGeometry, smugglersIslandMaterial);
     
+    // Add smuggler hideouts
+    const hideoutGeometry = new THREE.BoxGeometry(8, 5, 8);
+    const hideoutMaterial = new THREE.MeshLambertMaterial({ 
+        color: 0x8b4513 // Saddle brown
+    });
+    
+    // Create hideouts around the island
+    for (let i = 0; i < 5; i++) {
+        const angle = (i / 5) * Math.PI * 2;
+        const radius = 20;
+        const x = Math.cos(angle) * radius;
+        const z = Math.sin(angle) * radius;
+        
+        const hideout = new THREE.Mesh(hideoutGeometry, hideoutMaterial);
+        hideout.position.set(x, 6, z);
+        smugglersIsland.add(hideout);
+    }
+    
     // Position the smugglers island
     const position = CONFIG.positions.central.smugglersIsland;
     smugglersIsland.position.set(position.x, position.y, position.z);
@@ -129,6 +194,24 @@ function createBelt(scene, labelSystem) {
         opacity: 0.9
     });
     const belt = new THREE.Mesh(beltGeometry, beltMaterial);
+    
+    // Add floating trading platforms on the belt
+    const platformGeometry = new THREE.BoxGeometry(6, 2, 6);
+    const platformMaterial = new THREE.MeshLambertMaterial({ 
+        color: 0xcd853f // Peru
+    });
+    
+    // Create platforms along the belt
+    for (let i = 0; i < 8; i++) {
+        const angle = (i / 8) * Math.PI * 2;
+        const x = Math.cos(angle) * 20;
+        const z = Math.sin(angle) * 20;
+        
+        const platform = new THREE.Mesh(platformGeometry, platformMaterial);
+        platform.position.set(x, 0, z);
+        platform.rotation.y = angle + Math.PI / 2;
+        belt.add(platform);
+    }
     
     // Position the belt
     const position = CONFIG.positions.central.belt;
@@ -163,7 +246,7 @@ function createCaveIslands(scene, labelSystem) {
         cave.position.y = size * 0.01;
         caveGroup.add(cave);
         
-        caveGroup.position.set(x, 0, z);
+        caveGroup.position.set(x, CONFIG.positions.central.smugglersIsland.y, z);
         scene.add(caveGroup);
         
         return caveGroup;
@@ -183,24 +266,5 @@ function createCaveIslands(scene, labelSystem) {
     return caveIslands;
 }
 
-// Create Atlantis (underwater city)
-export function createAtlantis(scene, labelSystem) {
-    // Atlantis
-    const atlantisGeometry = new THREE.DodecahedronGeometry(40, 1);
-    const atlantisMaterial = new THREE.MeshLambertMaterial({ 
-        color: CONFIG.colors.atlantis,
-        transparent: true,
-        opacity: 0.7
-    });
-    const atlantis = new THREE.Mesh(atlantisGeometry, atlantisMaterial);
-    
-    // Position Atlantis
-    const position = CONFIG.positions.central.atlantis;
-    atlantis.position.set(position.x, position.y, position.z);
-    scene.add(atlantis);
-    
-    // Add label
-    labelSystem.addLabel(atlantis, "Atlantis", CONFIG.colors.atlantis);
-    
-    return atlantis;
-}
+// Make the function available globally
+window.createCentralIslands = createCentralIslands;
