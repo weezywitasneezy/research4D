@@ -66,10 +66,15 @@
             window.CONFIG.labelSize = state.labelSize;
             console.log('Label size decreased to:', state.labelSize);
             
-            // Force an immediate update by refreshing the page with parameter
-            const currentUrl = new URL(window.location.href);
-            currentUrl.searchParams.set('labelSize', state.labelSize);
-            window.location.href = currentUrl.toString();
+            // Create and dispatch a custom event to notify that label size has changed
+            const labelSizeEvent = new CustomEvent('labelSizeChanged', { detail: { size: state.labelSize } });
+            window.dispatchEvent(labelSizeEvent);
+            
+            // Find the animation frame and force an immediate labels update
+            const visualizationMount = document.getElementById('visualization-mount');
+            if (visualizationMount && visualizationMount._labelSystem) {
+                visualizationMount._labelSystem.updateLabels(camera);
+            }
         }
     }
     
@@ -83,12 +88,17 @@
             window.CONFIG.labelSize = state.labelSize;
             console.log('Label size increased to:', state.labelSize);
             
-            // Force an immediate update by refreshing the page with parameter
-            const currentUrl = new URL(window.location.href);
-            currentUrl.searchParams.set('labelSize', state.labelSize);
-            window.location.href = currentUrl.toString();
+            // Create and dispatch a custom event to notify that label size has changed
+            const labelSizeEvent = new CustomEvent('labelSizeChanged', { detail: { size: state.labelSize } });
+            window.dispatchEvent(labelSizeEvent);
+            
+            // Find the animation frame and force an immediate labels update
+            const visualizationMount = document.getElementById('visualization-mount');
+            if (visualizationMount && visualizationMount._labelSystem) {
+                visualizationMount._labelSystem.updateLabels(camera);
+            }
         }
-    }    // Get elements for updating the label size indicator
+    } // Get elements for updating the label size indicator
     const labelSizeValueElement = document.getElementById('label-size-value');
     const labelSizeSlider = document.getElementById('label-size-slider');
     
@@ -117,7 +127,7 @@
     labelSizeIndicator.innerHTML = `
         <div class="label-size-label">Label Size: <span id="label-size-value">100%</span></div>
         <div class="label-size-slider-container">
-            <input type="range" id="label-size-slider" min="0.5" max="2.0" step="0.1" value="1.0" style="width: 100%">
+            <input type="range" id="label-size-slider" min="0.5" max="2.0" step="0.1" value="1.5" style="width: 100%">
         </div>
         <div class="label-size-buttons">
             <button id="label-size-smaller" class="control-button">Smaller</button>
@@ -149,7 +159,7 @@ function initZoomControls(container, camera) {
         elevationOffset: 0,  // New state for vertical movement
         minElevation: -300,  // Minimum elevation (below surface) - now much deeper
         maxElevation: 200,   // Maximum elevation (above surface)
-        labelSize: 1.0,      // Label size multiplier
+        labelSize: 1.5,      // Label size multiplier
         minLabelSize: 0.5,   // Minimum label size
         maxLabelSize: 2.0    // Maximum label size
     };
@@ -487,10 +497,15 @@ function initZoomControls(container, camera) {
             window.CONFIG.labelSize = state.labelSize;
             console.log('Label size changed to:', state.labelSize, 'CONFIG updated:', window.CONFIG.labelSize);
             
-            // Force an immediate update by refreshing the page with parameter
-            const currentUrl = new URL(window.location.href);
-            currentUrl.searchParams.set('labelSize', state.labelSize);
-            window.location.href = currentUrl.toString();
+            // Create and dispatch a custom event to notify that label size has changed
+            const labelSizeEvent = new CustomEvent('labelSizeChanged', { detail: { size: state.labelSize } });
+            window.dispatchEvent(labelSizeEvent);
+            
+            // Find the animation frame and force an immediate labels update
+            const visualizationMount = document.getElementById('visualization-mount');
+            if (visualizationMount && visualizationMount._labelSystem) {
+                visualizationMount._labelSystem.updateLabels(camera);
+            }
         } else {
             console.warn('CONFIG object not available for label size update');
         }

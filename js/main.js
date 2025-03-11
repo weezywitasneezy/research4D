@@ -807,8 +807,15 @@ function setupAnimations(camera, controls, labelSystem, renderer, scene, zoomCon
             // Add event listener for label size changes
             window.addEventListener('labelSizeChanged', function(event) {
                 console.log('Label size change detected by animation loop:', event.detail.size);
-                // Force a redraw
-                labelSystem.updateLabels(camera);
+                // Force a redraw - make sure to use the correct camera reference
+                if (labelSystem && labelSystem.updateLabels) {
+                    console.log('Updating labels with new size...');
+                    labelSystem.updateLabels(camera);
+                    // Force a render
+                    renderer.render(scene, camera);
+                } else {
+                    console.warn('Cannot update labels - labelSystem not available');
+                }
             });
         } else {
             console.warn('Animation functions not found, creating fallback');

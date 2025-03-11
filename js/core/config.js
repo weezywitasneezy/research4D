@@ -4,7 +4,7 @@
 window.CONFIG = {
     // Current state tracking (used for scaling labels, etc.)
     currentZoom: 1.0, // Default zoom level
-    labelSize: 1.0,  // Default label size multiplier
+    labelSize: 1.5,  // Default label size multiplier
     
     // Scene settings
     scene: {
@@ -86,13 +86,3 @@ window.CONFIG = {
 };
 
 console.log('CONFIG loaded');
-
-// Check URL parameters for initial label size
-const urlParams = new URLSearchParams(window.location.search);
-if (urlParams.has('labelSize')) {
-    const labelSizeParam = parseFloat(urlParams.get('labelSize'));
-    if (!isNaN(labelSizeParam) && labelSizeParam >= 0.5 && labelSizeParam <= 2.0) {
-        window.CONFIG.labelSize = labelSizeParam;
-        console.log('Set label size from URL parameter:', labelSizeParam);
-    }
-}

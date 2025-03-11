@@ -171,10 +171,10 @@ function setupLabelSystem(container) {
                     if (currentZoom <= 0.3) {
                         // Scale down proportionally for zooms below 30%
                         const zoomRatio = currentZoom / 0.3; // Becomes 1.0 at 30% zoom
-                        fontSize = baseFontSize * distanceScale * 0.25 * zoomRatio * labelSize;
+                        fontSize = baseFontSize * distanceScale * 0.5 * zoomRatio * labelSize; // Increased from 0.25 to 0.5
                     } else {
                         // Cap at the 30% zoom size for anything higher
-                        fontSize = baseFontSize * distanceScale * 0.25 * labelSize;
+                        fontSize = baseFontSize * distanceScale * 0.5 * labelSize; // Increased from 0.25 to 0.5
                     }
                 } else {
                     // In fullscreen mode, use regular scaling
