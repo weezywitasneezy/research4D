@@ -22,14 +22,14 @@ window.CONFIG = {
     // Region positions
     positions: {
         eastern: {
-            continent: { x: 130, y: 6, z: 0 },
-            farms: { x: 110, y: 13.5, z: -60 },
-            industrial: { x: 150, y: 15, z: 0 },
-            capital: { x: 100, y: 16, z: 60 },
-            skyPalace: { x: 100, y: 80, z: 60 },
-            spaceFarms: { x: 120, y: 140, z: 0 },
-            mines: { x: 150, y: -25, z: 0 },
-            sewers: { x: 100, y: -15, z: 60 }
+            continent: { x: 160, y: 6, z: 0 },
+            farms: { x: 180, y: 13.5, z: -120 },
+            industrial: { x: 240, y: 15, z: 30 },
+            capital: { x: 90, y: 16, z: 120 },
+            skyPalace: { x: 90, y: 80, z: 120 },
+            spaceFarms: { x: 160, y: 140, z: 20 },
+            mines: { x: 250, y: -25, z: -40 },
+            sewers: { x: 120, y: -15, z: 90 }
         },
         central: {
             magicIslands: { x: 0, y: 7.5, z: 0 },
