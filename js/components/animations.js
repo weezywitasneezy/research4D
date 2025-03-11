@@ -1,8 +1,8 @@
 // Animation and camera controls
 
 // Initialize animations
-function initAnimations(camera, isRotatingFn, zoomLevelFn) {
-    console.log('Initializing animations with zoom support');
+function initAnimations(camera, isRotatingFn, zoomLevelFn, elevationOffsetFn) {
+    console.log('Initializing animations with zoom and elevation support');
     
     // Camera rotation variables
     let angle = 0;
@@ -26,9 +26,19 @@ function initAnimations(camera, isRotatingFn, zoomLevelFn) {
             console.warn('Error getting zoom level:', e);
         }
         
+        // Get current elevation offset with fallback
+        let elevationOffset = 0;
+        try {
+            if (elevationOffsetFn && typeof elevationOffsetFn === 'function') {
+                elevationOffset = elevationOffsetFn();
+            }
+        } catch (e) {
+            console.warn('Error getting elevation offset:', e);
+        }
+        
         // Adjust camera position based on zoom level
         radius = CONFIG.camera.radius * CONFIG.camera.zoomFactor / zoomLevel;
-        height = CONFIG.camera.height * CONFIG.camera.zoomFactor / zoomLevel;
+        height = (CONFIG.camera.height * CONFIG.camera.zoomFactor / zoomLevel) + elevationOffset;
         
         if (isRotatingFn()) {
             angle += CONFIG.camera.rotationSpeed;

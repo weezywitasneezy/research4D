@@ -7,14 +7,17 @@ function initZoomControls(container, camera) {
     
     if (!visualizationControls) {
         console.warn('Visualization controls not found for zoom functionality');
-        return { zoomLevel: () => 1.0 };
+        return { zoomLevel: () => 1.0, elevationOffset: () => 0 };
     }
     
     // State object
     const state = {
         zoomLevel: 1.0,
         minZoom: 0.3,
-        maxZoom: 2.5
+        maxZoom: 2.5,
+        elevationOffset: 0,  // New state for vertical movement
+        minElevation: -100,  // Minimum elevation (below surface)
+        maxElevation: 200    // Maximum elevation (above surface)
     };
     
     // Track event listeners for cleanup
@@ -46,7 +49,34 @@ function initZoomControls(container, camera) {
         </div>
     `;
     
-    // Add elements to container
+    // Create elevation buttons
+    const elevateUpButton = document.createElement('button');
+    elevateUpButton.id = 'elevate-up';
+    elevateUpButton.className = 'control-button';
+    elevateUpButton.textContent = 'Move Up';
+    
+    const elevateDownButton = document.createElement('button');
+    elevateDownButton.id = 'elevate-down';
+    elevateDownButton.className = 'control-button';
+    elevateDownButton.textContent = 'Move Down';
+    
+    // Create elevation indicator
+    const elevationIndicator = document.createElement('div');
+    elevationIndicator.className = 'elevation-indicator';
+    elevationIndicator.innerHTML = `<div class="elevation-label">Elevation: <span id="elevation-value">0m</span></div>
+                                 <div class="elevation-slider-container">
+                                   <div class="elevation-slider-track"></div>
+                                   <div class="elevation-slider-fill" id="elevation-slider-fill"></div>
+                                 </div>`;
+    
+    // Create container for elevation controls
+    const elevationControlsContainer = document.createElement('div');
+    elevationControlsContainer.className = 'elevation-controls-container';
+    elevationControlsContainer.appendChild(elevateUpButton);
+    elevationControlsContainer.appendChild(elevateDownButton);
+    elevationControlsContainer.appendChild(elevationIndicator);
+    
+    // Add zoom elements to container
     zoomControlsContainer.appendChild(zoomInButton);
     zoomControlsContainer.appendChild(zoomOutButton);
     zoomControlsContainer.appendChild(zoomIndicator);
@@ -55,9 +85,11 @@ function initZoomControls(container, camera) {
     const toggleRotationButton = document.getElementById('toggle-rotation');
     if (toggleRotationButton) {
         toggleRotationButton.insertAdjacentElement('afterend', zoomControlsContainer);
+        zoomControlsContainer.insertAdjacentElement('afterend', elevationControlsContainer);
     } else {
         // If rotation button not found, just add to the controls
         visualizationControls.appendChild(zoomControlsContainer);
+        visualizationControls.appendChild(elevationControlsContainer);
     }
     
     // Add necessary styles to document if not already present
@@ -83,8 +115,28 @@ function initZoomControls(container, camera) {
         }
     }
     
-    // Initial indicator update
+    // Get elements for updating the elevation indicator
+    const elevationValueElement = document.getElementById('elevation-value');
+    const elevationSliderFill = document.getElementById('elevation-slider-fill');
+    
+    // Function to update the elevation indicator display
+    function updateElevationIndicator() {
+        if (elevationValueElement) {
+            elevationValueElement.textContent = `${Math.round(state.elevationOffset)}m`;
+        }
+        
+        if (elevationSliderFill) {
+            // Calculate fill percentage
+            const elevationRange = state.maxElevation - state.minElevation;
+            const elevationPosition = state.elevationOffset - state.minElevation;
+            const fillPercent = (elevationPosition / elevationRange) * 100;
+            elevationSliderFill.style.width = `${fillPercent}%`;
+        }
+    }
+    
+    // Initial indicator updates
     updateZoomIndicator();
+    updateElevationIndicator();
     
     // Zoom in handler
     function handleZoomIn() {
@@ -100,39 +152,74 @@ function initZoomControls(container, camera) {
         console.log('Zoomed out to:', state.zoomLevel);
     }
     
-    // Mouse wheel zoom handler
+    // Elevation up handler
+    function handleElevateUp() {
+        state.elevationOffset = Math.min(state.elevationOffset + 20, state.maxElevation);
+        updateElevationIndicator();
+        console.log('Elevated up to:', state.elevationOffset);
+    }
+    
+    // Elevation down handler
+    function handleElevateDown() {
+        state.elevationOffset = Math.max(state.elevationOffset - 20, state.minElevation);
+        updateElevationIndicator();
+        console.log('Elevated down to:', state.elevationOffset);
+    }
+    
+    // Enhanced mouse wheel handler
     function handleMouseWheel(event) {
         event.preventDefault();
         
-        // Determine zoom direction
-        const zoomDirection = event.deltaY < 0 ? 1 : -1;
-        
-        // Adjust zoom level
-        const zoomChange = 0.1 * zoomDirection;
-        state.zoomLevel = Math.max(
-            state.minZoom, 
-            Math.min(state.maxZoom, state.zoomLevel + zoomChange)
-        );
-        
-        updateZoomIndicator();
-        console.log('Mouse wheel zoom:', state.zoomLevel);
+        // If shift key is pressed, adjust elevation instead of zoom
+        if (event.shiftKey) {
+            // Determine elevation direction
+            const elevationDirection = event.deltaY < 0 ? 1 : -1;
+            
+            // Adjust elevation level
+            const elevationChange = 10 * elevationDirection;
+            state.elevationOffset = Math.max(
+                state.minElevation, 
+                Math.min(state.maxElevation, state.elevationOffset + elevationChange)
+            );
+            
+            updateElevationIndicator();
+            console.log('Mouse wheel elevation:', state.elevationOffset);
+        } else {
+            // Regular zoom behavior (unchanged)
+            const zoomDirection = event.deltaY < 0 ? 1 : -1;
+            
+            // Adjust zoom level
+            const zoomChange = 0.1 * zoomDirection;
+            state.zoomLevel = Math.max(
+                state.minZoom, 
+                Math.min(state.maxZoom, state.zoomLevel + zoomChange)
+            );
+            
+            updateZoomIndicator();
+            console.log('Mouse wheel zoom:', state.zoomLevel);
+        }
     }
     
     // Add event listeners
     zoomInButton.addEventListener('click', handleZoomIn);
     zoomOutButton.addEventListener('click', handleZoomOut);
+    elevateUpButton.addEventListener('click', handleElevateUp);
+    elevateDownButton.addEventListener('click', handleElevateDown);
     container.addEventListener('wheel', handleMouseWheel, { passive: false });
     
     // Track listeners for cleanup
     listeners.push(
         { element: zoomInButton, event: 'click', handler: handleZoomIn },
         { element: zoomOutButton, event: 'click', handler: handleZoomOut },
+        { element: elevateUpButton, event: 'click', handler: handleElevateUp },
+        { element: elevateDownButton, event: 'click', handler: handleElevateDown },
         { element: container, event: 'wheel', handler: handleMouseWheel }
     );
     
     // Return API
     return {
         zoomLevel: () => state.zoomLevel,
+        elevationOffset: () => state.elevationOffset,
         cleanup: () => {
             // Remove all event listeners
             listeners.forEach(({ element, event, handler }) => {
@@ -144,6 +231,10 @@ function initZoomControls(container, camera) {
             // Optionally remove DOM elements
             if (zoomControlsContainer && zoomControlsContainer.parentNode) {
                 zoomControlsContainer.parentNode.removeChild(zoomControlsContainer);
+            }
+            
+            if (elevationControlsContainer && elevationControlsContainer.parentNode) {
+                elevationControlsContainer.parentNode.removeChild(elevationControlsContainer);
             }
         }
     };
@@ -160,33 +251,37 @@ function addZoomStyles() {
     const styleElement = document.createElement('style');
     styleElement.id = 'zoom-controls-styles';
     
-    // Add CSS for zoom controls
+    // Add CSS for zoom and elevation controls
     styleElement.textContent = `
-        .zoom-controls-container {
+        .zoom-controls-container,
+        .elevation-controls-container {
             margin-bottom: 12px;
         }
         
-        #zoom-in, #zoom-out {
+        #zoom-in, #zoom-out,
+        #elevate-up, #elevate-down {
             display: inline-block;
             width: calc(50% - 5px);
             text-align: center;
             margin-bottom: 6px;
         }
         
-        #zoom-in {
+        #zoom-in, #elevate-up {
             margin-right: 5px;
         }
         
-        #zoom-out {
+        #zoom-out, #elevate-down {
             margin-left: 5px;
         }
         
-        .zoom-indicator {
+        .zoom-indicator,
+        .elevation-indicator {
             width: 100%;
             margin-top: 2px;
         }
         
-        .zoom-label {
+        .zoom-label,
+        .elevation-label {
             font-size: 12px;
             margin-bottom: 4px;
             color: #333;
@@ -194,7 +289,8 @@ function addZoomStyles() {
             justify-content: space-between;
         }
         
-        .zoom-slider-container {
+        .zoom-slider-container,
+        .elevation-slider-container {
             position: relative;
             width: 100%;
             height: 6px;
@@ -203,19 +299,34 @@ function addZoomStyles() {
             overflow: hidden;
         }
         
-        .zoom-slider-track {
+        .zoom-slider-track,
+        .elevation-slider-track {
             position: absolute;
             width: 100%;
             height: 100%;
             background: #e0e0e0;
         }
         
-        .zoom-slider-fill {
+        .zoom-slider-fill,
+        .elevation-slider-fill {
             position: absolute;
             width: 32%;
             height: 100%;
             background: #1a2a3a;
             transition: width 0.2s ease;
+        }
+        
+        /* Different color for elevation controls */
+        #elevate-up, #elevate-down {
+            background-color: #2c5e8a;
+        }
+        
+        #elevate-up:hover, #elevate-down:hover {
+            background-color: #3d7ab3;
+        }
+        
+        .elevation-slider-fill {
+            background: #2c5e8a;
         }
     `;
     

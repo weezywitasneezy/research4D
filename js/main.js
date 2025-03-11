@@ -733,7 +733,7 @@ function setupAnimations(camera, controls, labelSystem, renderer, scene, zoomCon
     script.src = 'js/components/animations.js';
     script.onload = function() {
         if (typeof initAnimations === 'function' && typeof startAnimationLoop === 'function') {
-            const animations = initAnimations(camera, controls.isRotating, zoomControls.zoomLevel);
+            const animations = initAnimations(camera, controls.isRotating, zoomControls.zoomLevel, zoomControls.elevationOffset);
             startAnimationLoop(renderer, scene, camera, animations, labelSystem);
         } else {
             console.warn('Animation functions not found, creating fallback');
@@ -747,12 +747,13 @@ function setupAnimations(camera, controls, labelSystem, renderer, scene, zoomCon
             function animate() {
                 animationFrameId = requestAnimationFrame(animate);
                 
-                // Get zoom level
+                // Get zoom level and elevation
                 const zoomLevel = zoomControls ? zoomControls.zoomLevel() : 1.0;
+                const elevationOffset = zoomControls ? zoomControls.elevationOffset() : 0;
                 
-                // Update camera position based on zoom
+                // Update camera position based on zoom and elevation
                 radius = (320 * 0.7) / zoomLevel;
-                height = (180 * 0.7) / zoomLevel;
+                height = ((180 * 0.7) / zoomLevel) + elevationOffset;
                 
                 // Rotate camera if needed
                 if (controls.isRotating()) {
