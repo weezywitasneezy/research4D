@@ -103,36 +103,38 @@ export function setupLabelSystem(container) {
                 // Calculate distance to camera for size scaling
                 const dist = camera.position.distanceTo(worldPosition);
                 
-                // Scale based on both distance and zoom level
-                // When zoomed out (smaller zoom value), labels should be smaller
-                // When zoomed in (larger zoom value), labels should be larger
+                // Distance-based scaling factor
                 const distanceScale = Math.max(0.5, Math.min(1.2, 800 / dist));
                 
-                // Apply a more dramatic scaling based on zoom level
-                // Make it more responsive to zoom changes
-                // Use more explicit scaling to ensure zooming out makes them smaller
-                const zoomFactorForScaling = isFullscreen ? currentZoom : currentZoom * 0.7;
-                const zoomScale = Math.pow(zoomFactorForScaling, 2.5); // More dramatic exponential effect
-                
-                // Add additional scaling factor for very zoomed out state
-                let zoomOutMultiplier = 1.0;
-                if (currentZoom < 0.7) {
-                    // Further reduce size when zoomed out significantly
-                    zoomOutMultiplier = Math.max(0.4, currentZoom / 0.7);
-                }
-                
-                // Combine distance and zoom scaling with fullscreen adjustment
-                const finalScale = distanceScale * zoomScale * fullscreenMultiplier * zoomOutMultiplier;
-                
-                // Base font size adjusted by final scale
+                // Base font size
                 const baseFontSize = 14;
-                let fontSize = baseFontSize * finalScale;
+                let fontSize;
                 
-                // Apply a more dramatic size change for minimum/maximum zoom states
-                if (currentZoom <= 0.4) { // Very zoomed out
-                    fontSize *= 0.5; // Make labels much smaller when fully zoomed out
-                } else if (currentZoom >= 2.0) { // Very zoomed in
-                    fontSize *= isFullscreen ? 1.5 : 1.2; // Different boost based on mode
+                if (!isFullscreen) {
+                    // In normal mode, implement the special scaling:
+                    // 1. At 30% zoom, use half the current size
+                    // 2. For zoom > 30%, cap it at the 30% size
+                    // 3. For zoom < 30%, scale down proportionally
+                    
+                    if (currentZoom <= 0.3) {
+                        // Scale down proportionally for zooms below 30%
+                        const zoomRatio = currentZoom / 0.3; // Becomes 1.0 at 30% zoom
+                        fontSize = baseFontSize * distanceScale * 0.25 * zoomRatio;
+                    } else {
+                        // Cap at the 30% zoom size for anything higher
+                        fontSize = baseFontSize * distanceScale * 0.25;
+                    }
+                } else {
+                    // In fullscreen mode, use regular scaling
+                    const zoomScale = Math.pow(currentZoom, 2); // Squared for dramatic effect
+                    fontSize = baseFontSize * distanceScale * zoomScale;
+                    
+                    // Apply extreme zoom adjustments
+                    if (currentZoom <= 0.4) {
+                        fontSize *= 0.6; // Smaller when zoomed out extremely
+                    } else if (currentZoom >= 2.0) {
+                        fontSize *= 1.5; // Larger when zoomed in extremely
+                    }
                 }
                 
                 // Update label position and visibility
@@ -142,24 +144,34 @@ export function setupLabelSystem(container) {
                 // Set font size with the calculated scale
                 label.element.style.fontSize = `${fontSize}px`;
                 
-                // Adjust padding based on zoom level for a more dramatic effect
-                // Smaller padding when zoomed out, larger when zoomed in
-                // Use reduced vertical padding as requested
-                const paddingV = Math.max(1, Math.min(5, 2.5 * currentZoom)); // Reduced vertical padding values
-                const paddingH = Math.max(4, Math.min(16, 8 * currentZoom));
-                label.element.style.padding = `${paddingV}px ${paddingH}px`;
+                // Adjust padding based on zoom level and mode
+                if (!isFullscreen) {
+                    // In normal mode, use minimal padding regardless of zoom level
+                    label.element.style.padding = '2px 4px';
+                } else {
+                    // In fullscreen mode, scale padding with zoom
+                    const paddingV = Math.max(1, Math.min(5, 2.5 * currentZoom));
+                    const paddingH = Math.max(4, Math.min(16, 8 * currentZoom));
+                    label.element.style.padding = `${paddingV}px ${paddingH}px`;
+                }
                 
-                // Make background more opaque when zoomed in, more transparent when zoomed out
-                const bgOpacity = Math.max(0.5, Math.min(0.9, 0.7 * currentZoom));
+                // Adjust background opacity based on mode and zoom
+                let bgOpacity;
+                if (!isFullscreen) {
+                    // In normal mode, use more transparent background
+                    bgOpacity = 0.5;
+                } else {
+                    // In fullscreen mode, scale with zoom
+                    bgOpacity = Math.max(0.5, Math.min(0.9, 0.7 * currentZoom));
+                }
                 label.element.style.backgroundColor = `rgba(0, 0, 0, ${bgOpacity})`;
                 
-                // Adjust text opacity based on distance - enhanced by zoom level
+                // Adjust text opacity based on distance
                 const baseOpacity = Math.max(0.3, Math.min(1.0, 500 / dist));
-                const finalOpacity = Math.min(1.0, baseOpacity * Math.sqrt(currentZoom));
-                label.element.style.opacity = finalOpacity.toString();
+                label.element.style.opacity = baseOpacity.toString();
                 
-                // Add a subtle border when zoomed in for better visibility
-                if (currentZoom > 1.5) {
+                // Only add borders in fullscreen mode
+                if (isFullscreen && currentZoom > 1.5) {
                     label.element.style.border = '1px solid rgba(255, 255, 255, 0.5)';
                 } else {
                     label.element.style.border = 'none';
