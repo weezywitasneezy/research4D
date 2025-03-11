@@ -26,7 +26,7 @@ function createMainContinent(scene, labelSystem) {
     const eastContinentGroup = new THREE.Group();
     
     // Using a combination of shapes for more natural look - adjusted to requested dimensions
-    const mainContinentGeometry = new THREE.BoxGeometry(200, 12, 100);
+    const mainContinentGeometry = new THREE.BoxGeometry(100, 12, 400);
     const mainContinentMaterial = new THREE.MeshLambertMaterial({ 
         color: CONFIG.colors.easternContinent
     });
@@ -34,40 +34,49 @@ function createMainContinent(scene, labelSystem) {
     eastContinentGroup.add(mainContinent);
     
     // Adding a slightly elevated plateau for terrain variation
-    const plateauGeometry = new THREE.BoxGeometry(100, 4, 60);
+    const plateauGeometry = new THREE.BoxGeometry(60, 4, 180);
     const plateauMaterial = new THREE.MeshLambertMaterial({ 
         color: 0xb0b0b0 
     });
     const plateau = new THREE.Mesh(plateauGeometry, plateauMaterial);
-    plateau.position.set(-20, 8, -10);
+    plateau.position.set(-10, 8, -60);
     eastContinentGroup.add(plateau);
     
     // Adding coastal ridges - eastern edge
-    const eastCoastalRidgeGeometry = new THREE.BoxGeometry(12, 8, 100);
+    const eastCoastalRidgeGeometry = new THREE.BoxGeometry(12, 8, 400);
     const eastCoastalRidgeMaterial = new THREE.MeshLambertMaterial({ 
         color: 0x909090 
     });
     const eastCoastalRidge = new THREE.Mesh(eastCoastalRidgeGeometry, eastCoastalRidgeMaterial);
-    eastCoastalRidge.position.set(94, 4, 0);
+    eastCoastalRidge.position.set(44, 4, 0);
     eastContinentGroup.add(eastCoastalRidge);
     
     // Western coastal ridge
-    const westCoastalRidgeGeometry = new THREE.BoxGeometry(10, 10, 80);
+    const westCoastalRidgeGeometry = new THREE.BoxGeometry(10, 10, 360);
     const westCoastalRidgeMaterial = new THREE.MeshLambertMaterial({ 
         color: 0x808080 
     });
     const westCoastalRidge = new THREE.Mesh(westCoastalRidgeGeometry, westCoastalRidgeMaterial);
-    westCoastalRidge.position.set(-95, 5, 0);
+    westCoastalRidge.position.set(-45, 5, 0);
     eastContinentGroup.add(westCoastalRidge);
     
     // Northern mountains
-    const northernMountainsGeometry = new THREE.BoxGeometry(180, 18, 15);
+    const northernMountainsGeometry = new THREE.BoxGeometry(80, 18, 15);
     const northernMountainsMaterial = new THREE.MeshLambertMaterial({ 
         color: 0x787878 
     });
     const northernMountains = new THREE.Mesh(northernMountainsGeometry, northernMountainsMaterial);
-    northernMountains.position.set(0, 9, -42);
+    northernMountains.position.set(0, 9, -192);
     eastContinentGroup.add(northernMountains);
+    
+    // Southern mountains - added to complete the look for the longer landmass
+    const southernMountainsGeometry = new THREE.BoxGeometry(70, 16, 15);
+    const southernMountainsMaterial = new THREE.MeshLambertMaterial({ 
+        color: 0x696969 
+    });
+    const southernMountains = new THREE.Mesh(southernMountainsGeometry, southernMountainsMaterial);
+    southernMountains.position.set(0, 8, 192);
+    eastContinentGroup.add(southernMountains);
     
     // Position the entire continent group
     const position = CONFIG.positions.eastern.continent;
