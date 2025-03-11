@@ -45,6 +45,25 @@ export function setupLabelSystem(container) {
     
     // Function to update all label positions
     function updateLabels(camera) {
+        // Check if we're in fullscreen mode - moved to outer scope
+        const isFullscreen = !!(document.fullscreenElement ||
+            document.mozFullScreenElement ||
+            document.webkitFullscreenElement ||
+            document.msFullscreenElement);
+        
+        // Get the current zoom level from CONFIG - moved to outer scope
+        let currentZoom = 1.0;
+        if (window.CONFIG && window.CONFIG.currentZoom) {
+            currentZoom = window.CONFIG.currentZoom;
+        }
+        
+        // Apply different base sizes when not in fullscreen
+        // Make labels 50% smaller in normal mode
+        const fullscreenMultiplier = isFullscreen ? 1.0 : 0.5;
+        
+        // Add debug info to console
+        console.log(`Label scaling - Fullscreen: ${isFullscreen}, Zoom: ${currentZoom}, Multiplier: ${fullscreenMultiplier}`);
+        
         // Loop through all labels
         labelData.forEach(label => {
             if (!label.visible) {
@@ -84,43 +103,36 @@ export function setupLabelSystem(container) {
                 // Calculate distance to camera for size scaling
                 const dist = camera.position.distanceTo(worldPosition);
                 
-                // Get the current zoom level from CONFIG if available
-                let currentZoom = 1.0;
-                if (window.CONFIG && window.CONFIG.currentZoom) {
-                    currentZoom = window.CONFIG.currentZoom;
-                }
-                
-                // Check if we're in fullscreen mode
-                const isFullscreen = !!(document.fullscreenElement ||
-                    document.mozFullScreenElement ||
-                    document.webkitFullscreenElement ||
-                    document.msFullscreenElement);
-                
-                // Apply different base sizes when not in fullscreen
-                // Make labels 50% smaller in normal mode
-                let fullscreenMultiplier = isFullscreen ? 1.0 : 0.5;
-                
                 // Scale based on both distance and zoom level
                 // When zoomed out (smaller zoom value), labels should be smaller
                 // When zoomed in (larger zoom value), labels should be larger
                 const distanceScale = Math.max(0.5, Math.min(1.2, 800 / dist));
                 
                 // Apply a more dramatic scaling based on zoom level
-                // Square the zoom value to make the effect more pronounced
-                const zoomScale = Math.pow(currentZoom, 2); // Squared for more dramatic effect
+                // Make it more responsive to zoom changes
+                // Use more explicit scaling to ensure zooming out makes them smaller
+                const zoomFactorForScaling = isFullscreen ? currentZoom : currentZoom * 0.7;
+                const zoomScale = Math.pow(zoomFactorForScaling, 2.5); // More dramatic exponential effect
+                
+                // Add additional scaling factor for very zoomed out state
+                let zoomOutMultiplier = 1.0;
+                if (currentZoom < 0.7) {
+                    // Further reduce size when zoomed out significantly
+                    zoomOutMultiplier = Math.max(0.4, currentZoom / 0.7);
+                }
                 
                 // Combine distance and zoom scaling with fullscreen adjustment
-                const finalScale = distanceScale * zoomScale * fullscreenMultiplier;
+                const finalScale = distanceScale * zoomScale * fullscreenMultiplier * zoomOutMultiplier;
                 
                 // Base font size adjusted by final scale
                 const baseFontSize = 14;
-                const fontSize = baseFontSize * finalScale;
+                let fontSize = baseFontSize * finalScale;
                 
                 // Apply a more dramatic size change for minimum/maximum zoom states
                 if (currentZoom <= 0.4) { // Very zoomed out
-                    fontSize *= 0.6; // Make labels much smaller when fully zoomed out
+                    fontSize *= 0.5; // Make labels much smaller when fully zoomed out
                 } else if (currentZoom >= 2.0) { // Very zoomed in
-                    fontSize *= 1.5; // Make labels much larger when fully zoomed in
+                    fontSize *= isFullscreen ? 1.5 : 1.2; // Different boost based on mode
                 }
                 
                 // Update label position and visibility
