@@ -16,7 +16,7 @@ function initZoomControls(container, camera) {
         minZoom: 0.3,
         maxZoom: 2.5,
         elevationOffset: 0,  // New state for vertical movement
-        minElevation: -100,  // Minimum elevation (below surface)
+        minElevation: -300,  // Minimum elevation (below surface) - now much deeper
         maxElevation: 200    // Maximum elevation (above surface)
     };
     
@@ -53,21 +53,22 @@ function initZoomControls(container, camera) {
     const elevateUpButton = document.createElement('button');
     elevateUpButton.id = 'elevate-up';
     elevateUpButton.className = 'control-button';
-    elevateUpButton.textContent = 'Move Up';
+    elevateUpButton.textContent = '↑ Go Up';
     
     const elevateDownButton = document.createElement('button');
     elevateDownButton.id = 'elevate-down';
     elevateDownButton.className = 'control-button';
-    elevateDownButton.textContent = 'Move Down';
+    elevateDownButton.textContent = '↓ Go Down';
     
-    // Create elevation indicator
+    // Create elevation indicator with Shift key hint
     const elevationIndicator = document.createElement('div');
     elevationIndicator.className = 'elevation-indicator';
-    elevationIndicator.innerHTML = `<div class="elevation-label">Elevation: <span id="elevation-value">0m</span></div>
+    elevationIndicator.innerHTML = `<div class="elevation-label">Height: <span id="elevation-value">0m (ground)</span></div>
                                  <div class="elevation-slider-container">
                                    <div class="elevation-slider-track"></div>
                                    <div class="elevation-slider-fill" id="elevation-slider-fill"></div>
-                                 </div>`;
+                                 </div>
+                                 <div class="elevation-hint">Tip: Use Shift+Mouse Wheel</div>`;
     
     // Create container for elevation controls
     const elevationControlsContainer = document.createElement('div');
@@ -122,7 +123,18 @@ function initZoomControls(container, camera) {
     // Function to update the elevation indicator display
     function updateElevationIndicator() {
         if (elevationValueElement) {
-            elevationValueElement.textContent = `${Math.round(state.elevationOffset)}m`;
+            const elevValue = Math.round(state.elevationOffset);
+            // Add suffix and color based on elevation
+            if (elevValue < 0) {
+                elevationValueElement.textContent = `${Math.abs(elevValue)}m below`;
+                elevationValueElement.style.color = '#d32f2f'; // Red for below ground
+            } else if (elevValue > 0) {
+                elevationValueElement.textContent = `${elevValue}m above`;
+                elevationValueElement.style.color = '#2e7d32'; // Green for above ground
+            } else {
+                elevationValueElement.textContent = `0m (ground)`;
+                elevationValueElement.style.color = '#000000'; // Black for ground level
+            }
         }
         
         if (elevationSliderFill) {
@@ -131,6 +143,15 @@ function initZoomControls(container, camera) {
             const elevationPosition = state.elevationOffset - state.minElevation;
             const fillPercent = (elevationPosition / elevationRange) * 100;
             elevationSliderFill.style.width = `${fillPercent}%`;
+            
+            // Change color based on above/below ground
+            if (state.elevationOffset < 0) {
+                elevationSliderFill.style.backgroundColor = '#d32f2f'; // Red for below ground
+            } else if (state.elevationOffset > 0) {
+                elevationSliderFill.style.backgroundColor = '#2e7d32'; // Green for above ground
+            } else {
+                elevationSliderFill.style.backgroundColor = '#1a2a3a'; // Default for ground level
+            }
         }
     }
     
@@ -154,14 +175,14 @@ function initZoomControls(container, camera) {
     
     // Elevation up handler
     function handleElevateUp() {
-        state.elevationOffset = Math.min(state.elevationOffset + 20, state.maxElevation);
+        state.elevationOffset = Math.min(state.elevationOffset + 30, state.maxElevation);
         updateElevationIndicator();
         console.log('Elevated up to:', state.elevationOffset);
     }
     
     // Elevation down handler
     function handleElevateDown() {
-        state.elevationOffset = Math.max(state.elevationOffset - 20, state.minElevation);
+        state.elevationOffset = Math.max(state.elevationOffset - 30, state.minElevation);
         updateElevationIndicator();
         console.log('Elevated down to:', state.elevationOffset);
     }
@@ -176,7 +197,7 @@ function initZoomControls(container, camera) {
             const elevationDirection = event.deltaY < 0 ? 1 : -1;
             
             // Adjust elevation level
-            const elevationChange = 10 * elevationDirection;
+            const elevationChange = 15 * elevationDirection;
             state.elevationOffset = Math.max(
                 state.minElevation, 
                 Math.min(state.maxElevation, state.elevationOffset + elevationChange)
@@ -289,6 +310,14 @@ function addZoomStyles() {
             justify-content: space-between;
         }
         
+        .elevation-hint {
+            font-size: 10px;
+            color: #666;
+            text-align: right;
+            margin-top: 2px;
+            font-style: italic;
+        }
+        
         .zoom-slider-container,
         .elevation-slider-container {
             position: relative;
@@ -319,10 +348,15 @@ function addZoomStyles() {
         /* Different color for elevation controls */
         #elevate-up, #elevate-down {
             background-color: #2c5e8a;
+            font-weight: bold;
         }
         
-        #elevate-up:hover, #elevate-down:hover {
+        #elevate-up:hover {
             background-color: #3d7ab3;
+        }
+        
+        #elevate-down:hover {
+            background-color: #a03232;
         }
         
         .elevation-slider-fill {
