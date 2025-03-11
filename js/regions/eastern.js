@@ -25,8 +25,8 @@ function createEasternContinent(scene, labelSystem) {
 function createMainContinent(scene, labelSystem) {
     const eastContinentGroup = new THREE.Group();
     
-    // Using a combination of shapes for more natural look - wider to match grid
-    const mainContinentGeometry = new THREE.BoxGeometry(280, 12, 280);
+    // Using a combination of shapes for more natural look - adjusted to requested dimensions
+    const mainContinentGeometry = new THREE.BoxGeometry(200, 12, 100);
     const mainContinentMaterial = new THREE.MeshLambertMaterial({ 
         color: CONFIG.colors.easternContinent
     });
@@ -34,39 +34,39 @@ function createMainContinent(scene, labelSystem) {
     eastContinentGroup.add(mainContinent);
     
     // Adding a slightly elevated plateau for terrain variation
-    const plateauGeometry = new THREE.BoxGeometry(140, 4, 160);
+    const plateauGeometry = new THREE.BoxGeometry(100, 4, 60);
     const plateauMaterial = new THREE.MeshLambertMaterial({ 
         color: 0xb0b0b0 
     });
     const plateau = new THREE.Mesh(plateauGeometry, plateauMaterial);
-    plateau.position.set(-40, 8, -20);
+    plateau.position.set(-20, 8, -10);
     eastContinentGroup.add(plateau);
     
     // Adding coastal ridges - eastern edge
-    const eastCoastalRidgeGeometry = new THREE.BoxGeometry(12, 8, 280);
+    const eastCoastalRidgeGeometry = new THREE.BoxGeometry(12, 8, 100);
     const eastCoastalRidgeMaterial = new THREE.MeshLambertMaterial({ 
         color: 0x909090 
     });
     const eastCoastalRidge = new THREE.Mesh(eastCoastalRidgeGeometry, eastCoastalRidgeMaterial);
-    eastCoastalRidge.position.set(134, 4, 0);
+    eastCoastalRidge.position.set(94, 4, 0);
     eastContinentGroup.add(eastCoastalRidge);
     
     // Western coastal ridge
-    const westCoastalRidgeGeometry = new THREE.BoxGeometry(10, 10, 200);
+    const westCoastalRidgeGeometry = new THREE.BoxGeometry(10, 10, 80);
     const westCoastalRidgeMaterial = new THREE.MeshLambertMaterial({ 
         color: 0x808080 
     });
     const westCoastalRidge = new THREE.Mesh(westCoastalRidgeGeometry, westCoastalRidgeMaterial);
-    westCoastalRidge.position.set(-135, 5, 0);
+    westCoastalRidge.position.set(-95, 5, 0);
     eastContinentGroup.add(westCoastalRidge);
     
     // Northern mountains
-    const northernMountainsGeometry = new THREE.BoxGeometry(240, 18, 15);
+    const northernMountainsGeometry = new THREE.BoxGeometry(180, 18, 15);
     const northernMountainsMaterial = new THREE.MeshLambertMaterial({ 
         color: 0x787878 
     });
     const northernMountains = new THREE.Mesh(northernMountainsGeometry, northernMountainsMaterial);
-    northernMountains.position.set(0, 9, -132);
+    northernMountains.position.set(0, 9, -42);
     eastContinentGroup.add(northernMountains);
     
     // Position the entire continent group
