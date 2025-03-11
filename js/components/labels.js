@@ -97,7 +97,8 @@ export function setupLabelSystem(container) {
                     document.msFullscreenElement);
                 
                 // Apply different base sizes when not in fullscreen
-                let fullscreenMultiplier = isFullscreen ? 1.0 : 0.8;
+                // Make labels 50% smaller in normal mode
+                let fullscreenMultiplier = isFullscreen ? 1.0 : 0.5;
                 
                 // Scale based on both distance and zoom level
                 // When zoomed out (smaller zoom value), labels should be smaller
