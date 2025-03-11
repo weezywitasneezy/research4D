@@ -90,6 +90,15 @@ export function setupLabelSystem(container) {
                     currentZoom = window.CONFIG.currentZoom;
                 }
                 
+                // Check if we're in fullscreen mode
+                const isFullscreen = !!(document.fullscreenElement ||
+                    document.mozFullScreenElement ||
+                    document.webkitFullscreenElement ||
+                    document.msFullscreenElement);
+                
+                // Apply different base sizes when not in fullscreen
+                let fullscreenMultiplier = isFullscreen ? 1.0 : 0.8;
+                
                 // Scale based on both distance and zoom level
                 // When zoomed out (smaller zoom value), labels should be smaller
                 // When zoomed in (larger zoom value), labels should be larger
@@ -99,8 +108,8 @@ export function setupLabelSystem(container) {
                 // Square the zoom value to make the effect more pronounced
                 const zoomScale = Math.pow(currentZoom, 2); // Squared for more dramatic effect
                 
-                // Combine distance and zoom scaling
-                const finalScale = distanceScale * zoomScale;
+                // Combine distance and zoom scaling with fullscreen adjustment
+                const finalScale = distanceScale * zoomScale * fullscreenMultiplier;
                 
                 // Base font size adjusted by final scale
                 const baseFontSize = 14;
@@ -122,7 +131,8 @@ export function setupLabelSystem(container) {
                 
                 // Adjust padding based on zoom level for a more dramatic effect
                 // Smaller padding when zoomed out, larger when zoomed in
-                const paddingV = Math.max(2, Math.min(8, 4 * currentZoom));
+                // Use reduced vertical padding as requested
+                const paddingV = Math.max(1, Math.min(5, 2.5 * currentZoom)); // Reduced vertical padding values
                 const paddingH = Math.max(4, Math.min(16, 8 * currentZoom));
                 label.element.style.padding = `${paddingV}px ${paddingH}px`;
                 
