@@ -2,6 +2,8 @@
 
 // Initialize animations
 function initAnimations(camera, isRotatingFn, zoomLevelFn) {
+    console.log('Initializing animations with zoom support');
+    
     // Camera rotation variables
     let angle = 0;
     let radius = CONFIG.camera.radius * CONFIG.camera.zoomFactor;
@@ -14,8 +16,15 @@ function initAnimations(camera, isRotatingFn, zoomLevelFn) {
     
     // Camera rotation function
     function updateCameraPosition() {
-        // Get current zoom level
-        const zoomLevel = zoomLevelFn ? zoomLevelFn() : 1.0;
+        // Get current zoom level - ensure we have a fallback if the function is unavailable
+        let zoomLevel = 1.0;
+        try {
+            if (zoomLevelFn && typeof zoomLevelFn === 'function') {
+                zoomLevel = zoomLevelFn();
+            }
+        } catch (e) {
+            console.warn('Error getting zoom level:', e);
+        }
         
         // Adjust camera position based on zoom level
         radius = CONFIG.camera.radius * CONFIG.camera.zoomFactor / zoomLevel;

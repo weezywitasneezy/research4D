@@ -29,8 +29,11 @@ function initWorldVisualization() {
                     // Create connectors between regions
                     loadUtilsAndCreateConnectors(scene, regions);
                     
-                    // Setup animations
-                    setupAnimations(camera, controls, labelSystem, renderer, scene);
+                    // Load zoom controls
+                    loadZoomControls(container, camera).then(zoomControls => {
+                        // Setup animations with zoom controls
+                        setupAnimations(camera, controls, labelSystem, renderer, scene, zoomControls);
+                    });
                     
                     // Setup cleanup function
                     cleanup = function() {
@@ -700,14 +703,37 @@ function loadRegionModules(scene, labelSystem) {
     });
 }
 
+// Load zoom controls module
+function loadZoomControls(container, camera) {
+    return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = 'js/components/zoom.js';
+        script.onload = function() {
+            if (typeof initZoomControls === 'function') {
+                console.log('Initializing zoom controls');
+                const zoomControls = initZoomControls(container, camera);
+                resolve(zoomControls);
+            } else {
+                console.warn('Zoom controls function not found');
+                resolve({ zoomLevel: () => 1.0 }); // Return dummy zoom control
+            }
+        };
+        script.onerror = function() {
+            console.error('Failed to load zoom controls script');
+            resolve({ zoomLevel: () => 1.0 }); // Fallback
+        };
+        document.head.appendChild(script);
+    });
+}
+
 // Setup animations
-function setupAnimations(camera, controls, labelSystem, renderer, scene) {
+function setupAnimations(camera, controls, labelSystem, renderer, scene, zoomControls) {
     // Load animations script
     const script = document.createElement('script');
     script.src = 'js/components/animations.js';
     script.onload = function() {
         if (typeof initAnimations === 'function' && typeof startAnimationLoop === 'function') {
-            const animations = initAnimations(camera, controls.isRotating, controls.zoomLevel);
+            const animations = initAnimations(camera, controls.isRotating, zoomControls.zoomLevel);
             startAnimationLoop(renderer, scene, camera, animations, labelSystem);
         } else {
             console.warn('Animation functions not found, creating fallback');
@@ -722,7 +748,7 @@ function setupAnimations(camera, controls, labelSystem, renderer, scene) {
                 animationFrameId = requestAnimationFrame(animate);
                 
                 // Get zoom level
-                const zoomLevel = controls.zoomLevel ? controls.zoomLevel() : 1.0;
+                const zoomLevel = zoomControls ? zoomControls.zoomLevel() : 1.0;
                 
                 // Update camera position based on zoom
                 radius = (320 * 0.7) / zoomLevel;
