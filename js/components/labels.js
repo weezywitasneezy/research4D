@@ -94,21 +94,53 @@ export function setupLabelSystem(container) {
                 // When zoomed out (smaller zoom value), labels should be smaller
                 // When zoomed in (larger zoom value), labels should be larger
                 const distanceScale = Math.max(0.5, Math.min(1.2, 800 / dist));
-                const zoomScale = currentZoom; // Apply zoom factor directly
+                
+                // Apply a more dramatic scaling based on zoom level
+                // Square the zoom value to make the effect more pronounced
+                const zoomScale = Math.pow(currentZoom, 2); // Squared for more dramatic effect
+                
+                // Combine distance and zoom scaling
                 const finalScale = distanceScale * zoomScale;
                 
                 // Base font size adjusted by final scale
                 const baseFontSize = 14;
                 const fontSize = baseFontSize * finalScale;
                 
+                // Apply a more dramatic size change for minimum/maximum zoom states
+                if (currentZoom <= 0.4) { // Very zoomed out
+                    fontSize *= 0.6; // Make labels much smaller when fully zoomed out
+                } else if (currentZoom >= 2.0) { // Very zoomed in
+                    fontSize *= 1.5; // Make labels much larger when fully zoomed in
+                }
+                
                 // Update label position and visibility
                 label.element.style.display = 'block';
                 label.element.style.transform = `translate(-50%, -50%) translate(${x}px, ${y}px)`;
+                
+                // Set font size with the calculated scale
                 label.element.style.fontSize = `${fontSize}px`;
                 
-                // Adjust opacity based on distance - keep this unchanged
-                const opacity = Math.max(0.3, Math.min(1.0, 500 / dist));
-                label.element.style.opacity = opacity.toString();
+                // Adjust padding based on zoom level for a more dramatic effect
+                // Smaller padding when zoomed out, larger when zoomed in
+                const paddingV = Math.max(2, Math.min(8, 4 * currentZoom));
+                const paddingH = Math.max(4, Math.min(16, 8 * currentZoom));
+                label.element.style.padding = `${paddingV}px ${paddingH}px`;
+                
+                // Make background more opaque when zoomed in, more transparent when zoomed out
+                const bgOpacity = Math.max(0.5, Math.min(0.9, 0.7 * currentZoom));
+                label.element.style.backgroundColor = `rgba(0, 0, 0, ${bgOpacity})`;
+                
+                // Adjust text opacity based on distance - enhanced by zoom level
+                const baseOpacity = Math.max(0.3, Math.min(1.0, 500 / dist));
+                const finalOpacity = Math.min(1.0, baseOpacity * Math.sqrt(currentZoom));
+                label.element.style.opacity = finalOpacity.toString();
+                
+                // Add a subtle border when zoomed in for better visibility
+                if (currentZoom > 1.5) {
+                    label.element.style.border = '1px solid rgba(255, 255, 255, 0.5)';
+                } else {
+                    label.element.style.border = 'none';
+                }
             } else {
                 // Hide the label if it's not visible
                 label.element.style.display = 'none';

@@ -133,13 +133,18 @@
     color: white;
     padding: 4px 8px;
     border-radius: 4px;
-    font-size: 14px;
+    font-size: 14px; /* This is now dynamically adjusted */
     font-weight: bold;
     pointer-events: none;
     z-index: 10;
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
     white-space: nowrap;
     transform: translate(-50%, -50%);
+    /* Add transition for smoother size changes */
+    transition: font-size 0.2s ease, padding 0.2s ease;
+    /* Min/max size constraints */
+    min-width: 40px;
+    text-align: center;
 }
 
 /* Fullscreen styles - IMPROVED */
