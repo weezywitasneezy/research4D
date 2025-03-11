@@ -96,13 +96,11 @@ function setupLabelSystem(container) {
             document.webkitFullscreenElement ||
             document.msFullscreenElement);
         
-        // Get the current zoom level and label size from CONFIG
+        // Get the current zoom level from CONFIG
         let currentZoom = 1.0;
-        let labelSize = 1.0;
         
-        if (window.CONFIG) {
-            currentZoom = window.CONFIG.currentZoom || 1.0;
-            labelSize = window.CONFIG.labelSize || 1.0;
+        if (window.CONFIG && window.CONFIG.currentZoom) {
+            currentZoom = window.CONFIG.currentZoom;
         }
         
         // Apply different base sizes when not in fullscreen
@@ -148,12 +146,13 @@ function setupLabelSystem(container) {
                 const dist = camera.position.distanceTo(worldPosition);
                 
                 // Calculate scaling factors
-                const distanceScale = Math.max(0.5, Math.min(1.2, 800 / dist));
+                // Enhanced distance and zoom scaling for better visibility
+                const distanceScale = Math.max(0.5, Math.min(1.5, 900 / dist));
                 const zoomScale = Math.max(0.5, Math.min(1.5, currentZoom));
                 
-                // Calculate final font size
+                // Calculate final font size - automatic scaling based on zoom and distance
                 const baseFontSize = 14;
-                const fontSize = baseFontSize * distanceScale * zoomScale * labelSize * fullscreenMultiplier;
+                const fontSize = baseFontSize * distanceScale * zoomScale * fullscreenMultiplier;
                 
                 // Update label position and visibility
                 label.element.style.display = 'block';

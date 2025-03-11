@@ -20,9 +20,8 @@ function initZoomControls(container, camera) {
         elevationOffset: 0,
         minElevation: -300,
         maxElevation: 200,
-        labelSize: 1.0,
-        minLabelSize: 0.5,
-        maxLabelSize: 2.0
+        // Keep labelSize in state for use by other components
+        labelSize: 1.0
     };
     
     // Track event listeners for cleanup
@@ -82,27 +81,6 @@ function initZoomControls(container, camera) {
     elevationControlsContainer.appendChild(elevateDownButton);
     elevationControlsContainer.appendChild(elevationIndicator);
     
-    // Create container for label size controls
-    const labelSizeControlsContainer = document.createElement('div');
-    labelSizeControlsContainer.className = 'label-size-controls-container';
-    
-    // Create label size indicator
-    const labelSizeIndicator = document.createElement('div');
-    labelSizeIndicator.className = 'label-size-indicator';
-    labelSizeIndicator.innerHTML = `
-        <div class="label-size-label">Label Size: <span id="label-size-value">100%</span></div>
-        <div class="label-size-slider-container">
-            <input type="range" id="label-size-slider" min="0.5" max="2.0" step="0.1" value="1.0" style="width: 100%">
-        </div>
-        <div class="label-size-buttons">
-            <button id="label-size-smaller" class="control-button">Smaller</button>
-            <button id="label-size-bigger" class="control-button">Bigger</button>
-        </div>
-    `;
-    
-    // Add label size control to container
-    labelSizeControlsContainer.appendChild(labelSizeIndicator);
-    
     // Add zoom elements to container
     zoomControlsContainer.appendChild(zoomInButton);
     zoomControlsContainer.appendChild(zoomOutButton);
@@ -113,12 +91,10 @@ function initZoomControls(container, camera) {
     if (toggleRotationButton) {
         toggleRotationButton.insertAdjacentElement('afterend', zoomControlsContainer);
         zoomControlsContainer.insertAdjacentElement('afterend', elevationControlsContainer);
-        elevationControlsContainer.insertAdjacentElement('afterend', labelSizeControlsContainer);
     } else {
         // If rotation button not found, just add to the controls
         visualizationControls.appendChild(zoomControlsContainer);
         visualizationControls.appendChild(elevationControlsContainer);
-        visualizationControls.appendChild(labelSizeControlsContainer);
     }
     
     // Add necessary styles to document
@@ -188,35 +164,14 @@ function initZoomControls(container, camera) {
         }
     }
     
-    // Get elements for updating the label size indicator
-    const labelSizeValueElement = document.getElementById('label-size-value');
-    const labelSizeSlider = document.getElementById('label-size-slider');
-    
-    // Update the label size indicator
-    function updateLabelSizeIndicator() {
-        if (labelSizeValueElement) {
-            const sizePercent = Math.round(state.labelSize * 100);
-            labelSizeValueElement.textContent = `${sizePercent}%`;
-        }
-        
-        if (labelSizeSlider) {
-            labelSizeSlider.value = state.labelSize;
-        }
-        
-        // Update CONFIG with new label size
-        if (window.CONFIG) {
-            window.CONFIG.labelSize = state.labelSize;
-        }
-    }
-    
     // Initial indicator updates
     updateZoomIndicator();
     updateElevationIndicator();
-    updateLabelSizeIndicator();
     
-    // Set initial zoom and label size in CONFIG
+    // Set initial zoom in CONFIG
     if (window.CONFIG) {
         window.CONFIG.currentZoom = state.zoomLevel;
+        // Set a default labelSize for consistency
         window.CONFIG.labelSize = state.labelSize;
     }
     
@@ -282,66 +237,6 @@ function initZoomControls(container, camera) {
         }
     }
     
-    // Label size smaller handler
-    function handleLabelSizeSmaller() {
-        state.labelSize = Math.max(state.minLabelSize, state.labelSize - 0.1);
-        updateLabelSizeIndicator();
-        
-        // Notify label system of size change
-        const labelSizeEvent = new CustomEvent('labelSizeChanged', { 
-            detail: { size: state.labelSize } 
-        });
-        window.dispatchEvent(labelSizeEvent);
-        
-        // Force an immediate labels update if possible
-        const visualizationMount = document.getElementById('visualization-mount');
-        if (visualizationMount && visualizationMount._labelSystem) {
-            visualizationMount._labelSystem.updateLabels(camera);
-        }
-        
-        console.log('Label size decreased to:', state.labelSize);
-    }
-    
-    // Label size bigger handler
-    function handleLabelSizeBigger() {
-        state.labelSize = Math.min(state.maxLabelSize, state.labelSize + 0.1);
-        updateLabelSizeIndicator();
-        
-        // Notify label system of size change
-        const labelSizeEvent = new CustomEvent('labelSizeChanged', { 
-            detail: { size: state.labelSize } 
-        });
-        window.dispatchEvent(labelSizeEvent);
-        
-        // Force an immediate labels update if possible
-        const visualizationMount = document.getElementById('visualization-mount');
-        if (visualizationMount && visualizationMount._labelSystem) {
-            visualizationMount._labelSystem.updateLabels(camera);
-        }
-        
-        console.log('Label size increased to:', state.labelSize);
-    }
-    
-    // Label size slider handler
-    function handleLabelSizeChange(event) {
-        state.labelSize = parseFloat(event.target.value);
-        updateLabelSizeIndicator();
-        
-        // Notify label system of size change
-        const labelSizeEvent = new CustomEvent('labelSizeChanged', { 
-            detail: { size: state.labelSize } 
-        });
-        window.dispatchEvent(labelSizeEvent);
-        
-        // Force an immediate labels update if possible
-        const visualizationMount = document.getElementById('visualization-mount');
-        if (visualizationMount && visualizationMount._labelSystem) {
-            visualizationMount._labelSystem.updateLabels(camera);
-        }
-        
-        console.log('Label size changed to:', state.labelSize);
-    }
-    
     // Add event listeners
     zoomInButton.addEventListener('click', handleZoomIn);
     zoomOutButton.addEventListener('click', handleZoomOut);
@@ -349,41 +244,20 @@ function initZoomControls(container, camera) {
     elevateDownButton.addEventListener('click', handleElevateDown);
     container.addEventListener('wheel', handleMouseWheel, { passive: false });
     
-    // Get button elements for label size
-    const labelSizeSmallerButton = document.getElementById('label-size-smaller');
-    const labelSizeBiggerButton = document.getElementById('label-size-bigger');
-    
-    // Add label size button event listeners
-    if (labelSizeSmallerButton) {
-        labelSizeSmallerButton.addEventListener('click', handleLabelSizeSmaller);
-    }
-    
-    if (labelSizeBiggerButton) {
-        labelSizeBiggerButton.addEventListener('click', handleLabelSizeBigger);
-    }
-    
-    // Add label size slider event listener
-    if (labelSizeSlider) {
-        labelSizeSlider.addEventListener('input', handleLabelSizeChange);
-    }
-    
     // Track listeners for cleanup
     listeners.push(
         { element: zoomInButton, event: 'click', handler: handleZoomIn },
         { element: zoomOutButton, event: 'click', handler: handleZoomOut },
         { element: elevateUpButton, event: 'click', handler: handleElevateUp },
         { element: elevateDownButton, event: 'click', handler: handleElevateDown },
-        { element: container, event: 'wheel', handler: handleMouseWheel },
-        { element: labelSizeSlider, event: 'input', handler: handleLabelSizeChange },
-        { element: labelSizeSmallerButton, event: 'click', handler: handleLabelSizeSmaller },
-        { element: labelSizeBiggerButton, event: 'click', handler: handleLabelSizeBigger }
+        { element: container, event: 'wheel', handler: handleMouseWheel }
     );
     
     // Return API
     return {
         zoomLevel: () => state.zoomLevel,
         elevationOffset: () => state.elevationOffset,
-        labelSize: () => state.labelSize,
+        labelSize: () => state.labelSize, // Keep this for backward compatibility
         cleanup: () => {
             // Remove all event listeners
             listeners.forEach(({ element, event, handler }) => {
@@ -392,17 +266,13 @@ function initZoomControls(container, camera) {
                 }
             });
             
-            // Optionally remove DOM elements
+            // Remove DOM elements
             if (zoomControlsContainer && zoomControlsContainer.parentNode) {
                 zoomControlsContainer.parentNode.removeChild(zoomControlsContainer);
             }
             
             if (elevationControlsContainer && elevationControlsContainer.parentNode) {
                 elevationControlsContainer.parentNode.removeChild(elevationControlsContainer);
-            }
-            
-            if (labelSizeControlsContainer && labelSizeControlsContainer.parentNode) {
-                labelSizeControlsContainer.parentNode.removeChild(labelSizeControlsContainer);
             }
         }
     };
@@ -419,11 +289,10 @@ function addZoomStyles() {
     const styleElement = document.createElement('style');
     styleElement.id = 'zoom-controls-styles';
     
-    // Add CSS for zoom and elevation controls
+    // Add CSS for zoom and elevation controls (without label size controls)
     styleElement.textContent = `
         .zoom-controls-container,
-        .elevation-controls-container,
-        .label-size-controls-container {
+        .elevation-controls-container {
             margin-bottom: 12px;
         }
         
@@ -444,15 +313,13 @@ function addZoomStyles() {
         }
         
         .zoom-indicator,
-        .elevation-indicator,
-        .label-size-indicator {
+        .elevation-indicator {
             width: 100%;
             margin-top: 2px;
         }
         
         .zoom-label,
-        .elevation-label,
-        .label-size-label {
+        .elevation-label {
             font-size: 12px;
             margin-bottom: 4px;
             color: #333;
@@ -469,8 +336,7 @@ function addZoomStyles() {
         }
         
         .zoom-slider-container,
-        .elevation-slider-container,
-        .label-size-slider-container {
+        .elevation-slider-container {
             position: relative;
             width: 100%;
             height: 24px;
@@ -513,64 +379,6 @@ function addZoomStyles() {
         
         .elevation-slider-fill {
             background: #2c5e8a;
-        }
-        
-        /* Style for the label size slider */
-        #label-size-slider {
-            width: 100%;
-            margin: 0;
-            height: 24px;
-            background: #e0e0e0;
-            outline: none;
-            -webkit-appearance: none;
-            border-radius: 3px;
-        }
-        
-        #label-size-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 20px;
-            height: 20px;
-            background: #4CAF50;
-            cursor: pointer;
-            border-radius: 50%;
-        }
-        
-        #label-size-slider::-moz-range-thumb {
-            width: 20px;
-            height: 20px;
-            background: #4CAF50;
-            cursor: pointer;
-            border-radius: 50%;
-            border: none;
-        }
-        
-        /* Style for the label size buttons */
-        .label-size-buttons {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 6px;
-        }
-        
-        #label-size-smaller, #label-size-bigger {
-            display: inline-block;
-            width: calc(50% - 5px);
-            text-align: center;
-            margin-bottom: 6px;
-            background-color: #4CAF50;
-            color: white;
-        }
-        
-        #label-size-smaller:hover, #label-size-bigger:hover {
-            background-color: #3e8e41;
-        }
-        
-        #label-size-smaller {
-            margin-right: 5px;
-        }
-        
-        #label-size-bigger {
-            margin-left: 5px;
         }
     `;
     

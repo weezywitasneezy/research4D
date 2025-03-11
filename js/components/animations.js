@@ -162,11 +162,6 @@ function initAnimations(camera, isRotatingFn, zoomLevelFn, elevationOffsetFn) {
         camera.lookAt(centerX, 0, centerZ);
     }
     
-    // Listen for label size changes
-    window.addEventListener('labelSizeChanged', function(event) {
-        console.log('Label size change detected by animation module:', event.detail.size);
-    });
-    
     return {
         angle,
         updateCameraPosition,
@@ -187,9 +182,6 @@ function initAnimations(camera, isRotatingFn, zoomLevelFn, elevationOffsetFn) {
                 window.removeEventListener('touchmove', onMouseMove);
                 window.removeEventListener('touchend', onMouseUp);
             }
-            
-            // Remove label size change listener
-            window.removeEventListener('labelSizeChanged', null);
         }
     };
 }
