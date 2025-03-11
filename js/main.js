@@ -191,30 +191,74 @@ function initModules() {
             !document.webkitFullscreenElement &&
             !document.msFullscreenElement) {
             
+            // Before entering fullscreen, ensure the element has appropriate styles
+            if (element) {
+                // Save original styles to restore later
+                element._originalStyles = {
+                    width: element.style.width,
+                    height: element.style.height,
+                    position: element.style.position,
+                    overflow: element.style.overflow
+                };
+                
+                // Set styles for fullscreen
+                element.style.width = '100%';
+                element.style.height = '100%';
+                element.style.position = 'fixed';
+                element.style.top = '0';
+                element.style.left = '0';
+                element.style.overflow = 'hidden';
+            }
+            
             // Enter fullscreen mode
-            if (element.requestFullscreen) {
-                element.requestFullscreen().catch(err => {
-                    console.warn(`Error attempting to enable fullscreen: ${err.message}`);
-                });
-            } else if (element.mozRequestFullScreen) {
-                element.mozRequestFullScreen();
-            } else if (element.webkitRequestFullscreen) {
-                element.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
-            } else if (element.msRequestFullscreen) {
-                element.msRequestFullscreen();
+            try {
+                if (element.requestFullscreen) {
+                    element.requestFullscreen().then(() => {
+                        console.log("Entered fullscreen mode");
+                        handleResize(); // Force resize immediately
+                    }).catch(err => {
+                        console.warn(`Error attempting to enable fullscreen: ${err.message}`);
+                    });
+                } else if (element.mozRequestFullScreen) {
+                    element.mozRequestFullScreen();
+                    console.log("Entered fullscreen mode (moz)");
+                } else if (element.webkitRequestFullscreen) {
+                    element.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+                    console.log("Entered fullscreen mode (webkit)");
+                } else if (element.msRequestFullscreen) {
+                    element.msRequestFullscreen();
+                    console.log("Entered fullscreen mode (ms)");
+                }
+            } catch (err) {
+                console.error("Fullscreen error:", err);
             }
         } else {
             // Exit fullscreen mode
-            if (document.exitFullscreen) {
-                document.exitFullscreen().catch(err => {
-                    console.warn(`Error attempting to exit fullscreen: ${err.message}`);
-                });
-            } else if (document.mozCancelFullScreen) {
-                document.mozCancelFullScreen();
-            } else if (document.webkitExitFullscreen) {
-                document.webkitExitFullscreen();
-            } else if (document.msExitFullscreen) {
-                document.msExitFullscreen();
+            try {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen().then(() => {
+                        console.log("Exited fullscreen mode");
+                        // Restore original styles
+                        if (element && element._originalStyles) {
+                            Object.keys(element._originalStyles).forEach(key => {
+                                element.style[key] = element._originalStyles[key];
+                            });
+                        }
+                    }).catch(err => {
+                        console.warn(`Error attempting to exit fullscreen: ${err.message}`);
+                    });
+                } else if (document.mozCancelFullScreen) {
+                    document.mozCancelFullScreen();
+                    console.log("Exited fullscreen mode (moz)");
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                    console.log("Exited fullscreen mode (webkit)");
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                    console.log("Exited fullscreen mode (ms)");
+                }
+            } catch (err) {
+                console.error("Fullscreen exit error:", err);
             }
         }
     }
@@ -555,7 +599,16 @@ function initModules() {
 function initWorldVisualization() {
     // Initialize the scene, camera, and renderer
     const container = document.getElementById('visualization-mount');
-    if (!container) return;
+    if (!container) {
+        console.error("Visualization mount not found!");
+        return;
+    }
+    
+    // Ensure container has appropriate CSS for fullscreen
+    container.style.overflow = 'hidden';
+    container.style.position = 'relative';
+    container.style.width = '100%';
+    container.style.height = '100%';
     
     // Load all our module functionality
     initModules();

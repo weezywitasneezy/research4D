@@ -86,42 +86,64 @@
     transform: translate(-50%, -50%);
 }
 
-/* Fullscreen styles */
+/* Fullscreen styles - IMPROVED */
 .visualization-container:fullscreen {
-    width: 100vw;
-    height: 100vh;
-    padding: 0;
-    margin: 0;
-    background-color: #f1f8ff;
+    width: 100vw !important;
+    height: 100vh !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background-color: #87ceeb;
+    border-radius: 0;
 }
 
 .visualization-container:-webkit-full-screen {
-    width: 100vw;
-    height: 100vh;
+    width: 100vw !important;
+    height: 100vh !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background-color: #87ceeb;
+    border-radius: 0;
 }
 
 .visualization-container:-moz-full-screen {
-    width: 100vw;
-    height: 100vh;
+    width: 100vw !important;
+    height: 100vh !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background-color: #87ceeb;
+    border-radius: 0;
 }
 
 .visualization-container:-ms-fullscreen {
-    width: 100vw;
-    height: 100vh;
+    width: 100vw !important;
+    height: 100vh !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background-color: #87ceeb;
+    border-radius: 0;
 }
 
 /* Make sure the Three.js canvas fills the fullscreen container */
-.visualization-container:fullscreen #visualization-mount {
-    width: 100vw;
-    height: 100vh;
+.visualization-container:fullscreen #visualization-mount,
+.visualization-container:-webkit-full-screen #visualization-mount,
+.visualization-container:-moz-full-screen #visualization-mount,
+.visualization-container:-ms-fullscreen #visualization-mount {
+    width: 100vw !important;
+    height: 100vh !important;
+    position: absolute;
+    top: 0;
+    left: 0;
 }
 
 /* Keep controls visible and properly positioned in fullscreen */
-.visualization-container:fullscreen .visualization-controls {
-    position: absolute;
+.visualization-container:fullscreen .visualization-controls,
+.visualization-container:-webkit-full-screen .visualization-controls,
+.visualization-container:-moz-full-screen .visualization-controls,
+.visualization-container:-ms-fullscreen .visualization-controls {
+    position: fixed;
     bottom: 20px;
     left: 20px;
-    z-index: 100;
+    z-index: 9999;
     background-color: rgba(255, 255, 255, 0.8);
     padding: 15px;
     border-radius: 10px;
@@ -129,6 +151,24 @@
 }
 
 /* Ensure 3D labels remain visible in fullscreen */
-.visualization-container:fullscreen .label3d {
+.visualization-container:fullscreen .label3d,
+.visualization-container:-webkit-full-screen .label3d,
+.visualization-container:-moz-full-screen .label3d,
+.visualization-container:-ms-fullscreen .label3d {
     z-index: 10;
+}
+
+/* Additional fixes for canvas sizing in fullscreen */
+.visualization-container canvas {
+    width: 100% !important;
+    height: 100% !important;
+    display: block;
+}
+
+.visualization-container:fullscreen canvas,
+.visualization-container:-webkit-full-screen canvas,
+.visualization-container:-moz-full-screen canvas,
+.visualization-container:-ms-fullscreen canvas {
+    width: 100vw !important;
+    height: 100vh !important;
 }
