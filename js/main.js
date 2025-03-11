@@ -258,20 +258,11 @@ function loadCoreModules() {
                 fullscreenButton.className = 'control-button';
                 fullscreenButton.textContent = 'Enter Fullscreen';
                 
-                // Create drag control toggle button
-                const dragControlButton = document.createElement('button');
-                dragControlButton.id = 'toggle-drag';
-                dragControlButton.className = 'control-button';
-                dragControlButton.textContent = window.CONFIG && window.CONFIG.animation.dragEnabled ? 
-                    'Disable Drag' : 'Enable Drag';
-                
                 // Insert fullscreen button after rotation button
                 if (toggleRotationButton) {
                     toggleRotationButton.insertAdjacentElement('afterend', fullscreenButton);
-                    fullscreenButton.insertAdjacentElement('afterend', dragControlButton);
                 } else {
                     visualizationControls.appendChild(fullscreenButton);
-                    visualizationControls.appendChild(dragControlButton);
                 }
                 
                 // Toggle rotation handler
@@ -290,22 +281,6 @@ function loadCoreModules() {
                     }, 100);
                 };
                 
-                // Toggle drag control handler
-                const handleToggleDrag = function() {
-                    if (window.CONFIG) {
-                        window.CONFIG.animation.dragEnabled = !window.CONFIG.animation.dragEnabled;
-                        this.textContent = window.CONFIG.animation.dragEnabled ? 'Disable Drag' : 'Enable Drag';
-                        
-                        // Update cursor style
-                        const vizMount = document.getElementById('visualization-mount');
-                        if (vizMount) {
-                            vizMount.style.cursor = window.CONFIG.animation.dragEnabled ? 'grab' : 'default';
-                        }
-                        
-                        console.log('Drag control:', window.CONFIG.animation.dragEnabled ? 'enabled' : 'disabled');
-                    }
-                };
-                
                 // Update fullscreen button text based on fullscreen state
                 const updateFullscreenButtonText = function() {
                     if (document.fullscreenElement || 
@@ -321,7 +296,6 @@ function loadCoreModules() {
                 // Add event listeners
                 toggleRotationButton.addEventListener('click', handleToggleRotation);
                 fullscreenButton.addEventListener('click', handleToggleFullscreen);
-                dragControlButton.addEventListener('click', handleToggleDrag);
                 document.addEventListener('fullscreenchange', updateFullscreenButtonText);
                 document.addEventListener('mozfullscreenchange', updateFullscreenButtonText);
                 document.addEventListener('webkitfullscreenchange', updateFullscreenButtonText);
@@ -331,7 +305,6 @@ function loadCoreModules() {
                 listeners.push(
                     { element: toggleRotationButton, event: 'click', handler: handleToggleRotation },
                     { element: fullscreenButton, event: 'click', handler: handleToggleFullscreen },
-                    { element: dragControlButton, event: 'click', handler: handleToggleDrag },
                     { element: document, event: 'fullscreenchange', handler: updateFullscreenButtonText },
                     { element: document, event: 'mozfullscreenchange', handler: updateFullscreenButtonText },
                     { element: document, event: 'webkitfullscreenchange', handler: updateFullscreenButtonText },

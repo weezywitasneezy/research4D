@@ -137,8 +137,8 @@ function createSpaceFarms(scene, labelSystem) {
     // Add orbital platforms
     addOrbitalPlatforms(scene, spaceFarms, labelSystem);
     
-    // Add label
-    labelSystem.addLabel(spaceFarms, "Space Farms", CONFIG.colors.spaceFarms);
+    // No label for the orbital ring
+    // Keep only the platforms' labels if any
     
     return spaceFarms;
 }

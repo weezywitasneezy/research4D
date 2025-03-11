@@ -79,8 +79,8 @@ window.CONFIG = {
     animation: {
         enabled: true,
         rotationSpeed: 0.002,
-        dragEnabled: true,       // Enable drag to rotate
-        dragPausesRotation: true  // Pause auto-rotation while dragging
+        dragEnabled: true,      // Always enable drag to rotate
+        dragPausesRotation: true // Pause auto-rotation while dragging
     }
 };
 
