@@ -1,6 +1,7 @@
 // Configuration settings and constants
 
-export const CONFIG = {
+// Define CONFIG object globally
+window.CONFIG = {
     // Scene settings
     scene: {
         backgroundColor: 0x87ceeb, // Sky blue
@@ -77,3 +78,5 @@ export const CONFIG = {
         rotationSpeed: 0.002
     }
 };
+
+console.log('CONFIG loaded');

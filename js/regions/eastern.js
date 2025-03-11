@@ -1,8 +1,13 @@
 // Eastern regions implementation
-import { CONFIG } from '../core/config.js';
 
 // Create Eastern continent and all its sub-regions
-export function createEasternContinent(scene, labelSystem) {
+function createEasternContinent(scene, labelSystem) {
+    // Need to check if CONFIG is available
+    if (typeof CONFIG === 'undefined') {
+        console.error('CONFIG is not defined. Make sure config.js is loaded first.');
+        return {};
+    }
+    
     const elements = {
         continent: createMainContinent(scene, labelSystem),
         farms: createVerticalFarms(scene, labelSystem),
@@ -137,23 +142,6 @@ function createIndustrialArea(scene, labelSystem) {
     factory3.position.set(-5, 10.5, 25);
     industrialAreaGroup.add(factory3);
     
-    // Smoke stacks
-    const smokestackGeometry = new THREE.CylinderGeometry(2, 2.5, 25, 8);
-    const smokestackMaterial = new THREE.MeshLambertMaterial({ 
-        color: 0xa0a0a0 
-    });
-    
-    // Add smokestacks
-    const addSmokestack = (x, z) => {
-        const smokestack = new THREE.Mesh(smokestackGeometry, smokestackMaterial);
-        smokestack.position.set(x, 23, z);
-        industrialAreaGroup.add(smokestack);
-    };
-    
-    addSmokestack(-15, -20);
-    addSmokestack(10, 0);
-    addSmokestack(-5, 25);
-    
     // Position the entire industrial area group
     const position = CONFIG.positions.eastern.industrial;
     industrialAreaGroup.position.set(position.x, position.y, position.z);
@@ -167,10 +155,6 @@ function createIndustrialArea(scene, labelSystem) {
 
 // Create seaside capital
 function createSeasideCapital(scene, labelSystem) {
-    // Implementation similar to above, focused on creating the seaside capital
-    // ...
-    
-    // For brevity, this is simplified - you would implement the full city details
     const seasideCapitalGroup = new THREE.Group();
     
     // Main city base
@@ -238,3 +222,6 @@ function createSewers(scene, labelSystem) {
     
     return sewers;
 }
+
+// Make the function available globally
+window.createEasternContinent = createEasternContinent;

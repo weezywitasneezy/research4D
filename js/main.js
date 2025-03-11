@@ -1,599 +1,7 @@
 // Main entry point for visualization
 
-// Global variables to hold module references after THREE is loaded
-let Scene, Controls, Labels, EasternRegion, CentralRegion, WesternRegion, UnderwaterRegion, SkyRegion, Animations, Utils;
-
 // Global state
 let cleanup = null;
-let scene, camera, renderer, labelContainer, labelSystem, controls;
-
-// Initialize modules after THREE.js is loaded
-function initModules() {
-    // Create module objects with necessary dependencies
-    Scene = {
-        initScene: function(container) {
-            // Scene setup
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x87ceeb); // Sky blue from CONFIG
-            
-            // Camera setup
-            camera = new THREE.PerspectiveCamera(
-                45, // fov
-                container.clientWidth / container.clientHeight,
-                0.1, // near
-                2000 // far
-            );
-            
-            // Position camera
-            const zoomFactor = 0.7;
-            const cameraRadius = 320 * zoomFactor;
-            const cameraHeight = 180 * zoomFactor;
-            
-            camera.position.set(cameraRadius, cameraHeight, cameraRadius);
-            camera.lookAt(0, 0, 0);
-            
-            // Renderer setup
-            renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(container.clientWidth, container.clientHeight);
-            renderer.setPixelRatio(window.devicePixelRatio);
-            container.appendChild(renderer.domElement);
-            
-            // Create a container for HTML labels
-            labelContainer = document.createElement('div');
-            labelContainer.style.position = 'absolute';
-            labelContainer.style.top = '0';
-            labelContainer.style.left = '0';
-            labelContainer.style.width = '100%';
-            labelContainer.style.height = '100%';
-            labelContainer.style.pointerEvents = 'none';
-            labelContainer.style.overflow = 'hidden';
-            container.appendChild(labelContainer);
-            
-            // Add lights
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-            scene.add(ambientLight);
-            
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-            directionalLight.position.set(50, 100, 50);
-            directionalLight.castShadow = true;
-            scene.add(directionalLight);
-            
-            // Add base plane (sea level)
-            const baseGeometry = new THREE.PlaneGeometry(400, 400);
-            const baseMaterial = new THREE.MeshLambertMaterial({ 
-                color: 0x4682b4, // Steel blue from CONFIG
-                side: THREE.DoubleSide,
-                transparent: true,
-                opacity: 0.8
-            });
-            const basePlane = new THREE.Mesh(baseGeometry, baseMaterial);
-            basePlane.rotation.x = -Math.PI / 2;
-            scene.add(basePlane);
-            
-            // Add grid helper
-            const gridHelper = new THREE.GridHelper(400, 40, 0x000000, 0x000000);
-            gridHelper.position.y = 0.1;
-            gridHelper.material.opacity = 0.2;
-            gridHelper.material.transparent = true;
-            scene.add(gridHelper);
-            
-            return { scene, camera, renderer, labelContainer };
-        }
-    };
-    
-    Controls = {
-        setupControls: function(container) {
-            const visualizationContainer = document.querySelector('.visualization-container');
-            const visualizationControls = document.querySelector('.visualization-controls');
-            
-            // State
-            const state = {
-                isRotating: true // Default to rotating
-            };
-            
-            // Event listeners
-            const listeners = [];
-            
-            if (!visualizationControls) {
-                console.warn('Visualization controls not found');
-                return { 
-                    isRotating: () => state.isRotating,
-                    cleanup: () => {}
-                };
-            }
-            
-            // Get or create rotation button
-            let toggleRotationButton = document.getElementById('toggle-rotation');
-            
-            if (!toggleRotationButton) {
-                toggleRotationButton = document.createElement('button');
-                toggleRotationButton.id = 'toggle-rotation';
-                toggleRotationButton.className = 'control-button';
-                toggleRotationButton.textContent = state.isRotating ? 'Pause Rotation' : 'Start Rotation';
-                visualizationControls.appendChild(toggleRotationButton);
-            }
-            
-            // Create fullscreen button
-            const fullscreenButton = document.createElement('button');
-            fullscreenButton.id = 'toggle-fullscreen';
-            fullscreenButton.className = 'control-button';
-            fullscreenButton.textContent = 'Enter Fullscreen';
-            
-            // Insert fullscreen button after rotation button
-            if (toggleRotationButton) {
-                toggleRotationButton.insertAdjacentElement('afterend', fullscreenButton);
-            } else {
-                visualizationControls.appendChild(fullscreenButton);
-            }
-            
-            // Toggle rotation handler
-            const handleToggleRotation = function() {
-                state.isRotating = !state.isRotating;
-                this.textContent = state.isRotating ? 'Pause Rotation' : 'Start Rotation';
-            };
-            
-            // Toggle fullscreen handler
-            const handleToggleFullscreen = function() {
-                toggleFullScreen(visualizationContainer);
-                
-                // Force a resize after a short delay to ensure proper rendering
-                setTimeout(() => {
-                    window.dispatchEvent(new Event('resize'));
-                }, 100);
-            };
-            
-            // Update fullscreen button text based on fullscreen state
-            const updateFullscreenButtonText = function() {
-                if (document.fullscreenElement || 
-                    document.mozFullScreenElement || 
-                    document.webkitFullscreenElement || 
-                    document.msFullscreenElement) {
-                    fullscreenButton.textContent = 'Exit Fullscreen';
-                } else {
-                    fullscreenButton.textContent = 'Enter Fullscreen';
-                }
-            };
-            
-            // Add event listeners
-            toggleRotationButton.addEventListener('click', handleToggleRotation);
-            fullscreenButton.addEventListener('click', handleToggleFullscreen);
-            document.addEventListener('fullscreenchange', updateFullscreenButtonText);
-            document.addEventListener('mozfullscreenchange', updateFullscreenButtonText);
-            document.addEventListener('webkitfullscreenchange', updateFullscreenButtonText);
-            document.addEventListener('MSFullscreenChange', updateFullscreenButtonText);
-            
-            // Track listeners for cleanup
-            listeners.push(
-                { element: toggleRotationButton, event: 'click', handler: handleToggleRotation },
-                { element: fullscreenButton, event: 'click', handler: handleToggleFullscreen },
-                { element: document, event: 'fullscreenchange', handler: updateFullscreenButtonText },
-                { element: document, event: 'mozfullscreenchange', handler: updateFullscreenButtonText },
-                { element: document, event: 'webkitfullscreenchange', handler: updateFullscreenButtonText },
-                { element: document, event: 'MSFullscreenChange', handler: updateFullscreenButtonText }
-            );
-            
-            return {
-                isRotating: () => state.isRotating,
-                cleanup: () => {
-                    // Remove all event listeners
-                    listeners.forEach(({ element, event, handler }) => {
-                        element.removeEventListener(event, handler);
-                    });
-                }
-            };
-        }
-    };
-    
-    // Helper function for fullscreen
-    function toggleFullScreen(element) {
-        if (!document.fullscreenElement &&
-            !document.mozFullScreenElement &&
-            !document.webkitFullscreenElement &&
-            !document.msFullscreenElement) {
-            
-            // Before entering fullscreen, ensure the element has appropriate styles
-            if (element) {
-                // Save original styles to restore later
-                element._originalStyles = {
-                    width: element.style.width,
-                    height: element.style.height,
-                    position: element.style.position,
-                    overflow: element.style.overflow
-                };
-                
-                // Set styles for fullscreen
-                element.style.width = '100%';
-                element.style.height = '100%';
-                element.style.position = 'fixed';
-                element.style.top = '0';
-                element.style.left = '0';
-                element.style.overflow = 'hidden';
-            }
-            
-            // Enter fullscreen mode
-            try {
-                if (element.requestFullscreen) {
-                    element.requestFullscreen().then(() => {
-                        console.log("Entered fullscreen mode");
-                        handleResize(); // Force resize immediately
-                    }).catch(err => {
-                        console.warn(`Error attempting to enable fullscreen: ${err.message}`);
-                    });
-                } else if (element.mozRequestFullScreen) {
-                    element.mozRequestFullScreen();
-                    console.log("Entered fullscreen mode (moz)");
-                } else if (element.webkitRequestFullscreen) {
-                    element.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
-                    console.log("Entered fullscreen mode (webkit)");
-                } else if (element.msRequestFullscreen) {
-                    element.msRequestFullscreen();
-                    console.log("Entered fullscreen mode (ms)");
-                }
-            } catch (err) {
-                console.error("Fullscreen error:", err);
-            }
-        } else {
-            // Exit fullscreen mode
-            try {
-                if (document.exitFullscreen) {
-                    document.exitFullscreen().then(() => {
-                        console.log("Exited fullscreen mode");
-                        // Restore original styles
-                        if (element && element._originalStyles) {
-                            Object.keys(element._originalStyles).forEach(key => {
-                                element.style[key] = element._originalStyles[key];
-                            });
-                        }
-                    }).catch(err => {
-                        console.warn(`Error attempting to exit fullscreen: ${err.message}`);
-                    });
-                } else if (document.mozCancelFullScreen) {
-                    document.mozCancelFullScreen();
-                    console.log("Exited fullscreen mode (moz)");
-                } else if (document.webkitExitFullscreen) {
-                    document.webkitExitFullscreen();
-                    console.log("Exited fullscreen mode (webkit)");
-                } else if (document.msExitFullscreen) {
-                    document.msExitFullscreen();
-                    console.log("Exited fullscreen mode (ms)");
-                }
-            } catch (err) {
-                console.error("Fullscreen exit error:", err);
-            }
-        }
-    }
-    
-    Labels = {
-        setupLabelSystem: function(container) {
-            // Store label data
-            const labelData = [];
-            
-            // Function to add a label to a 3D object
-            function addLabel(object, text, color) {
-                // Convert hex color to CSS color string
-                const cssColor = typeof color === 'number' 
-                    ? '#' + color.toString(16).padStart(6, '0')
-                    : color || 'white';
-                
-                // Create a div element for the label
-                const labelDiv = document.createElement('div');
-                labelDiv.className = 'label3d';
-                labelDiv.textContent = text;
-                labelDiv.style.color = cssColor;
-                
-                // Add the label to our container
-                container.appendChild(labelDiv);
-                
-                // Calculate the object's dimensions
-                const box = new THREE.Box3().setFromObject(object);
-                const objectHeight = box.max.y - box.min.y;
-                
-                // Create a position vector for the label
-                // We'll position it slightly above the object
-                const position = new THREE.Vector3(0, objectHeight / 2 + 10, 0);
-                
-                // Store the label info for updating in the animation loop
-                const labelInfo = {
-                    element: labelDiv,
-                    object: object,
-                    position: position,
-                    visible: true
-                };
-                
-                labelData.push(labelInfo);
-                
-                return labelInfo;
-            }
-            
-            // Function to update all label positions
-            function updateLabels(camera) {
-                // Loop through all labels
-                labelData.forEach(label => {
-                    if (!label.visible) {
-                        label.element.style.display = 'none';
-                        return;
-                    }
-                    
-                    // Get the object's world position
-                    const worldPosition = new THREE.Vector3();
-                    
-                    // If the object is a group, use its position directly
-                    if (label.object.isGroup) {
-                        worldPosition.copy(label.object.position);
-                        worldPosition.y += label.position.y; // Add the label's y offset
-                    } else {
-                        // Get the object's world position and add the label's offset
-                        label.object.updateMatrixWorld();
-                        // Get the object's position in world space
-                        label.object.getWorldPosition(worldPosition);
-                        // Add the label's offset
-                        worldPosition.y += label.position.y;
-                    }
-                    
-                    // Project the world position to screen coordinates
-                    const screenPosition = worldPosition.clone();
-                    screenPosition.project(camera);
-                    
-                    // Convert to CSS coordinates
-                    const x = (screenPosition.x * 0.5 + 0.5) * container.clientWidth;
-                    const y = (-screenPosition.y * 0.5 + 0.5) * container.clientHeight;
-                    
-                    // Check if the label is in front of the camera and within screen bounds
-                    if (screenPosition.z < 1 && 
-                        x > 0 && x < container.clientWidth && 
-                        y > 0 && y < container.clientHeight) {
-                        
-                        // Calculate distance to camera for size scaling
-                        const dist = camera.position.distanceTo(worldPosition);
-                        const scale = Math.max(0.5, Math.min(1.2, 800 / dist));
-                        
-                        // Update label position and visibility
-                        label.element.style.display = 'block';
-                        label.element.style.transform = `translate(-50%, -50%) translate(${x}px, ${y}px)`;
-                        label.element.style.fontSize = `${14 * scale}px`;
-                        
-                        // Adjust opacity based on distance
-                        const opacity = Math.max(0.3, Math.min(1.0, 500 / dist));
-                        label.element.style.opacity = opacity.toString();
-                    } else {
-                        // Hide the label if it's not visible
-                        label.element.style.display = 'none';
-                    }
-                });
-            }
-            
-            // Function to remove all labels
-            function cleanup() {
-                labelData.forEach(label => {
-                    if (label.element && label.element.parentNode) {
-                        label.element.parentNode.removeChild(label.element);
-                    }
-                });
-                
-                // Clear the array
-                labelData.length = 0;
-            }
-            
-            // Return the label system API
-            return {
-                addLabel,
-                updateLabels,
-                cleanup,
-                labelData
-            };
-        }
-    };
-    
-    // Simple placeholder for regions
-    EasternRegion = {
-        createEasternContinent: function(scene, labelSystem) {
-            // Create a basic eastern continent
-            const easternGroup = new THREE.Group();
-            
-            // Main continent body
-            const continentGeom = new THREE.BoxGeometry(140, 12, 180);
-            const continentMat = new THREE.MeshLambertMaterial({ color: 0xa9a9a9 });
-            const continent = new THREE.Mesh(continentGeom, continentMat);
-            easternGroup.add(continent);
-            
-            // Position
-            easternGroup.position.set(130, 6, 0);
-            scene.add(easternGroup);
-            
-            // Add label
-            labelSystem.addLabel(easternGroup, "Eastern Continent", 0xa9a9a9);
-            
-            return { continent: easternGroup };
-        }
-    };
-    
-    CentralRegion = {
-        createCentralIslands: function(scene, labelSystem) {
-            // Create a basic central islands
-            const islandGroup = new THREE.Group();
-            
-            // Magic Islands Capital
-            const islandGeom = new THREE.CylinderGeometry(35, 40, 15, 8);
-            const islandMat = new THREE.MeshLambertMaterial({ color: 0x9932cc });
-            const island = new THREE.Mesh(islandGeom, islandMat);
-            islandGroup.add(island);
-            
-            // Position
-            islandGroup.position.set(0, 7.5, 0);
-            scene.add(islandGroup);
-            
-            // Add label
-            labelSystem.addLabel(islandGroup, "Magic Islands", 0x9932cc);
-            
-            return { magicIslands: islandGroup };
-        }
-    };
-    
-    WesternRegion = {
-        createWesternRegions: function(scene, labelSystem) {
-            // Create basic western regions
-            const westernGroup = new THREE.Group();
-            
-            // Fire Islands
-            const islandGeom = new THREE.CylinderGeometry(30, 35, 20, 8);
-            const islandMat = new THREE.MeshLambertMaterial({ color: 0xff4500 });
-            const island = new THREE.Mesh(islandGeom, islandMat);
-            westernGroup.add(island);
-            
-            // Position
-            westernGroup.position.set(-90, 10, 0);
-            scene.add(westernGroup);
-            
-            // Add label
-            labelSystem.addLabel(westernGroup, "Fire Islands", 0xff4500);
-            
-            return { fireIslands: westernGroup };
-        }
-    };
-    
-    SkyRegion = {
-        createSkyStructures: function(scene, labelSystem) {
-            // Create basic sky palace
-            const skyGroup = new THREE.Group();
-            
-            // Sky Palace
-            const palaceGeom = new THREE.CylinderGeometry(18, 22, 6, 6);
-            const palaceMat = new THREE.MeshLambertMaterial({ 
-                color: 0x00ffff,
-                transparent: true,
-                opacity: 0.8
-            });
-            const palace = new THREE.Mesh(palaceGeom, palaceMat);
-            skyGroup.add(palace);
-            
-            // Position
-            skyGroup.position.set(100, 80, 60);
-            scene.add(skyGroup);
-            
-            // Add label
-            labelSystem.addLabel(skyGroup, "Sky Palace", 0x00ffff);
-            
-            return { skyPalace: skyGroup };
-        }
-    };
-    
-    UnderwaterRegion = {
-        createUnderwaterStructures: function(scene, labelSystem) {
-            // Create basic atlantis
-            const atlantisGroup = new THREE.Group();
-            
-            // Atlantis
-            const atlantisGeom = new THREE.DodecahedronGeometry(40, 1);
-            const atlantisMat = new THREE.MeshLambertMaterial({
-                color: 0x40e0d0,
-                transparent: true,
-                opacity: 0.7
-            });
-            const atlantis = new THREE.Mesh(atlantisGeom, atlantisMat);
-            atlantisGroup.add(atlantis);
-            
-            // Position
-            atlantisGroup.position.set(0, -50, 45);
-            scene.add(atlantisGroup);
-            
-            // Add label
-            labelSystem.addLabel(atlantisGroup, "Atlantis", 0x40e0d0);
-            
-            return { atlantis: atlantisGroup };
-        }
-    };
-    
-    Utils = {
-        createConnectors: function(scene, elements) {
-            // Create vertical connectors between different regions
-            const createConnector = (startX, startY, startZ, endX, endY, endZ, color) => {
-                const points = [
-                    new THREE.Vector3(startX, startY, startZ),
-                    new THREE.Vector3(endX, endY, endZ)
-                ];
-                
-                const geometry = new THREE.BufferGeometry().setFromPoints(points);
-                const material = new THREE.LineBasicMaterial({ 
-                    color, 
-                    linewidth: 2,
-                    transparent: true,
-                    opacity: 0.7
-                });
-                
-                const line = new THREE.Line(geometry, material);
-                scene.add(line);
-                return line;
-            };
-            
-            // Just create a few sample connectors
-            const connectors = [
-                // Sky Palace to Ground
-                createConnector(100, 80, 60, 100, 16, 60, 0x00ffff),
-                
-                // Magic Islands to Atlantis
-                createConnector(0, 7.5, 0, 0, -50, 45, 0x9932cc)
-            ];
-            
-            return connectors;
-        }
-    };
-    
-    Animations = {
-        initAnimations: function(camera, isRotatingFn) {
-            // Camera rotation variables
-            let angle = 0;
-            const radius = 320 * 0.7; // From CONFIG
-            const height = 180 * 0.7;
-            const centerX = 0;
-            const centerZ = 0;
-            
-            // Animation frame ID for cleanup
-            let animationFrameId = null;
-            
-            // Camera rotation function
-            function updateCameraPosition() {
-                if (isRotatingFn()) {
-                    angle += 0.002; // From CONFIG
-                    camera.position.x = centerX + radius * Math.cos(angle);
-                    camera.position.z = centerZ + radius * Math.sin(angle);
-                    camera.position.y = height;
-                    camera.lookAt(0, 0, 0);
-                }
-            }
-            
-            return {
-                angle,
-                updateCameraPosition,
-                getAnimationFrameId: () => animationFrameId,
-                setAnimationFrameId: (id) => { animationFrameId = id; },
-                cleanup: () => {
-                    if (animationFrameId) {
-                        cancelAnimationFrame(animationFrameId);
-                    }
-                }
-            };
-        },
-        
-        startAnimationLoop: function(renderer, scene, camera, animations, labelSystem) {
-            // Animation loop
-            function animate() {
-                animations.setAnimationFrameId(requestAnimationFrame(animate));
-                
-                // Update camera position for rotation
-                animations.updateCameraPosition();
-                
-                // Update label positions
-                labelSystem.updateLabels(camera);
-                
-                // Render the scene
-                renderer.render(scene, camera);
-            }
-            
-            // Start the animation loop
-            animate();
-        }
-    };
-}
 
 // Main initialization function
 function initWorldVisualization() {
@@ -610,63 +18,787 @@ function initWorldVisualization() {
     container.style.width = '100%';
     container.style.height = '100%';
     
-    // Load all our module functionality
-    initModules();
-    
-    const sceneObjects = Scene.initScene(container);
-    scene = sceneObjects.scene;
-    camera = sceneObjects.camera;
-    renderer = sceneObjects.renderer;
-    labelContainer = sceneObjects.labelContainer;
-    
-    // Setup controls
-    controls = Controls.setupControls(container);
-    
-    // Setup label system
-    labelSystem = Labels.setupLabelSystem(labelContainer);
-    
-    // Add regions to the scene - simplified versions for testing
-    const easternElements = EasternRegion.createEasternContinent(scene, labelSystem);
-    const centralElements = CentralRegion.createCentralIslands(scene, labelSystem);
-    const westernElements = WesternRegion.createWesternRegions(scene, labelSystem);
-    const underwaterElements = UnderwaterRegion.createUnderwaterStructures(scene, labelSystem);
-    const skyElements = SkyRegion.createSkyStructures(scene, labelSystem);
-    
-    // Create vertical connectors between layers
-    Utils.createConnectors(scene, {
-        easternElements,
-        centralElements,
-        underwaterElements,
-        skyElements
-    });
-    
-    // Setup animations
-    const animations = Animations.initAnimations(camera, controls.isRotating);
-    
-    // Start animation loop
-    Animations.startAnimationLoop(renderer, scene, camera, animations, labelSystem);
-    
-    // Setup cleanup function
-    cleanup = function() {
-        // Cleanup code here...
-        controls.cleanup();
-        animations.cleanup();
-        labelSystem.cleanup();
-        
-        // Dispose of all scene resources
-        scene.traverse((object) => {
-            if (object.geometry) object.geometry.dispose();
-            if (object.material) {
-                if (Array.isArray(object.material)) {
-                    object.material.forEach(material => material.dispose());
-                } else {
-                    object.material.dispose();
-                }
-            }
+    // First load core modules
+    loadCoreModules()
+        .then(core => {
+            const { scene, camera, renderer, labelSystem, controls } = core;
+            
+            // Then load region modules
+            return loadRegionModules(scene, labelSystem)
+                .then(regions => {
+                    // Create connectors between regions
+                    loadUtilsAndCreateConnectors(scene, regions);
+                    
+                    // Setup animations
+                    setupAnimations(camera, controls, labelSystem, renderer, scene);
+                    
+                    // Setup cleanup function
+                    cleanup = function() {
+                        // Cleanup code here...
+                        if (controls && controls.cleanup) controls.cleanup();
+                        if (core.cleanup) core.cleanup();
+                        
+                        if (labelSystem && labelSystem.cleanup) {
+                            labelSystem.cleanup();
+                        }
+                        
+                        // Dispose of all scene resources
+                        scene.traverse((object) => {
+                            if (object.geometry) object.geometry.dispose();
+                            if (object.material) {
+                                if (Array.isArray(object.material)) {
+                                    object.material.forEach(material => material.dispose());
+                                } else {
+                                    object.material.dispose();
+                                }
+                            }
+                        });
+                    };
+                });
+        })
+        .catch(error => {
+            console.error("Error initializing visualization:", error);
         });
-    };
     
     return cleanup;
+}
+
+// Load core modules (scene, controls, labels)
+function loadCoreModules() {
+    return new Promise((resolve, reject) => {
+        // Create scene module
+        const sceneModule = {
+            initScene: function(container) {
+                // Scene setup
+                const scene = new THREE.Scene();
+                scene.background = new THREE.Color(0x87ceeb); // Sky blue
+                
+                // Camera setup
+                const camera = new THREE.PerspectiveCamera(
+                    45, // fov
+                    container.clientWidth / container.clientHeight,
+                    0.1, // near
+                    2000 // far
+                );
+                
+                // Position camera
+                const zoomFactor = 0.7;
+                const cameraRadius = 320 * zoomFactor;
+                const cameraHeight = 180 * zoomFactor;
+                
+                camera.position.set(cameraRadius, cameraHeight, cameraRadius);
+                camera.lookAt(0, 0, 0);
+                
+                // Renderer setup
+                const renderer = new THREE.WebGLRenderer({ antialias: true });
+                renderer.setSize(container.clientWidth, container.clientHeight);
+                renderer.setPixelRatio(window.devicePixelRatio);
+                container.appendChild(renderer.domElement);
+                
+                // Create a container for HTML labels
+                const labelContainer = document.createElement('div');
+                labelContainer.style.position = 'absolute';
+                labelContainer.style.top = '0';
+                labelContainer.style.left = '0';
+                labelContainer.style.width = '100%';
+                labelContainer.style.height = '100%';
+                labelContainer.style.pointerEvents = 'none';
+                labelContainer.style.overflow = 'hidden';
+                container.appendChild(labelContainer);
+                
+                // Add lights
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+                scene.add(ambientLight);
+                
+                const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+                directionalLight.position.set(50, 100, 50);
+                directionalLight.castShadow = true;
+                scene.add(directionalLight);
+                
+                // Add base plane (sea level)
+                const baseGeometry = new THREE.PlaneGeometry(400, 400);
+                const baseMaterial = new THREE.MeshLambertMaterial({ 
+                    color: 0x4682b4, // Steel blue
+                    side: THREE.DoubleSide,
+                    transparent: true,
+                    opacity: 0.8
+                });
+                const basePlane = new THREE.Mesh(baseGeometry, baseMaterial);
+                basePlane.rotation.x = -Math.PI / 2;
+                scene.add(basePlane);
+                
+                // Add grid helper
+                const gridHelper = new THREE.GridHelper(400, 40, 0x000000, 0x000000);
+                gridHelper.position.y = 0.1;
+                gridHelper.material.opacity = 0.2;
+                gridHelper.material.transparent = true;
+                scene.add(gridHelper);
+                
+                // Setup window resize handler
+                const handleResize = () => {
+                    // If in fullscreen, get dimensions from window
+                    // Otherwise use container dimensions
+                    let width, height;
+                    
+                    if (document.fullscreenElement ||
+                        document.mozFullScreenElement ||
+                        document.webkitFullscreenElement ||
+                        document.msFullscreenElement) {
+                        width = window.innerWidth;
+                        height = window.innerHeight;
+                        
+                        // When in fullscreen, ensure renderer canvas fills the entire screen
+                        renderer.domElement.style.position = 'absolute';
+                        renderer.domElement.style.left = '0';
+                        renderer.domElement.style.top = '0';
+                        renderer.domElement.style.width = '100%';
+                        renderer.domElement.style.height = '100%';
+                        
+                        // Make sure label container also fills the screen
+                        if (labelContainer) {
+                            labelContainer.style.position = 'absolute';
+                            labelContainer.style.left = '0';
+                            labelContainer.style.top = '0';
+                            labelContainer.style.width = '100%';
+                            labelContainer.style.height = '100%';
+                        }
+                    } else {
+                        width = container.clientWidth;
+                        height = container.clientHeight;
+                        
+                        // Reset styles when not in fullscreen
+                        renderer.domElement.style.position = '';
+                        renderer.domElement.style.left = '';
+                        renderer.domElement.style.top = '';
+                        renderer.domElement.style.width = '';
+                        renderer.domElement.style.height = '';
+                        
+                        if (labelContainer) {
+                            labelContainer.style.position = 'absolute';
+                            labelContainer.style.left = '0';
+                            labelContainer.style.top = '0';
+                            labelContainer.style.width = '100%';
+                            labelContainer.style.height = '100%';
+                        }
+                    }
+                    
+                    // Update camera
+                    camera.aspect = width / height;
+                    camera.updateProjectionMatrix();
+                    
+                    // Update renderer size
+                    renderer.setSize(width, height, true);
+                    
+                    console.log(`Resize: ${width}x${height}, Fullscreen: ${!!document.fullscreenElement}`);
+                };
+                
+                // Add resize event listeners including fullscreen changes
+                window.addEventListener('resize', handleResize);
+                
+                // Add delay to fullscreen event handlers to ensure proper rendering after transition
+                const delayedResize = () => {
+                    setTimeout(handleResize, 100);
+                };
+                
+                document.addEventListener('fullscreenchange', delayedResize);
+                document.addEventListener('mozfullscreenchange', delayedResize);
+                document.addEventListener('webkitfullscreenchange', delayedResize);
+                document.addEventListener('MSFullscreenChange', delayedResize);
+                
+                const cleanup = () => {
+                    window.removeEventListener('resize', handleResize);
+                    document.removeEventListener('fullscreenchange', delayedResize);
+                    document.removeEventListener('mozfullscreenchange', delayedResize);
+                    document.removeEventListener('webkitfullscreenchange', delayedResize);
+                    document.removeEventListener('MSFullscreenChange', delayedResize);
+                };
+                
+                return { scene, camera, renderer, labelContainer, cleanup };
+            }
+        };
+        
+        // Create controls module
+        const controlsModule = {
+            setupControls: function(container) {
+                const visualizationContainer = document.querySelector('.visualization-container');
+                const visualizationControls = document.querySelector('.visualization-controls');
+                
+                // State
+                const state = {
+                    isRotating: true // Default to rotating
+                };
+                
+                // Event listeners
+                const listeners = [];
+                
+                if (!visualizationControls) {
+                    console.warn('Visualization controls not found');
+                    return { 
+                        isRotating: () => state.isRotating,
+                        cleanup: () => {}
+                    };
+                }
+                
+                // Get or create rotation button
+                let toggleRotationButton = document.getElementById('toggle-rotation');
+                
+                if (!toggleRotationButton) {
+                    toggleRotationButton = document.createElement('button');
+                    toggleRotationButton.id = 'toggle-rotation';
+                    toggleRotationButton.className = 'control-button';
+                    toggleRotationButton.textContent = state.isRotating ? 'Pause Rotation' : 'Start Rotation';
+                    visualizationControls.appendChild(toggleRotationButton);
+                }
+                
+                // Create fullscreen button
+                const fullscreenButton = document.createElement('button');
+                fullscreenButton.id = 'toggle-fullscreen';
+                fullscreenButton.className = 'control-button';
+                fullscreenButton.textContent = 'Enter Fullscreen';
+                
+                // Insert fullscreen button after rotation button
+                if (toggleRotationButton) {
+                    toggleRotationButton.insertAdjacentElement('afterend', fullscreenButton);
+                } else {
+                    visualizationControls.appendChild(fullscreenButton);
+                }
+                
+                // Toggle rotation handler
+                const handleToggleRotation = function() {
+                    state.isRotating = !state.isRotating;
+                    this.textContent = state.isRotating ? 'Pause Rotation' : 'Start Rotation';
+                };
+                
+                // Toggle fullscreen handler
+                const handleToggleFullscreen = function() {
+                    toggleFullScreen(visualizationContainer);
+                    
+                    // Force a resize after a short delay to ensure proper rendering
+                    setTimeout(() => {
+                        window.dispatchEvent(new Event('resize'));
+                    }, 100);
+                };
+                
+                // Update fullscreen button text based on fullscreen state
+                const updateFullscreenButtonText = function() {
+                    if (document.fullscreenElement || 
+                        document.mozFullScreenElement || 
+                        document.webkitFullscreenElement || 
+                        document.msFullscreenElement) {
+                        fullscreenButton.textContent = 'Exit Fullscreen';
+                    } else {
+                        fullscreenButton.textContent = 'Enter Fullscreen';
+                    }
+                };
+                
+                // Add event listeners
+                toggleRotationButton.addEventListener('click', handleToggleRotation);
+                fullscreenButton.addEventListener('click', handleToggleFullscreen);
+                document.addEventListener('fullscreenchange', updateFullscreenButtonText);
+                document.addEventListener('mozfullscreenchange', updateFullscreenButtonText);
+                document.addEventListener('webkitfullscreenchange', updateFullscreenButtonText);
+                document.addEventListener('MSFullscreenChange', updateFullscreenButtonText);
+                
+                // Track listeners for cleanup
+                listeners.push(
+                    { element: toggleRotationButton, event: 'click', handler: handleToggleRotation },
+                    { element: fullscreenButton, event: 'click', handler: handleToggleFullscreen },
+                    { element: document, event: 'fullscreenchange', handler: updateFullscreenButtonText },
+                    { element: document, event: 'mozfullscreenchange', handler: updateFullscreenButtonText },
+                    { element: document, event: 'webkitfullscreenchange', handler: updateFullscreenButtonText },
+                    { element: document, event: 'MSFullscreenChange', handler: updateFullscreenButtonText }
+                );
+                
+                return {
+                    isRotating: () => state.isRotating,
+                    cleanup: () => {
+                        // Remove all event listeners
+                        listeners.forEach(({ element, event, handler }) => {
+                            element.removeEventListener(event, handler);
+                        });
+                    }
+                };
+            }
+        };
+        
+        // Create label system module
+        const labelsModule = {
+            setupLabelSystem: function(container) {
+                // Store label data
+                const labelData = [];
+                
+                // Function to add a label to a 3D object
+                function addLabel(object, text, color) {
+                    // Convert hex color to CSS color string
+                    const cssColor = typeof color === 'number' 
+                        ? '#' + color.toString(16).padStart(6, '0')
+                        : color || 'white';
+                    
+                    // Create a div element for the label
+                    const labelDiv = document.createElement('div');
+                    labelDiv.className = 'label3d';
+                    labelDiv.textContent = text;
+                    labelDiv.style.color = cssColor;
+                    
+                    // Add the label to our container
+                    container.appendChild(labelDiv);
+                    
+                    // Calculate the object's dimensions
+                    const box = new THREE.Box3().setFromObject(object);
+                    const objectHeight = box.max.y - box.min.y;
+                    
+                    // Create a position vector for the label
+                    // We'll position it slightly above the object
+                    const position = new THREE.Vector3(0, objectHeight / 2 + 10, 0);
+                    
+                    // Store the label info for updating in the animation loop
+                    const labelInfo = {
+                        element: labelDiv,
+                        object: object,
+                        position: position,
+                        visible: true
+                    };
+                    
+                    labelData.push(labelInfo);
+                    
+                    return labelInfo;
+                }
+                
+                // Function to update all label positions
+                function updateLabels(camera) {
+                    // Loop through all labels
+                    labelData.forEach(label => {
+                        if (!label.visible) {
+                            label.element.style.display = 'none';
+                            return;
+                        }
+                        
+                        // Get the object's world position
+                        const worldPosition = new THREE.Vector3();
+                        
+                        // If the object is a group, use its position directly
+                        if (label.object.isGroup) {
+                            worldPosition.copy(label.object.position);
+                            worldPosition.y += label.position.y; // Add the label's y offset
+                        } else {
+                            // Get the object's world position and add the label's offset
+                            label.object.updateMatrixWorld();
+                            // Get the object's position in world space
+                            label.object.getWorldPosition(worldPosition);
+                            // Add the label's offset
+                            worldPosition.y += label.position.y;
+                        }
+                        
+                        // Project the world position to screen coordinates
+                        const screenPosition = worldPosition.clone();
+                        screenPosition.project(camera);
+                        
+                        // Convert to CSS coordinates
+                        const x = (screenPosition.x * 0.5 + 0.5) * container.clientWidth;
+                        const y = (-screenPosition.y * 0.5 + 0.5) * container.clientHeight;
+                        
+                        // Check if the label is in front of the camera and within screen bounds
+                        if (screenPosition.z < 1 && 
+                            x > 0 && x < container.clientWidth && 
+                            y > 0 && y < container.clientHeight) {
+                            
+                            // Calculate distance to camera for size scaling
+                            const dist = camera.position.distanceTo(worldPosition);
+                            const scale = Math.max(0.5, Math.min(1.2, 800 / dist));
+                            
+                            // Update label position and visibility
+                            label.element.style.display = 'block';
+                            label.element.style.transform = `translate(-50%, -50%) translate(${x}px, ${y}px)`;
+                            label.element.style.fontSize = `${14 * scale}px`;
+                            
+                            // Adjust opacity based on distance
+                            const opacity = Math.max(0.3, Math.min(1.0, 500 / dist));
+                            label.element.style.opacity = opacity.toString();
+                        } else {
+                            // Hide the label if it's not visible
+                            label.element.style.display = 'none';
+                        }
+                    });
+                }
+                
+                // Function to remove all labels
+                function cleanup() {
+                    labelData.forEach(label => {
+                        if (label.element && label.element.parentNode) {
+                            label.element.parentNode.removeChild(label.element);
+                        }
+                    });
+                    
+                    // Clear the array
+                    labelData.length = 0;
+                }
+                
+                // Return the label system API
+                return {
+                    addLabel,
+                    updateLabels,
+                    cleanup,
+                    labelData
+                };
+            }
+        };
+        
+        // Fullscreen toggle function
+        function toggleFullScreen(element) {
+            if (!document.fullscreenElement &&
+                !document.mozFullScreenElement &&
+                !document.webkitFullscreenElement &&
+                !document.msFullscreenElement) {
+                
+                // Before entering fullscreen, ensure the element has appropriate styles
+                if (element) {
+                    // Save original styles to restore later
+                    element._originalStyles = {
+                        width: element.style.width,
+                        height: element.style.height,
+                        position: element.style.position,
+                        overflow: element.style.overflow
+                    };
+                    
+                    // Set styles for fullscreen
+                    element.style.width = '100%';
+                    element.style.height = '100%';
+                    element.style.position = 'fixed';
+                    element.style.top = '0';
+                    element.style.left = '0';
+                    element.style.overflow = 'hidden';
+                }
+                
+                // Enter fullscreen mode
+                try {
+                    if (element.requestFullscreen) {
+                        element.requestFullscreen().then(() => {
+                            console.log("Entered fullscreen mode");
+                            // Force resize immediately
+                            window.dispatchEvent(new Event('resize'));
+                        }).catch(err => {
+                            console.warn(`Error attempting to enable fullscreen: ${err.message}`);
+                        });
+                    } else if (element.mozRequestFullScreen) {
+                        element.mozRequestFullScreen();
+                        console.log("Entered fullscreen mode (moz)");
+                    } else if (element.webkitRequestFullscreen) {
+                        element.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+                        console.log("Entered fullscreen mode (webkit)");
+                    } else if (element.msRequestFullscreen) {
+                        element.msRequestFullscreen();
+                        console.log("Entered fullscreen mode (ms)");
+                    }
+                } catch (err) {
+                    console.error("Fullscreen error:", err);
+                }
+            } else {
+                // Exit fullscreen mode
+                try {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen().then(() => {
+                            console.log("Exited fullscreen mode");
+                            // Restore original styles
+                            if (element && element._originalStyles) {
+                                Object.keys(element._originalStyles).forEach(key => {
+                                    element.style[key] = element._originalStyles[key];
+                                });
+                            }
+                        }).catch(err => {
+                            console.warn(`Error attempting to exit fullscreen: ${err.message}`);
+                        });
+                    } else if (document.mozCancelFullScreen) {
+                        document.mozCancelFullScreen();
+                        console.log("Exited fullscreen mode (moz)");
+                    } else if (document.webkitExitFullscreen) {
+                        document.webkitExitFullscreen();
+                        console.log("Exited fullscreen mode (webkit)");
+                    } else if (document.msExitFullscreen) {
+                        document.msExitFullscreen();
+                        console.log("Exited fullscreen mode (ms)");
+                    }
+                } catch (err) {
+                    console.error("Fullscreen exit error:", err);
+                }
+            }
+        }
+        
+        // Initialize scene, controls, and label system
+        const container = document.getElementById('visualization-mount');
+        const sceneResult = sceneModule.initScene(container);
+        const scene = sceneResult.scene;
+        const camera = sceneResult.camera;
+        const renderer = sceneResult.renderer;
+        const labelContainer = sceneResult.labelContainer;
+        
+        // Initialize controls
+        const controls = controlsModule.setupControls(container);
+        
+        // Initialize label system
+        const labelSystem = labelsModule.setupLabelSystem(labelContainer);
+        
+        resolve({
+            scene,
+            camera,
+            renderer,
+            labelSystem,
+            controls,
+            cleanup: sceneResult.cleanup
+        });
+    });
+}
+
+// Load region modules
+function loadRegionModules(scene, labelSystem) {
+    return new Promise((resolve, reject) => {
+        // We'll load each region's script dynamically
+        const loadScript = (src) => {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = src;
+                script.onload = () => resolve();
+                script.onerror = (e) => reject(new Error(`Failed to load script: ${src}`));
+                document.head.appendChild(script);
+            });
+        };
+        
+        // Load the configuration first
+        loadScript('js/core/config.js')
+            .then(() => {
+                // Create a placeholder for regions
+                const regions = {};
+                
+                // Load all region scripts
+                return Promise.all([
+                    // After each script loads, create the region and store the elements
+                    loadScript('js/regions/eastern.js')
+                        .then(() => {
+                            if (typeof createEasternContinent === 'function') {
+                                regions.eastern = createEasternContinent(scene, labelSystem);
+                                console.log('Eastern region loaded');
+                            } else {
+                                console.warn('Eastern region function not found');
+                                // Create a simple placeholder for testing
+                                const easternGroup = new THREE.Group();
+                                const box = new THREE.Mesh(
+                                    new THREE.BoxGeometry(140, 12, 180),
+                                    new THREE.MeshLambertMaterial({ color: 0xa9a9a9 })
+                                );
+                                easternGroup.add(box);
+                                easternGroup.position.set(130, 6, 0);
+                                scene.add(easternGroup);
+                                
+                                labelSystem.addLabel(easternGroup, "Eastern Continent", 0xa9a9a9);
+                                regions.eastern = { continent: easternGroup };
+                            }
+                        }),
+                    
+                    loadScript('js/regions/central.js')
+                        .then(() => {
+                            if (typeof createCentralIslands === 'function') {
+                                regions.central = createCentralIslands(scene, labelSystem);
+                                console.log('Central region loaded');
+                            } else {
+                                console.warn('Central region function not found');
+                                // Create a placeholder
+                                const centralGroup = new THREE.Group();
+                                const cylinder = new THREE.Mesh(
+                                    new THREE.CylinderGeometry(35, 40, 15, 8),
+                                    new THREE.MeshLambertMaterial({ color: 0x9932cc })
+                                );
+                                centralGroup.add(cylinder);
+                                centralGroup.position.set(0, 7.5, 0);
+                                scene.add(centralGroup);
+                                
+                                labelSystem.addLabel(centralGroup, "Magic Islands", 0x9932cc);
+                                regions.central = { magicIslands: centralGroup };
+                            }
+                        }),
+                    
+                    loadScript('js/regions/western.js')
+                        .then(() => {
+                            if (typeof createWesternRegions === 'function') {
+                                regions.western = createWesternRegions(scene, labelSystem);
+                                console.log('Western region loaded');
+                            } else {
+                                console.warn('Western region function not found');
+                                // Create a placeholder
+                                const westernGroup = new THREE.Group();
+                                const cylinder = new THREE.Mesh(
+                                    new THREE.CylinderGeometry(30, 35, 20, 8),
+                                    new THREE.MeshLambertMaterial({ color: 0xff4500 })
+                                );
+                                westernGroup.add(cylinder);
+                                westernGroup.position.set(-90, 10, 0);
+                                scene.add(westernGroup);
+                                
+                                labelSystem.addLabel(westernGroup, "Fire Islands", 0xff4500);
+                                regions.western = { fireIslands: westernGroup };
+                            }
+                        }),
+                    
+                    loadScript('js/regions/underwater.js')
+                        .then(() => {
+                            if (typeof createUnderwaterStructures === 'function') {
+                                regions.underwater = createUnderwaterStructures(scene, labelSystem);
+                                console.log('Underwater region loaded');
+                            } else {
+                                console.warn('Underwater region function not found');
+                                // Create a placeholder
+                                const underwaterGroup = new THREE.Group();
+                                const sphere = new THREE.Mesh(
+                                    new THREE.DodecahedronGeometry(40, 1),
+                                    new THREE.MeshLambertMaterial({ 
+                                        color: 0x40e0d0,
+                                        transparent: true,
+                                        opacity: 0.7
+                                    })
+                                );
+                                underwaterGroup.add(sphere);
+                                underwaterGroup.position.set(0, -50, 45);
+                                scene.add(underwaterGroup);
+                                
+                                labelSystem.addLabel(underwaterGroup, "Atlantis", 0x40e0d0);
+                                regions.underwater = { atlantis: underwaterGroup };
+                            }
+                        }),
+                    
+                    loadScript('js/regions/sky.js')
+                        .then(() => {
+                            if (typeof createSkyStructures === 'function') {
+                                regions.sky = createSkyStructures(scene, labelSystem);
+                                console.log('Sky region loaded');
+                            } else {
+                                console.warn('Sky region function not found');
+                                // Create a placeholder
+                                const skyGroup = new THREE.Group();
+                                const cylinder = new THREE.Mesh(
+                                    new THREE.CylinderGeometry(18, 22, 6, 6),
+                                    new THREE.MeshLambertMaterial({ 
+                                        color: 0x00ffff,
+                                        transparent: true,
+                                        opacity: 0.8
+                                    })
+                                );
+                                skyGroup.add(cylinder);
+                                skyGroup.position.set(100, 80, 60);
+                                scene.add(skyGroup);
+                                
+                                labelSystem.addLabel(skyGroup, "Sky Palace", 0x00ffff);
+                                regions.sky = { skyPalace: skyGroup };
+                            }
+                        })
+                ])
+                .then(() => {
+                    resolve(regions);
+                });
+            })
+            .catch(error => {
+                console.error("Error loading region modules:", error);
+                reject(error);
+            });
+    });
+}
+
+// Setup animations
+function setupAnimations(camera, controls, labelSystem, renderer, scene) {
+    // Load animations script
+    const script = document.createElement('script');
+    script.src = 'js/components/animations.js';
+    script.onload = function() {
+        if (typeof initAnimations === 'function' && typeof startAnimationLoop === 'function') {
+            const animations = initAnimations(camera, controls.isRotating);
+            startAnimationLoop(renderer, scene, camera, animations, labelSystem);
+        } else {
+            console.warn('Animation functions not found, creating fallback');
+            
+            // Fallback animation implementation
+            let angle = 0;
+            const radius = 320 * 0.7;
+            const height = 180 * 0.7;
+            let animationFrameId = null;
+            
+            function animate() {
+                animationFrameId = requestAnimationFrame(animate);
+                
+                // Update camera position
+                if (controls.isRotating()) {
+                    angle += 0.002;
+                    camera.position.x = radius * Math.cos(angle);
+                    camera.position.z = radius * Math.sin(angle);
+                    camera.position.y = height;
+                    camera.lookAt(0, 0, 0);
+                }
+                
+                // Update labels
+                labelSystem.updateLabels(camera);
+                
+                // Render scene
+                renderer.render(scene, camera);
+            }
+            
+            // Start animation
+            animate();
+        }
+    };
+    script.onerror = function() {
+        console.error('Failed to load animations script');
+    };
+    document.head.appendChild(script);
+}
+
+// Load utils and create connectors
+function loadUtilsAndCreateConnectors(scene, regions) {
+    const script = document.createElement('script');
+    script.src = 'js/core/utils.js';
+    script.onload = function() {
+        if (typeof createConnectors === 'function') {
+            createConnectors(scene, regions);
+        } else {
+            console.warn('Utils functions not found, creating fallback connectors');
+            
+            // Create a simple connector between regions
+            function createConnector(startPos, endPos, color) {
+                const points = [
+                    new THREE.Vector3(startPos.x, startPos.y, startPos.z),
+                    new THREE.Vector3(endPos.x, endPos.y, endPos.z)
+                ];
+                
+                const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                const material = new THREE.LineBasicMaterial({ 
+                    color, 
+                    linewidth: 2,
+                    transparent: true,
+                    opacity: 0.7
+                });
+                
+                const line = new THREE.Line(geometry, material);
+                scene.add(line);
+                return line;
+            }
+            
+            // Create some basic connectors between regions
+            if (regions.sky && regions.sky.skyPalace && regions.eastern && regions.eastern.capital) {
+                createConnector(
+                    regions.sky.skyPalace.position,
+                    regions.eastern.capital.position,
+                    0x00ffff
+                );
+            }
+            
+            if (regions.central && regions.central.magicIslands && regions.underwater && regions.underwater.atlantis) {
+                createConnector(
+                    regions.central.magicIslands.position,
+                    regions.underwater.atlantis.position,
+                    0x9932cc
+                );
+            }
+        }
+    };
+    script.onerror = function() {
+        console.error('Failed to load utils script');
+    };
+    document.head.appendChild(script);
 }
 
 // Load Three.js and initialize visualization
@@ -675,7 +807,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const threeScript = document.createElement('script');
     threeScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
     threeScript.onload = function() {
+        console.log('THREE.js loaded, initializing visualization');
         cleanup = initWorldVisualization();
+    };
+    threeScript.onerror = function() {
+        console.error('Failed to load THREE.js library');
     };
     document.head.appendChild(threeScript);
 });

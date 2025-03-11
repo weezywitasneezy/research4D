@@ -1,8 +1,7 @@
 // Animation and camera controls
-import { CONFIG } from '../core/config.js';
 
 // Initialize animations
-export function initAnimations(camera, isRotatingFn) {
+function initAnimations(camera, isRotatingFn) {
     // Camera rotation variables
     let angle = 0;
     const radius = CONFIG.camera.radius * CONFIG.camera.zoomFactor;
@@ -38,7 +37,7 @@ export function initAnimations(camera, isRotatingFn) {
 }
 
 // Start animation loop
-export function startAnimationLoop(renderer, scene, camera, animations, labelSystem) {
+function startAnimationLoop(renderer, scene, camera, animations, labelSystem) {
     // Animation loop
     function animate() {
         animations.setAnimationFrameId(requestAnimationFrame(animate));
@@ -56,3 +55,9 @@ export function startAnimationLoop(renderer, scene, camera, animations, labelSys
     // Start the animation loop
     animate();
 }
+
+// Make functions available globally
+window.initAnimations = initAnimations;
+window.startAnimationLoop = startAnimationLoop;
+
+console.log('Animations module loaded');
