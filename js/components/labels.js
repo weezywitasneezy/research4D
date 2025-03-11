@@ -83,14 +83,30 @@ export function setupLabelSystem(container) {
                 
                 // Calculate distance to camera for size scaling
                 const dist = camera.position.distanceTo(worldPosition);
-                const scale = Math.max(0.5, Math.min(1.2, 800 / dist));
+                
+                // Get the current zoom level from CONFIG if available
+                let currentZoom = 1.0;
+                if (window.CONFIG && window.CONFIG.currentZoom) {
+                    currentZoom = window.CONFIG.currentZoom;
+                }
+                
+                // Scale based on both distance and zoom level
+                // When zoomed out (smaller zoom value), labels should be smaller
+                // When zoomed in (larger zoom value), labels should be larger
+                const distanceScale = Math.max(0.5, Math.min(1.2, 800 / dist));
+                const zoomScale = currentZoom; // Apply zoom factor directly
+                const finalScale = distanceScale * zoomScale;
+                
+                // Base font size adjusted by final scale
+                const baseFontSize = 14;
+                const fontSize = baseFontSize * finalScale;
                 
                 // Update label position and visibility
                 label.element.style.display = 'block';
                 label.element.style.transform = `translate(-50%, -50%) translate(${x}px, ${y}px)`;
-                label.element.style.fontSize = `${14 * scale}px`;
+                label.element.style.fontSize = `${fontSize}px`;
                 
-                // Adjust opacity based on distance
+                // Adjust opacity based on distance - keep this unchanged
                 const opacity = Math.max(0.3, Math.min(1.0, 500 / dist));
                 label.element.style.opacity = opacity.toString();
             } else {

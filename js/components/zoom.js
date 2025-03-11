@@ -159,10 +159,21 @@ function initZoomControls(container, camera) {
     updateZoomIndicator();
     updateElevationIndicator();
     
+    // Set initial zoom in CONFIG
+    if (window.CONFIG) {
+        window.CONFIG.currentZoom = state.zoomLevel;
+    }
+    
     // Zoom in handler
     function handleZoomIn() {
         state.zoomLevel = Math.min(state.zoomLevel + 0.2, state.maxZoom);
         updateZoomIndicator();
+        
+        // Update CONFIG with new zoom level
+        if (window.CONFIG) {
+            window.CONFIG.currentZoom = state.zoomLevel;
+        }
+        
         console.log('Zoomed in to:', state.zoomLevel);
     }
     
@@ -170,6 +181,12 @@ function initZoomControls(container, camera) {
     function handleZoomOut() {
         state.zoomLevel = Math.max(state.zoomLevel - 0.2, state.minZoom);
         updateZoomIndicator();
+        
+        // Update CONFIG with new zoom level
+        if (window.CONFIG) {
+            window.CONFIG.currentZoom = state.zoomLevel;
+        }
+        
         console.log('Zoomed out to:', state.zoomLevel);
     }
     
@@ -215,6 +232,11 @@ function initZoomControls(container, camera) {
                 state.minZoom, 
                 Math.min(state.maxZoom, state.zoomLevel + zoomChange)
             );
+            
+            // Update CONFIG with new zoom level
+            if (window.CONFIG) {
+                window.CONFIG.currentZoom = state.zoomLevel;
+            }
             
             updateZoomIndicator();
             console.log('Mouse wheel zoom:', state.zoomLevel);

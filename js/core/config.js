@@ -2,6 +2,9 @@
 
 // Define CONFIG object globally
 window.CONFIG = {
+    // Current state tracking (used for scaling labels, etc.)
+    currentZoom: 1.0, // Default zoom level
+    
     // Scene settings
     scene: {
         backgroundColor: 0x87ceeb, // Sky blue
