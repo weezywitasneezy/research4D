@@ -135,16 +135,39 @@
     border-radius: 4px;
     font-size: 14px; /* This is now dynamically adjusted */
     font-weight: bold;
-    pointer-events: none;
     z-index: 10;
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
     white-space: nowrap;
     transform: translate(-50%, -50%);
     /* Add transition for smoother size changes */
-    transition: font-size 0.2s ease, padding 0.2s ease;
+    transition: font-size 0.2s ease, padding 0.2s ease, box-shadow 0.3s ease, text-shadow 0.3s ease;
     /* Min/max size constraints */
     min-width: 40px;
     text-align: center;
+    /* Added cursor for better hover feedback */
+    cursor: pointer;
+}
+
+/* Hover effect for labels */
+.label3d:hover {
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.9);
+}
+
+/* Glowing label effect */
+.label3d-glow {
+    animation: labelGlowPulse 1.5s infinite alternate;
+}
+
+@keyframes labelGlowPulse {
+    0% {
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.7);
+        text-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
+    }
+    100% {
+        box-shadow: 0 0 18px rgba(255, 255, 255, 0.9);
+        text-shadow: 0 0 12px rgba(255, 255, 255, 1);
+    }
 }
 
 /* Fullscreen styles - IMPROVED */

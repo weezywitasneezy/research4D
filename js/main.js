@@ -105,7 +105,6 @@ function loadCoreModules() {
                 labelContainer.style.left = '0';
                 labelContainer.style.width = '100%';
                 labelContainer.style.height = '100%';
-                labelContainer.style.pointerEvents = 'none';
                 labelContainer.style.overflow = 'hidden';
                 container.appendChild(labelContainer);
                 
@@ -327,6 +326,17 @@ function loadCoreModules() {
         // Create label system module
         const labelsModule = {
             setupLabelSystem: function(container) {
+                // First, try to load the external label system
+                try {
+                    // Try loading from components first
+                    if (typeof setupLabelSystem === 'function') {
+                        return setupLabelSystem(container);
+                    }
+                } catch (e) {
+                    console.warn('Failed to load external label system, using built-in fallback', e);
+                }
+                
+                // If the external system fails, use the built-in one
                 // Store label data
                 const labelData = [];
                 
@@ -342,6 +352,53 @@ function loadCoreModules() {
                     labelDiv.className = 'label3d';
                     labelDiv.textContent = text;
                     labelDiv.style.color = cssColor;
+                    
+                    // Add hover event handlers for enhanced interaction
+                    const mouseEnterHandler = () => {
+                        // Additional hover effects beyond CSS
+                        labelDiv.style.backgroundColor = 'rgba(20, 20, 30, 0.85)';
+                        
+                        // Store original color to restore it
+                        labelDiv._originalColor = labelDiv.style.color;
+                        
+                        // Brighten color on hover
+                        if (labelDiv.style.color.startsWith('#')) {
+                            // For hex colors
+                            labelDiv.style.color = 'white';
+                        } else {
+                            // For named colors
+                            labelDiv.style.color = 'white';
+                        }
+                        
+                        // Add glow animation class
+                        labelDiv.classList.add('label3d-glow');
+                    };
+                    
+                    const mouseLeaveHandler = () => {
+                        // Restore original styles
+                        labelDiv.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+                        labelDiv.style.color = labelDiv._originalColor;
+                        
+                        // Remove glow animation class
+                        labelDiv.classList.remove('label3d-glow');
+                    };
+                    
+                    // Add click event for future interaction
+                    const clickHandler = () => {
+                        console.log(`Clicked on: ${text}`);
+                        // We can add additional functionality here like focusing the camera on this object
+                        // or showing information about it
+                    };
+                    
+                    // Store handlers for cleanup
+                    labelDiv._mouseEnterHandler = mouseEnterHandler;
+                    labelDiv._mouseLeaveHandler = mouseLeaveHandler;
+                    labelDiv._clickHandler = clickHandler;
+                    
+                    // Add event listeners
+                    labelDiv.addEventListener('mouseenter', mouseEnterHandler);
+                    labelDiv.addEventListener('mouseleave', mouseLeaveHandler);
+                    labelDiv.addEventListener('click', clickHandler);
                     
                     // Add the label to our container
                     container.appendChild(labelDiv);
@@ -427,8 +484,16 @@ function loadCoreModules() {
                 // Function to remove all labels
                 function cleanup() {
                     labelData.forEach(label => {
-                        if (label.element && label.element.parentNode) {
-                            label.element.parentNode.removeChild(label.element);
+                        if (label.element) {
+                            // Remove event listeners
+                            label.element.removeEventListener('mouseenter', label.element._mouseEnterHandler);
+                            label.element.removeEventListener('mouseleave', label.element._mouseLeaveHandler);
+                            label.element.removeEventListener('click', label.element._clickHandler);
+                            
+                            // Remove from DOM
+                            if (label.element.parentNode) {
+                                label.element.parentNode.removeChild(label.element);
+                            }
                         }
                     });
                     
@@ -842,6 +907,18 @@ document.addEventListener('DOMContentLoaded', function() {
     // Load Three.js dynamically
     const threeScript = document.createElement('script');
     threeScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+    
+    // Preload labels.js component
+    const labelsScript = document.createElement('script');
+    labelsScript.src = 'js/components/labels.js';
+    labelsScript.onload = function() {
+        console.log('Labels component loaded successfully');
+    };
+    labelsScript.onerror = function() {
+        console.warn('Could not load external labels module, using built-in fallback');
+    };
+    document.head.appendChild(labelsScript);
+    
     threeScript.onload = function() {
         console.log('THREE.js loaded, initializing visualization');
         cleanup = initWorldVisualization();
