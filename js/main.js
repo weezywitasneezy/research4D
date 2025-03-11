@@ -707,28 +707,37 @@ function setupAnimations(camera, controls, labelSystem, renderer, scene) {
     script.src = 'js/components/animations.js';
     script.onload = function() {
         if (typeof initAnimations === 'function' && typeof startAnimationLoop === 'function') {
-            const animations = initAnimations(camera, controls.isRotating);
+            const animations = initAnimations(camera, controls.isRotating, controls.zoomLevel);
             startAnimationLoop(renderer, scene, camera, animations, labelSystem);
         } else {
             console.warn('Animation functions not found, creating fallback');
             
             // Fallback animation implementation
             let angle = 0;
-            const radius = 320 * 0.7;
-            const height = 180 * 0.7;
+            let radius = 320 * 0.7;
+            let height = 180 * 0.7;
             let animationFrameId = null;
             
             function animate() {
                 animationFrameId = requestAnimationFrame(animate);
                 
-                // Update camera position
+                // Get zoom level
+                const zoomLevel = controls.zoomLevel ? controls.zoomLevel() : 1.0;
+                
+                // Update camera position based on zoom
+                radius = (320 * 0.7) / zoomLevel;
+                height = (180 * 0.7) / zoomLevel;
+                
+                // Rotate camera if needed
                 if (controls.isRotating()) {
                     angle += 0.002;
-                    camera.position.x = radius * Math.cos(angle);
-                    camera.position.z = radius * Math.sin(angle);
-                    camera.position.y = height;
-                    camera.lookAt(0, 0, 0);
                 }
+                
+                // Position camera
+                camera.position.x = radius * Math.cos(angle);
+                camera.position.z = radius * Math.sin(angle);
+                camera.position.y = height;
+                camera.lookAt(0, 0, 0);
                 
                 // Update labels
                 labelSystem.updateLabels(camera);

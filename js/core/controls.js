@@ -8,7 +8,11 @@ export function setupControls(container) {
     
     // State
     const state = {
-        isRotating: CONFIG.animation.enabled
+        isRotating: CONFIG.animation.enabled,
+        zoomLevel: 1.0, // Default zoom level
+        minZoom: 0.3,  // Minimum zoom level (zoomed out)
+        maxZoom: 2.5,  // Maximum zoom level (zoomed in)
+        updateZoomIndicator: null // Function to update zoom indicator
     };
     
     // Event listeners
@@ -33,23 +37,106 @@ export function setupControls(container) {
         visualizationControls.appendChild(toggleRotationButton);
     }
     
+    // Create zoom buttons
+    const zoomInButton = document.createElement('button');
+    zoomInButton.id = 'zoom-in';
+    zoomInButton.className = 'control-button';
+    zoomInButton.textContent = 'Zoom In';
+    
+    const zoomOutButton = document.createElement('button');
+    zoomOutButton.id = 'zoom-out';
+    zoomOutButton.className = 'control-button';
+    zoomOutButton.textContent = 'Zoom Out';
+    
     // Create fullscreen button
     const fullscreenButton = document.createElement('button');
     fullscreenButton.id = 'toggle-fullscreen';
     fullscreenButton.className = 'control-button';
     fullscreenButton.textContent = 'Enter Fullscreen';
     
-    // Insert fullscreen button after rotation button
+    // Create zoom indicator container
+    const zoomControlContainer = document.createElement('div');
+    zoomControlContainer.className = 'zoom-control-container';
+    
+    // Create zoom level indicator
+    const zoomIndicator = document.createElement('div');
+    zoomIndicator.className = 'zoom-indicator';
+    zoomIndicator.innerHTML = `<div class="zoom-label">Zoom: <span id="zoom-value">100%</span></div>
+                              <div class="zoom-slider-container">
+                                <div class="zoom-slider-track"></div>
+                                <div class="zoom-slider-fill" id="zoom-slider-fill"></div>
+                              </div>`;
+    
+    zoomControlContainer.appendChild(zoomInButton);
+    zoomControlContainer.appendChild(zoomOutButton);
+    zoomControlContainer.appendChild(zoomIndicator);
+    
+    // Insert controls
     if (toggleRotationButton) {
-        toggleRotationButton.insertAdjacentElement('afterend', fullscreenButton);
+        toggleRotationButton.insertAdjacentElement('afterend', zoomControlContainer);
+        zoomControlContainer.insertAdjacentElement('afterend', fullscreenButton);
     } else {
+        visualizationControls.appendChild(zoomControlContainer);
         visualizationControls.appendChild(fullscreenButton);
     }
+    
+    // Function to update zoom indicator
+    const zoomValueElement = document.getElementById('zoom-value');
+    const zoomSliderFill = document.getElementById('zoom-slider-fill');
+    
+    const updateZoomIndicator = () => {
+        if (zoomValueElement) {
+            const zoomPercent = Math.round(state.zoomLevel * 100);
+            zoomValueElement.textContent = `${zoomPercent}%`;
+        }
+        
+        if (zoomSliderFill) {
+            // Calculate fill percentage based on zoom level position in the range
+            const zoomRange = state.maxZoom - state.minZoom;
+            const zoomPosition = state.zoomLevel - state.minZoom;
+            const fillPercent = (zoomPosition / zoomRange) * 100;
+            zoomSliderFill.style.width = `${fillPercent}%`;
+        }
+    };
+    
+    // Store the update function in state
+    state.updateZoomIndicator = updateZoomIndicator;
+    
+    // Initial update
+    updateZoomIndicator();
     
     // Toggle rotation handler
     const handleToggleRotation = function() {
         state.isRotating = !state.isRotating;
         this.textContent = state.isRotating ? 'Pause Rotation' : 'Start Rotation';
+    };
+    
+    // Zoom handlers
+    const handleZoomIn = function() {
+        state.zoomLevel = Math.min(state.zoomLevel + 0.2, state.maxZoom);
+        if (state.updateZoomIndicator) state.updateZoomIndicator();
+        console.log('Zoom in to:', state.zoomLevel);
+    };
+    
+    const handleZoomOut = function() {
+        state.zoomLevel = Math.max(state.zoomLevel - 0.2, state.minZoom);
+        if (state.updateZoomIndicator) state.updateZoomIndicator();
+        console.log('Zoom out to:', state.zoomLevel);
+    };
+    
+    // Mouse wheel zoom handler
+    const handleMouseWheel = function(event) {
+        event.preventDefault();
+        
+        // Determine zoom direction based on wheel delta
+        const zoomDirection = event.deltaY < 0 ? 1 : -1;
+        
+        // Adjust zoom level based on direction
+        const zoomChange = 0.1 * zoomDirection;
+        state.zoomLevel = Math.max(state.minZoom, Math.min(state.maxZoom, state.zoomLevel + zoomChange));
+        if (state.updateZoomIndicator) state.updateZoomIndicator();
+        
+        console.log('Mouse wheel zoom:', state.zoomLevel);
     };
     
     // Toggle fullscreen handler
@@ -71,7 +158,10 @@ export function setupControls(container) {
     
     // Add event listeners
     toggleRotationButton.addEventListener('click', handleToggleRotation);
+    zoomInButton.addEventListener('click', handleZoomIn);
+    zoomOutButton.addEventListener('click', handleZoomOut);
     fullscreenButton.addEventListener('click', handleToggleFullscreen);
+    container.addEventListener('wheel', handleMouseWheel, { passive: false }); // Capture mouse wheel events
     document.addEventListener('fullscreenchange', updateFullscreenButtonText);
     document.addEventListener('mozfullscreenchange', updateFullscreenButtonText);
     document.addEventListener('webkitfullscreenchange', updateFullscreenButtonText);
@@ -80,7 +170,10 @@ export function setupControls(container) {
     // Track listeners for cleanup
     listeners.push(
         { element: toggleRotationButton, event: 'click', handler: handleToggleRotation },
+        { element: zoomInButton, event: 'click', handler: handleZoomIn },
+        { element: zoomOutButton, event: 'click', handler: handleZoomOut },
         { element: fullscreenButton, event: 'click', handler: handleToggleFullscreen },
+        { element: container, event: 'wheel', handler: handleMouseWheel },
         { element: document, event: 'fullscreenchange', handler: updateFullscreenButtonText },
         { element: document, event: 'mozfullscreenchange', handler: updateFullscreenButtonText },
         { element: document, event: 'webkitfullscreenchange', handler: updateFullscreenButtonText },
@@ -89,6 +182,7 @@ export function setupControls(container) {
     
     return {
         isRotating: () => state.isRotating,
+        zoomLevel: () => state.zoomLevel,
         cleanup: () => {
             // Remove all event listeners
             listeners.forEach(({ element, event, handler }) => {

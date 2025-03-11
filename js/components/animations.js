@@ -1,11 +1,11 @@
 // Animation and camera controls
 
 // Initialize animations
-function initAnimations(camera, isRotatingFn) {
+function initAnimations(camera, isRotatingFn, zoomLevelFn) {
     // Camera rotation variables
     let angle = 0;
-    const radius = CONFIG.camera.radius * CONFIG.camera.zoomFactor;
-    const height = CONFIG.camera.height * CONFIG.camera.zoomFactor;
+    let radius = CONFIG.camera.radius * CONFIG.camera.zoomFactor;
+    let height = CONFIG.camera.height * CONFIG.camera.zoomFactor;
     const centerX = 0;
     const centerZ = 0;
     
@@ -14,13 +14,22 @@ function initAnimations(camera, isRotatingFn) {
     
     // Camera rotation function
     function updateCameraPosition() {
+        // Get current zoom level
+        const zoomLevel = zoomLevelFn ? zoomLevelFn() : 1.0;
+        
+        // Adjust camera position based on zoom level
+        radius = CONFIG.camera.radius * CONFIG.camera.zoomFactor / zoomLevel;
+        height = CONFIG.camera.height * CONFIG.camera.zoomFactor / zoomLevel;
+        
         if (isRotatingFn()) {
             angle += CONFIG.camera.rotationSpeed;
-            camera.position.x = centerX + radius * Math.cos(angle);
-            camera.position.z = centerZ + radius * Math.sin(angle);
-            camera.position.y = height;
-            camera.lookAt(0, 0, 0);
         }
+        
+        // Update camera position using calculated values
+        camera.position.x = centerX + radius * Math.cos(angle);
+        camera.position.z = centerZ + radius * Math.sin(angle);
+        camera.position.y = height;
+        camera.lookAt(0, 0, 0);
     }
     
     return {
