@@ -1,13 +1,8 @@
 // Eastern regions implementation
+import { config } from '../core/config.js';
 
 // Create Eastern continent and all its sub-regions
-function createEasternContinent(scene, labelSystem) {
-    // Need to check if CONFIG is available
-    if (typeof CONFIG === 'undefined') {
-        console.error('CONFIG is not defined. Make sure config.js is loaded first.');
-        return {};
-    }
-    
+export function createEasternContinent(scene, labelSystem) {
     const elements = {
         continent: createMainContinent(scene, labelSystem),
         farms: createVerticalFarms(scene, labelSystem),
@@ -28,7 +23,7 @@ function createMainContinent(scene, labelSystem) {
     // Using a combination of shapes for more natural look - adjusted to requested dimensions
     const mainContinentGeometry = new THREE.BoxGeometry(100, 12, 400);
     const mainContinentMaterial = new THREE.MeshLambertMaterial({ 
-        color: CONFIG.colors.easternContinent
+        color: config.get('colors.easternContinent')
     });
     const mainContinent = new THREE.Mesh(mainContinentGeometry, mainContinentMaterial);
     eastContinentGroup.add(mainContinent);
@@ -79,12 +74,12 @@ function createMainContinent(scene, labelSystem) {
     eastContinentGroup.add(southernMountains);
     
     // Position the entire continent group
-    const position = CONFIG.positions.eastern.continent;
+    const position = config.get('positions.eastern.continent');
     eastContinentGroup.position.set(position.x, position.y, position.z);
     scene.add(eastContinentGroup);
     
     // Add label
-    labelSystem.addLabel(eastContinentGroup, "Eastern Continent", CONFIG.colors.easternContinent);
+    labelSystem.addLabel(eastContinentGroup, "Eastern Continent", config.get('colors.easternContinent'));
     
     return eastContinentGroup;
 }
@@ -105,7 +100,7 @@ function createVerticalFarms(scene, labelSystem) {
     const createFarmTower = (x, z, height, radius) => {
         const towerGeometry = new THREE.CylinderGeometry(radius, radius, height, 8);
         const towerMaterial = new THREE.MeshLambertMaterial({ 
-            color: CONFIG.colors.farmRegion
+            color: config.get('colors.farmRegion')
         });
         const tower = new THREE.Mesh(towerGeometry, towerMaterial);
         tower.position.set(x, height/2 + 4, z);
@@ -131,12 +126,12 @@ function createVerticalFarms(scene, labelSystem) {
     createFarmTower(15, 30, 20, 5);
     
     // Position the entire farm group
-    const position = CONFIG.positions.eastern.farms;
+    const position = config.get('positions.eastern.farms');
     verticalFarmGroup.position.set(position.x, position.y, position.z);
     scene.add(verticalFarmGroup);
     
     // Add label
-    labelSystem.addLabel(verticalFarmGroup, "Vertical Farm Region", CONFIG.colors.farmRegion);
+    labelSystem.addLabel(verticalFarmGroup, "Vertical Farm Region", config.get('colors.farmRegion'));
     
     return verticalFarmGroup;
 }
@@ -157,7 +152,7 @@ function createIndustrialArea(scene, labelSystem) {
     const createFactory = (x, z, width, height, depth) => {
         const factoryGeometry = new THREE.BoxGeometry(width, height, depth);
         const factoryMaterial = new THREE.MeshLambertMaterial({ 
-            color: CONFIG.colors.industrialArea
+            color: config.get('colors.industrialArea')
         });
         const factory = new THREE.Mesh(factoryGeometry, factoryMaterial);
         factory.position.set(x, height/2 + 3, z);
@@ -183,12 +178,12 @@ function createIndustrialArea(scene, labelSystem) {
     createFactory(-25, 40, 28, 20, 30);
     
     // Position the entire industrial area group
-    const position = CONFIG.positions.eastern.industrial;
+    const position = config.get('positions.eastern.industrial');
     industrialAreaGroup.position.set(position.x, position.y, position.z);
     scene.add(industrialAreaGroup);
     
     // Add label
-    labelSystem.addLabel(industrialAreaGroup, "Industrial Area", CONFIG.colors.industrialArea);
+    labelSystem.addLabel(industrialAreaGroup, "Industrial Area", config.get('colors.industrialArea'));
     
     return industrialAreaGroup;
 }
@@ -200,7 +195,7 @@ function createSeasideCapital(scene, labelSystem) {
     // Main city base - larger and more defined
     const cityBaseGeometry = new THREE.CylinderGeometry(40, 45, 5, 8);
     const cityBaseMaterial = new THREE.MeshLambertMaterial({ 
-        color: CONFIG.colors.seasideCapital
+        color: config.get('colors.seasideCapital')
     });
     const cityBase = new THREE.Mesh(cityBaseGeometry, cityBaseMaterial);
     cityBase.position.y = 2.5;
@@ -258,12 +253,12 @@ function createSeasideCapital(scene, labelSystem) {
     }
     
     // Position the city group
-    const position = CONFIG.positions.eastern.capital;
+    const position = config.get('positions.eastern.capital');
     seasideCapitalGroup.position.set(position.x, position.y, position.z);
     scene.add(seasideCapitalGroup);
     
     // Add label
-    labelSystem.addLabel(seasideCapitalGroup, "Seaside Capital", CONFIG.colors.seasideCapital);
+    labelSystem.addLabel(seasideCapitalGroup, "Seaside Capital", config.get('colors.seasideCapital'));
     
     return seasideCapitalGroup;
 }
@@ -310,7 +305,7 @@ function createSpaceFarms(scene, labelSystem) {
     }
     
     // Create several domes of varying sizes
-    createDome(0, 0, 20, 30, CONFIG.colors.spaceFarms);
+    createDome(0, 0, 20, 30, config.get('colors.spaceFarms'));
     createDome(-35, 15, 15, 25, 0x90caf9); // Light blue
     createDome(30, -10, 18, 28, 0x80deea); // Cyan
     createDome(-20, -30, 12, 20, 0x4fc3f7); // Light blue
@@ -346,12 +341,12 @@ function createSpaceFarms(scene, labelSystem) {
     createWalkway(30, -10, 25, 25);
     
     // Position the entire space farm group
-    const position = CONFIG.positions.eastern.spaceFarms;
+    const position = config.get('positions.eastern.spaceFarms');
     spaceFarmGroup.position.set(position.x, position.y, position.z);
     scene.add(spaceFarmGroup);
     
     // Add label
-    labelSystem.addLabel(spaceFarmGroup, "Space Farms", CONFIG.colors.spaceFarms);
+    labelSystem.addLabel(spaceFarmGroup, "Space Farms", config.get('colors.spaceFarms'));
     
     return spaceFarmGroup;
 }
@@ -364,7 +359,7 @@ function createEasternMines(scene, labelSystem) {
     // Main mine cavern
     const mainCavernGeometry = new THREE.SphereGeometry(40, 8, 8);
     const mainCavernMaterial = new THREE.MeshBasicMaterial({ 
-        color: CONFIG.colors.mines,
+        color: config.get('colors.mines'),
         wireframe: true,
         transparent: true,
         opacity: 0.3
@@ -376,7 +371,7 @@ function createEasternMines(scene, labelSystem) {
     const addTunnel = (x, y, z, length, rotation) => {
         const tunnelGeometry = new THREE.CylinderGeometry(8, 8, length, 8, 1, true);
         const tunnelMaterial = new THREE.MeshBasicMaterial({ 
-            color: CONFIG.colors.mines,
+            color: config.get('colors.mines'),
             wireframe: true,
             transparent: true,
             opacity: 0.3
@@ -398,7 +393,7 @@ function createEasternMines(scene, labelSystem) {
     const addCavern = (x, y, z, radius) => {
         const cavernGeometry = new THREE.SphereGeometry(radius, 8, 8);
         const cavernMaterial = new THREE.MeshBasicMaterial({ 
-            color: CONFIG.colors.mines,
+            color: config.get('colors.mines'),
             wireframe: true,
             transparent: true,
             opacity: 0.3
@@ -421,12 +416,12 @@ function createEasternMines(scene, labelSystem) {
     addCavern(0, 0, -60, 16);
     
     // Position the mines
-    const position = CONFIG.positions.eastern.mines;
+    const position = config.get('positions.eastern.mines');
     mineGroup.position.set(position.x, position.y, position.z);
     scene.add(mineGroup);
     
     // Add label
-    labelSystem.addLabel(mineGroup, "Eastern Mines", CONFIG.colors.mines);
+    labelSystem.addLabel(mineGroup, "Eastern Mines", config.get('colors.mines'));
     
     return mineGroup;
 }
@@ -439,7 +434,7 @@ function createSewers(scene, labelSystem) {
     // Main sewer cylinder
     const mainSewerGeometry = new THREE.CylinderGeometry(25, 30, 15, 8, 1, true);
     const sewerMaterial = new THREE.MeshBasicMaterial({ 
-        color: CONFIG.colors.sewers,
+        color: config.get('colors.sewers'),
         wireframe: true,
         transparent: true,
         opacity: 0.5
@@ -489,15 +484,12 @@ function createSewers(scene, labelSystem) {
     addTank(15, 0, 40, 15, 25);
     
     // Position the sewers
-    const position = CONFIG.positions.eastern.sewers;
+    const position = config.get('positions.eastern.sewers');
     sewerGroup.position.set(position.x, position.y, position.z);
     scene.add(sewerGroup);
     
     // Add label
-    labelSystem.addLabel(sewerGroup, "Mutant Sewers", CONFIG.colors.sewers);
+    labelSystem.addLabel(sewerGroup, "Mutant Sewers", config.get('colors.sewers'));
     
     return sewerGroup;
 }
-
-// Make the function available globally
-window.createEasternContinent = createEasternContinent;

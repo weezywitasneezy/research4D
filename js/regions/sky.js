@@ -1,7 +1,8 @@
 // Sky regions implementation
+import { config } from '../core/config.js';
 
 // Create all sky structures
-function createSkyStructures(scene, labelSystem) {
+export function createSkyStructures(scene, labelSystem) {
     // Need to check if CONFIG is available
     if (typeof CONFIG === 'undefined') {
         console.error('CONFIG is not defined. Make sure config.js is loaded first.');
@@ -191,6 +192,3 @@ function addOrbitalPlatforms(scene, spaceFarms, labelSystem) {
     
     return platformsGroup;
 }
-
-// Make functions available globally
-window.createSkyStructures = createSkyStructures;

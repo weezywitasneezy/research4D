@@ -5,6 +5,13 @@ function addCompassMarkers(container) {
 }
 
 // Main entry point for visualization
+import { config } from './core/config.js';
+import { initScene } from './core/scene.js';
+import { createEasternContinent } from './regions/eastern.js';
+import { createCentralIslands } from './regions/central.js';
+import { createWesternRegions } from './regions/western.js';
+import { createUnderwaterStructures } from './regions/underwater.js';
+import { createSkyStructures } from './regions/sky.js';
 
 // Global state
 let cleanup = null;
@@ -29,56 +36,61 @@ function initWorldVisualization() {
         .then(core => {
             const { scene, camera, renderer, labelSystem, controls } = core;
             
-            // Then load region modules
-            return loadRegionModules(scene, labelSystem)
-                .then(regions => {
-                    // Create connectors between regions
-                    loadUtilsAndCreateConnectors(scene, regions);
-                    
-                    // Create 3D compass markers if the function is available
-                    if (typeof create3DCompassMarkers === 'function') {
-                        create3DCompassMarkers(scene, labelSystem);
+            // Create all regions
+            const regions = {
+                eastern: createEasternContinent(scene, labelSystem),
+                central: createCentralIslands(scene, labelSystem),
+                western: createWesternRegions(scene, labelSystem),
+                underwater: createUnderwaterStructures(scene, labelSystem),
+                sky: createSkyStructures(scene, labelSystem)
+            };
+            
+            // Create connectors between regions
+            loadUtilsAndCreateConnectors(scene, regions);
+            
+            // Create 3D compass markers if the function is available
+            if (typeof create3DCompassMarkers === 'function') {
+                create3DCompassMarkers(scene, labelSystem);
+            }
+            
+            // Load zoom controls
+            loadZoomControls(container, camera).then(zoomControls => {
+                // Store zoomControls globally for access by other components
+                window.zoomControls = zoomControls;
+                
+                // Setup animations with zoom controls
+                setupAnimations(camera, controls, labelSystem, renderer, scene, zoomControls);
+            });
+            
+            // Setup cleanup function
+            cleanup = function() {
+                // Cleanup code here...
+                if (controls && controls.cleanup) controls.cleanup();
+                if (core.cleanup) core.cleanup();
+                
+                if (labelSystem && labelSystem.cleanup) {
+                    labelSystem.cleanup();
+                }
+                
+                if (window.zoomControls && window.zoomControls.cleanup) {
+                    window.zoomControls.cleanup();
+                }
+                
+                // Dispose of all scene resources
+                scene.traverse((object) => {
+                    if (object.geometry) object.geometry.dispose();
+                    if (object.material) {
+                        if (Array.isArray(object.material)) {
+                            object.material.forEach(material => material.dispose());
+                        } else {
+                            object.material.dispose();
+                        }
                     }
-                    
-                    // Load zoom controls
-                    loadZoomControls(container, camera).then(zoomControls => {
-                        // Store zoomControls globally for access by other components
-                        window.zoomControls = zoomControls;
-                        
-                        // Setup animations with zoom controls
-                        setupAnimations(camera, controls, labelSystem, renderer, scene, zoomControls);
-                    });
-                    
-                    // Setup cleanup function
-                    cleanup = function() {
-                        // Cleanup code here...
-                        if (controls && controls.cleanup) controls.cleanup();
-                        if (core.cleanup) core.cleanup();
-                        
-                        if (labelSystem && labelSystem.cleanup) {
-                            labelSystem.cleanup();
-                        }
-                        
-                        if (window.zoomControls && window.zoomControls.cleanup) {
-                            window.zoomControls.cleanup();
-                        }
-                        
-                        // Dispose of all scene resources
-                        scene.traverse((object) => {
-                            if (object.geometry) object.geometry.dispose();
-                            if (object.material) {
-                                if (Array.isArray(object.material)) {
-                                    object.material.forEach(material => material.dispose());
-                                } else {
-                                    object.material.dispose();
-                                }
-                            }
-                        });
-                        
-                        // Clear global references
-                        window.zoomControls = null;
-                    };
                 });
+                
+                // Clear global references
+                window.zoomControls = null;
+            };
         })
         .catch(error => {
             console.error("Error initializing visualization:", error);

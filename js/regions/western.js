@@ -1,7 +1,8 @@
 // Western regions implementation
+import { config } from '../core/config.js';
 
 // Create Western regions and related structures
-function createWesternRegions(scene, labelSystem) {
+export function createWesternRegions(scene, labelSystem) {
     // Need to check if CONFIG is available
     if (typeof CONFIG === 'undefined') {
         console.error('CONFIG is not defined. Make sure config.js is loaded first.');
@@ -223,6 +224,3 @@ scene.add(hellsEndGroup);
 
 return hellsEndGroup;
 }
-
-// Make the function available globally
-window.createWesternRegions = createWesternRegions;

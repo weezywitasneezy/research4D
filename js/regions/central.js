@@ -1,7 +1,8 @@
 // Central regions implementation
+import { config } from '../core/config.js';
 
 // Create Central islands and all related structures
-function createCentralIslands(scene, labelSystem) {
+export function createCentralIslands(scene, labelSystem) {
     // Need to check if CONFIG is available
     if (typeof CONFIG === 'undefined') {
         console.error('CONFIG is not defined. Make sure config.js is loaded first.');
@@ -265,6 +266,3 @@ function createCaveIslands(scene, labelSystem) {
     
     return caveIslands;
 }
-
-// Make the function available globally
-window.createCentralIslands = createCentralIslands;
