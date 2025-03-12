@@ -3,12 +3,6 @@ import { config } from '../core/config.js';
 
 // Create all sky structures
 export function createSkyStructures(scene, labelSystem) {
-    // Need to check if CONFIG is available
-    if (typeof CONFIG === 'undefined') {
-        console.error('CONFIG is not defined. Make sure config.js is loaded first.');
-        return {};
-    }
-    
     const elements = {
         skyPalace: createSkyPalace(scene, labelSystem),
         spaceFarms: createSpaceFarms(scene, labelSystem)
@@ -24,7 +18,7 @@ function createSkyPalace(scene, labelSystem) {
     // Main floating platform
     const platformGeometry = new THREE.CylinderGeometry(18, 22, 6, 6);
     const platformMaterial = new THREE.MeshLambertMaterial({ 
-        color: CONFIG.colors.skyPalace,
+        color: config.get('colors.skyPalace'),
         transparent: true,
         opacity: 0.8
     });
@@ -35,7 +29,7 @@ function createSkyPalace(scene, labelSystem) {
     // Central palace structure
     const palaceGeometry = new THREE.CylinderGeometry(12, 15, 15, 6);
     const palaceMaterial = new THREE.MeshLambertMaterial({ 
-        color: CONFIG.colors.skyPalace,
+        color: config.get('colors.skyPalace'),
         transparent: true,
         opacity: 0.9
     });
@@ -81,12 +75,12 @@ function createSkyPalace(scene, labelSystem) {
     addClouds(skyPalaceGroup);
     
     // Position the entire sky palace group
-    const position = CONFIG.positions.eastern.skyPalace;
+    const position = config.get('positions.eastern.skyPalace');
     skyPalaceGroup.position.set(position.x, position.y, position.z);
     scene.add(skyPalaceGroup);
     
     // Add label
-    labelSystem.addLabel(skyPalaceGroup, "Sky Palace", CONFIG.colors.skyPalace);
+    labelSystem.addLabel(skyPalaceGroup, "Sky Palace", config.get('colors.skyPalace'));
     
     return skyPalaceGroup;
 }
@@ -123,14 +117,14 @@ function createSpaceFarms(scene, labelSystem) {
     // Space Farms ring
     const spaceFarmsGeometry = new THREE.TorusGeometry(80, 4, 16, 50);
     const spaceFarmsMaterial = new THREE.MeshLambertMaterial({ 
-        color: CONFIG.colors.spaceFarms,
+        color: config.get('colors.spaceFarms'),
         transparent: true,
         opacity: 0.7
     });
     const spaceFarms = new THREE.Mesh(spaceFarmsGeometry, spaceFarmsMaterial);
     
     // Position the space farms
-    const position = CONFIG.positions.eastern.spaceFarms;
+    const position = config.get('positions.eastern.spaceFarms');
     spaceFarms.position.set(position.x, position.y, position.z);
     spaceFarms.rotation.x = Math.PI / 3;
     scene.add(spaceFarms);
@@ -186,7 +180,7 @@ function addOrbitalPlatforms(scene, spaceFarms, labelSystem) {
     }
     
     // Position the entire group at the same position as space farms
-    const position = CONFIG.positions.eastern.spaceFarms;
+    const position = config.get('positions.eastern.spaceFarms');
     platformsGroup.position.set(position.x, position.y, position.z);
     scene.add(platformsGroup);
     

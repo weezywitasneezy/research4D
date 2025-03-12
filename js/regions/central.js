@@ -3,12 +3,6 @@ import { config } from '../core/config.js';
 
 // Create Central islands and all related structures
 export function createCentralIslands(scene, labelSystem) {
-    // Need to check if CONFIG is available
-    if (typeof CONFIG === 'undefined') {
-        console.error('CONFIG is not defined. Make sure config.js is loaded first.');
-        return {};
-    }
-    
     const elements = {
         magicIslands: createMagicIslands(scene, labelSystem),
         moonPalace: createMoonPalace(scene, labelSystem),
@@ -26,12 +20,12 @@ function createMagicIslands(scene, labelSystem) {
     // Magic Islands Capital
     const magicIslandGeometry = new THREE.CylinderGeometry(35, 40, 15, 8);
     const magicIslandMaterial = new THREE.MeshLambertMaterial({ 
-        color: CONFIG.colors.magicIslands
+        color: config.get('colors.magicIslands')
     });
     const magicIsland = new THREE.Mesh(magicIslandGeometry, magicIslandMaterial);
     
     // Position the magic island
-    const position = CONFIG.positions.central.magicIslands;
+    const position = config.get('positions.central.magicIslands');
     magicIsland.position.set(position.x, position.y, position.z);
     scene.add(magicIsland);
     
@@ -58,7 +52,7 @@ function createMagicIslands(scene, labelSystem) {
     }
     
     // Add label
-    labelSystem.addLabel(magicIsland, "Magic Islands Capital", CONFIG.colors.magicIslands);
+    labelSystem.addLabel(magicIsland, "Magic Islands Capital", config.get('colors.magicIslands'));
     
     return magicIsland;
 }
@@ -68,7 +62,7 @@ function createMoonPalace(scene, labelSystem) {
     // Moon Palace
     const moonPalaceGeometry = new THREE.CylinderGeometry(20, 24, 18, 6);
     const moonPalaceMaterial = new THREE.MeshLambertMaterial({ 
-        color: CONFIG.colors.moonPalace,
+        color: config.get('colors.moonPalace'),
         transparent: true,
         opacity: 0.9
     });
@@ -95,12 +89,12 @@ function createMoonPalace(scene, labelSystem) {
     }
     
     // Position the moon palace
-    const position = CONFIG.positions.central.moonPalace;
+    const position = config.get('positions.central.moonPalace');
     moonPalace.position.set(position.x, position.y, position.z);
     scene.add(moonPalace);
     
     // Add label
-    labelSystem.addLabel(moonPalace, "Moon Palace", CONFIG.colors.moonPalace);
+    labelSystem.addLabel(moonPalace, "Moon Palace", config.get('colors.moonPalace'));
     
     return moonPalace;
 }
@@ -120,7 +114,7 @@ function createForestedIslands(scene, labelSystem) {
         // Forest
         const forestGeom = new THREE.ConeGeometry(size * 0.8, size * 1.2, 8);
         const forestMat = new THREE.MeshLambertMaterial({ 
-            color: CONFIG.colors.forestFarms
+            color: config.get('colors.forestFarms')
         });
         const forest = new THREE.Mesh(forestGeom, forestMat);
         forest.position.y = size * 0.8;
