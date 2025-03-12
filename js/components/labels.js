@@ -5,6 +5,9 @@ function setupLabelSystem(container) {
     // Store label data
     const labelData = [];
     
+    // Keep track of hover state
+    let isLabelHovered = false;
+    
     // Function to add a label to a 3D object
     function addLabel(object, text, color) {
         // Convert hex color to CSS color string
@@ -37,6 +40,19 @@ function setupLabelSystem(container) {
             
             // Add glow animation class
             labelDiv.classList.add('label3d-glow');
+            
+            // Pause rotation when hovering over a label
+            isLabelHovered = true;
+            
+            // Store rotation state to restore later
+            if (window.CONFIG && window.CONFIG.animation) {
+                // Store the current state only if we haven't already saved it
+                if (!window.CONFIG._wasRotatingBeforeLabel && window.CONFIG.animation.enabled) {
+                    window.CONFIG._wasRotatingBeforeLabel = true;
+                    // Temporarily disable rotation
+                    window.CONFIG.animation.enabled = false;
+                }
+            }
         };
         
         const mouseLeaveHandler = () => {
@@ -46,6 +62,17 @@ function setupLabelSystem(container) {
             
             // Remove glow animation class
             labelDiv.classList.remove('label3d-glow');
+            
+            // Resume rotation when no longer hovering over a label
+            isLabelHovered = false;
+            
+            // Restore rotation state
+            if (window.CONFIG && window.CONFIG.animation) {
+                if (window.CONFIG._wasRotatingBeforeLabel) {
+                    window.CONFIG.animation.enabled = true;
+                    window.CONFIG._wasRotatingBeforeLabel = false;
+                }
+            }
         };
         
         // Add click event for future interaction
@@ -181,8 +208,22 @@ function setupLabelSystem(container) {
         });
     }
     
+    // Function to check if any label is currently hovered
+    function isHovered() {
+        return isLabelHovered;
+    }
+    
     // Function to remove all labels
     function cleanup() {
+        // Reset hover state
+        isLabelHovered = false;
+        
+        // Restore rotation state if needed
+        if (window.CONFIG && window.CONFIG._wasRotatingBeforeLabel) {
+            window.CONFIG.animation.enabled = true;
+            window.CONFIG._wasRotatingBeforeLabel = false;
+        }
+        
         labelData.forEach(label => {
             if (label.element) {
                 // Remove event listeners
@@ -205,6 +246,7 @@ function setupLabelSystem(container) {
     return {
         addLabel,
         updateLabels,
+        isHovered,
         cleanup,
         labelData
     };
