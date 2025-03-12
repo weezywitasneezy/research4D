@@ -12,12 +12,12 @@ const defaultConfig = {
     
     // Camera settings
     camera: {
-        fov: 45,
+        fov: 60,
         near: 0.1,
         far: 2000,
-        zoomFactor: 0.7,
-        radius: 480,
-        height: 180,
+        zoomFactor: 1.0,
+        radius: 300,
+        height: 150,
         rotationSpeed: 0.002
     },
     

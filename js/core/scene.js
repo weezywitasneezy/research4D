@@ -40,6 +40,15 @@ export function initScene(container) {
     labelContainer.style.overflow = 'hidden';
     container.appendChild(labelContainer);
 
+    // Add orbit controls
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.screenSpacePanning = false;
+    controls.minDistance = 100;
+    controls.maxDistance = 800;
+    controls.maxPolarAngle = Math.PI / 2;
+
     // Add lights
     addLights(scene);
     
@@ -72,12 +81,14 @@ export function initScene(container) {
         camera,
         renderer,
         labelContainer,
+        controls,
         cleanup: () => {
             window.removeEventListener('resize', handleResize);
             document.removeEventListener('fullscreenchange', handleResize);
             document.removeEventListener('mozfullscreenchange', handleResize);
             document.removeEventListener('webkitfullscreenchange', handleResize);
             document.removeEventListener('MSFullscreenChange', handleResize);
+            controls.dispose();
         }
     };
 }

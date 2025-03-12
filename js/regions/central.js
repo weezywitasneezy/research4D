@@ -120,7 +120,7 @@ function createForestedIslands(scene, labelSystem) {
         forest.position.y = size * 0.8;
         islandGroup.add(forest);
         
-        islandGroup.position.set(x, CONFIG.positions.central.magicIslands.y, z);
+        islandGroup.position.set(x, config.get('positions.central.magicIslands.y'), z);
         scene.add(islandGroup);
         
         return islandGroup;
@@ -136,7 +136,7 @@ function createForestedIslands(scene, labelSystem) {
     ];
     
     // Add label to the first forested island
-    labelSystem.addLabel(forestedIslands[0], "Forest Farms", CONFIG.colors.forestFarms);
+    labelSystem.addLabel(forestedIslands[0], "Forest Farms", config.get('colors.forestFarms'));
     
     return forestedIslands;
 }
@@ -146,7 +146,7 @@ function createSmugglersIsland(scene, labelSystem) {
     // Smugglers Island
     const smugglersIslandGeometry = new THREE.CylinderGeometry(25, 30, 12, 8);
     const smugglersIslandMaterial = new THREE.MeshLambertMaterial({ 
-        color: CONFIG.colors.smugglersIsland
+        color: config.get('colors.smugglersIsland')
     });
     const smugglersIsland = new THREE.Mesh(smugglersIslandGeometry, smugglersIslandMaterial);
     
@@ -169,12 +169,12 @@ function createSmugglersIsland(scene, labelSystem) {
     }
     
     // Position the smugglers island
-    const position = CONFIG.positions.central.smugglersIsland;
+    const position = config.get('positions.central.smugglersIsland');
     smugglersIsland.position.set(position.x, position.y, position.z);
     scene.add(smugglersIsland);
     
     // Add label
-    labelSystem.addLabel(smugglersIsland, "Smugglers Island", CONFIG.colors.smugglersIsland);
+    labelSystem.addLabel(smugglersIsland, "Smugglers Island", config.get('colors.smugglersIsland'));
     
     return smugglersIsland;
 }
@@ -184,7 +184,7 @@ function createBelt(scene, labelSystem) {
     // The Belt
     const beltGeometry = new THREE.TorusGeometry(20, 3, 16, 32);
     const beltMaterial = new THREE.MeshLambertMaterial({ 
-        color: CONFIG.colors.belt,
+        color: config.get('colors.belt'),
         transparent: true,
         opacity: 0.9
     });
@@ -209,13 +209,13 @@ function createBelt(scene, labelSystem) {
     }
     
     // Position the belt
-    const position = CONFIG.positions.central.belt;
+    const position = config.get('positions.central.belt');
     belt.position.set(position.x, position.y, position.z);
     belt.rotation.x = Math.PI / 2;
     scene.add(belt);
     
     // Add label
-    labelSystem.addLabel(belt, "The Belt", CONFIG.colors.belt);
+    labelSystem.addLabel(belt, "The Belt", config.get('colors.belt'));
     
     return belt;
 }
@@ -229,7 +229,7 @@ function createCaveIslands(scene, labelSystem) {
         // Island base
         const baseGeom = new THREE.CylinderGeometry(size, size * 1.1, size * 0.3, 6);
         const baseMat = new THREE.MeshLambertMaterial({ 
-            color: CONFIG.colors.caveIslands
+            color: config.get('colors.caveIslands')
         });
         const base = new THREE.Mesh(baseGeom, baseMat);
         caveGroup.add(base);
@@ -241,7 +241,7 @@ function createCaveIslands(scene, labelSystem) {
         cave.position.y = size * 0.01;
         caveGroup.add(cave);
         
-        caveGroup.position.set(x, CONFIG.positions.central.smugglersIsland.y, z);
+        caveGroup.position.set(x, config.get('positions.central.smugglersIsland.y'), z);
         scene.add(caveGroup);
         
         return caveGroup;
@@ -256,7 +256,7 @@ function createCaveIslands(scene, labelSystem) {
     ];
     
     // Add label to the first cave island
-    labelSystem.addLabel(caveIslands[0], "Cave Islands", CONFIG.colors.caveIslands);
+    labelSystem.addLabel(caveIslands[0], "Cave Islands", config.get('colors.caveIslands'));
     
     return caveIslands;
 }
