@@ -257,16 +257,25 @@ function loadCoreModules() {
                 if (!toggleRotationButton) {
                     toggleRotationButton = document.createElement('button');
                     toggleRotationButton.id = 'toggle-rotation';
-                    toggleRotationButton.className = 'control-button';
-                    toggleRotationButton.textContent = state.isRotating ? 'Pause Rotation' : 'Start Rotation';
+                    toggleRotationButton.className = 'icon-button';
+                    
+                    // Create icon element for play/pause
+                    const rotationIcon = document.createElement('div');
+                    rotationIcon.className = state.isRotating ? 'pause-icon' : 'play-icon';
+                    toggleRotationButton.appendChild(rotationIcon);
+                    
                     visualizationControls.appendChild(toggleRotationButton);
                 }
                 
                 // Create fullscreen button
                 const fullscreenButton = document.createElement('button');
                 fullscreenButton.id = 'toggle-fullscreen';
-                fullscreenButton.className = 'control-button';
-                fullscreenButton.textContent = 'Enter Fullscreen';
+                fullscreenButton.className = 'icon-button';
+                
+                // Create fullscreen icon
+                const fullscreenIcon = document.createElement('div');
+                fullscreenIcon.className = 'fullscreen-icon';
+                fullscreenButton.appendChild(fullscreenIcon);
                 
                 // Insert fullscreen button after rotation button
                 if (toggleRotationButton) {
@@ -278,7 +287,20 @@ function loadCoreModules() {
                 // Toggle rotation handler
                 const handleToggleRotation = function() {
                     state.isRotating = !state.isRotating;
-                    this.textContent = state.isRotating ? 'Pause Rotation' : 'Start Rotation';
+                    
+                    // Get or create icon
+                    let icon = this.querySelector('.play-icon, .pause-icon');
+                    if (!icon) {
+                        icon = document.createElement('div');
+                        this.appendChild(icon);
+                    }
+                    
+                    // Update icon class
+                    if (state.isRotating) {
+                        icon.className = 'pause-icon';
+                    } else {
+                        icon.className = 'play-icon';
+                    }
                 };
                 
                 // Toggle fullscreen handler
@@ -291,34 +313,42 @@ function loadCoreModules() {
                     }, 100);
                 };
                 
-                // Update fullscreen button text based on fullscreen state
-                const updateFullscreenButtonText = function() {
+                // Update fullscreen button icon based on fullscreen state
+                const updateFullscreenButtonIcon = function() {
+                    // Get or create icon
+                    let icon = fullscreenButton.querySelector('.fullscreen-icon, .exit-fullscreen-icon');
+                    if (!icon) {
+                        icon = document.createElement('div');
+                        fullscreenButton.appendChild(icon);
+                    }
+                    
+                    // Update icon class based on fullscreen state
                     if (document.fullscreenElement || 
                         document.mozFullScreenElement || 
                         document.webkitFullscreenElement || 
                         document.msFullscreenElement) {
-                        fullscreenButton.textContent = 'Exit Fullscreen';
+                        icon.className = 'exit-fullscreen-icon';
                     } else {
-                        fullscreenButton.textContent = 'Enter Fullscreen';
+                        icon.className = 'fullscreen-icon';
                     }
                 };
                 
                 // Add event listeners
                 toggleRotationButton.addEventListener('click', handleToggleRotation);
                 fullscreenButton.addEventListener('click', handleToggleFullscreen);
-                document.addEventListener('fullscreenchange', updateFullscreenButtonText);
-                document.addEventListener('mozfullscreenchange', updateFullscreenButtonText);
-                document.addEventListener('webkitfullscreenchange', updateFullscreenButtonText);
-                document.addEventListener('MSFullscreenChange', updateFullscreenButtonText);
+                document.addEventListener('fullscreenchange', updateFullscreenButtonIcon);
+                document.addEventListener('mozfullscreenchange', updateFullscreenButtonIcon);
+                document.addEventListener('webkitfullscreenchange', updateFullscreenButtonIcon);
+                document.addEventListener('MSFullscreenChange', updateFullscreenButtonIcon);
                 
                 // Track listeners for cleanup
                 listeners.push(
                     { element: toggleRotationButton, event: 'click', handler: handleToggleRotation },
                     { element: fullscreenButton, event: 'click', handler: handleToggleFullscreen },
-                    { element: document, event: 'fullscreenchange', handler: updateFullscreenButtonText },
-                    { element: document, event: 'mozfullscreenchange', handler: updateFullscreenButtonText },
-                    { element: document, event: 'webkitfullscreenchange', handler: updateFullscreenButtonText },
-                    { element: document, event: 'MSFullscreenChange', handler: updateFullscreenButtonText }
+                    { element: document, event: 'fullscreenchange', handler: updateFullscreenButtonIcon },
+                    { element: document, event: 'mozfullscreenchange', handler: updateFullscreenButtonIcon },
+                    { element: document, event: 'webkitfullscreenchange', handler: updateFullscreenButtonIcon },
+                    { element: document, event: 'MSFullscreenChange', handler: updateFullscreenButtonIcon }
                 );
                 
                 return {
