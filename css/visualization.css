@@ -33,14 +33,14 @@
     cursor: grabbing; /* Changes cursor during drag */
 }
 
-/* Icon controls */
+/* Minimal icon controls */
 .visualization-controls {
     position: absolute;
-    bottom: 20px;
-    left: 20px;
+    bottom: 15px;
+    left: 15px;
     z-index: 100;
     display: flex;
-    gap: 10px;
+    gap: 8px;
     padding: 0;
     background: transparent;
     box-shadow: none;
@@ -48,34 +48,27 @@
 
 .icon-controls-container {
     display: flex;
-    gap: 15px;
+    gap: 8px;
 }
 
 .icon-button {
-    width: 40px;
-    height: 40px;
+    width: 26px;
+    height: 26px;
     border-radius: 50%;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.3);
     border: none;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
-    transition: background 0.2s, transform 0.2s;
+    transition: background 0.2s, transform 0.1s;
     padding: 0;
     outline: none;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-}
-
-.icon-button svg {
-    width: 24px;
-    height: 24px;
 }
 
 .icon-button:hover {
-    background: rgba(0, 0, 0, 0.7);
-    transform: scale(1.05);
+    background: rgba(0, 0, 0, 0.5);
 }
 
 .icon-button:active {
@@ -175,18 +168,15 @@
     left: 0;
 }
 
-/* Keep controls visible and properly positioned in fullscreen */
+/* Keep controls visible in fullscreen */
 .visualization-container:fullscreen .visualization-controls,
 .visualization-container:-webkit-full-screen .visualization-controls,
 .visualization-container:-moz-full-screen .visualization-controls,
 .visualization-container:-ms-fullscreen .visualization-controls {
     position: fixed;
-    bottom: 20px;
-    left: 20px;
+    bottom: 15px;
+    left: 15px;
     z-index: 9999;
-    background: transparent;
-    padding: 0;
-    box-shadow: none;
 }
 
 /* Ensure 3D labels remain visible in fullscreen */

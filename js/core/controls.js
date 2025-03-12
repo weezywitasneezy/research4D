@@ -32,16 +32,17 @@ export function setupControls(container) {
     const toggleRotationButton = document.createElement('button');
     toggleRotationButton.id = 'toggle-rotation';
     toggleRotationButton.className = 'icon-button';
+    // Use square icon when rotation is active (default)
     toggleRotationButton.innerHTML = state.isRotating ? 
-        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M6 5h2v14H6V5zm10 0h2v14h-2V5z" fill="currentColor"/></svg>' : 
-        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M8 5.14v14l11-7-11-7z" fill="currentColor"/></svg>';
+        '<svg viewBox="0 0 24 24" width="12" height="12"><rect x="7" y="7" width="10" height="10" fill="currentColor"/></svg>' : 
+        '<svg viewBox="0 0 24 24" width="12" height="12"><polygon points="7,5 19,12 7,19" fill="currentColor"/></svg>';
     toggleRotationButton.title = state.isRotating ? 'Pause Rotation' : 'Start Rotation';
     
     // Create fullscreen button with icon
     const fullscreenButton = document.createElement('button');
     fullscreenButton.id = 'toggle-fullscreen';
     fullscreenButton.className = 'icon-button';
-    fullscreenButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z" fill="currentColor"/></svg>';
+    fullscreenButton.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12"><path d="M3,3 L9,3 L9,5 L5,5 L5,9 L3,9 L3,3 Z M3,21 L3,15 L5,15 L5,19 L9,19 L9,21 L3,21 Z M21,3 L21,9 L19,9 L19,5 L15,5 L15,3 L21,3 Z M21,21 L15,21 L15,19 L19,19 L19,15 L21,15 L21,21 Z" fill="currentColor"/></svg>';
     fullscreenButton.title = 'Enter Fullscreen';
     
     // Add buttons to container
@@ -60,8 +61,8 @@ export function setupControls(container) {
         
         // Update button icon
         this.innerHTML = state.isRotating ? 
-            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M6 5h2v14H6V5zm10 0h2v14h-2V5z" fill="currentColor"/></svg>' : 
-            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M8 5.14v14l11-7-11-7z" fill="currentColor"/></svg>';
+            '<svg viewBox="0 0 24 24" width="12" height="12"><rect x="7" y="7" width="10" height="10" fill="currentColor"/></svg>' : 
+            '<svg viewBox="0 0 24 24" width="12" height="12"><polygon points="7,5 19,12 7,19" fill="currentColor"/></svg>';
         
         this.title = state.isRotating ? 'Pause Rotation' : 'Start Rotation';
     };
@@ -79,8 +80,8 @@ export function setupControls(container) {
             document.msFullscreenElement);
             
         fullscreenButton.innerHTML = isFullscreen ? 
-            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z" fill="currentColor"/></svg>' : 
-            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"/><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z" fill="currentColor"/></svg>';
+            '<svg viewBox="0 0 24 24" width="12" height="12"><path d="M3,9 L3,3 L9,3 M15,3 L21,3 L21,9 M3,15 L3,21 L9,21 M15,21 L21,21 L21,15" stroke="currentColor" stroke-width="2" fill="none"/></svg>' : 
+            '<svg viewBox="0 0 24 24" width="12" height="12"><path d="M3,3 L9,3 L9,5 L5,5 L5,9 L3,9 L3,3 Z M3,21 L3,15 L5,15 L5,19 L9,19 L9,21 L3,21 Z M21,3 L21,9 L19,9 L19,5 L15,5 L15,3 L21,3 Z M21,21 L15,21 L15,19 L19,19 L19,15 L21,15 L21,21 Z" fill="currentColor"/></svg>';
             
         fullscreenButton.title = isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen';
     };
@@ -88,9 +89,7 @@ export function setupControls(container) {
     // Mouse wheel zoom handler - keep wheel zoom functionality
     const handleMouseWheel = function(event) {
         event.preventDefault();
-        
-        // We don't need to track zoom level in the UI anymore,
-        // but we keep the event handler for the wheel functionality
+        // We keep the event handler for the wheel functionality
     };
     
     // Add event listeners
@@ -137,15 +136,15 @@ function addIconControlsStyles() {
     const styleElement = document.createElement('style');
     styleElement.id = 'icon-controls-styles';
     
-    // Add CSS for icon controls
+    // Add CSS for simple icon controls
     styleElement.textContent = `
         .visualization-controls {
             position: absolute;
-            bottom: 20px;
-            left: 20px;
+            bottom: 15px;
+            left: 15px;
             z-index: 100;
             display: flex;
-            gap: 10px;
+            gap: 8px;
             padding: 0;
             background: transparent;
             box-shadow: none;
@@ -153,33 +152,27 @@ function addIconControlsStyles() {
         
         .icon-controls-container {
             display: flex;
-            gap: 15px;
+            gap: 8px;
         }
         
         .icon-button {
-            width: 40px;
-            height: 40px;
+            width: 26px;
+            height: 26px;
             border-radius: 50%;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.3);
             border: none;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
-            transition: background 0.2s, transform 0.2s;
+            transition: background 0.2s, transform 0.1s;
             padding: 0;
             outline: none;
         }
         
-        .icon-button svg {
-            width: 24px;
-            height: 24px;
-        }
-        
         .icon-button:hover {
-            background: rgba(0, 0, 0, 0.7);
-            transform: scale(1.05);
+            background: rgba(0, 0, 0, 0.5);
         }
         
         .icon-button:active {
