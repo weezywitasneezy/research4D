@@ -1,3 +1,21 @@
+function addCompassMarkers(container) {
+    // Define the compass directions
+    const directions = [
+        { text: 'N', class: 'compass-n' },
+        { text: 'S', class: 'compass-s' },
+        { text: 'E', class: 'compass-e' },
+        { text: 'W', class: 'compass-w' }
+    ];
+    
+    // Create each compass marker
+    directions.forEach(dir => {
+        const marker = document.createElement('div');
+        marker.className = `compass-marker ${dir.class}`;
+        marker.textContent = dir.text;
+        container.appendChild(marker);
+    });
+}
+
 // Main entry point for visualization
 
 // Global state
@@ -118,31 +136,10 @@ function loadCoreModules() {
                 labelContainer.style.overflow = 'hidden';
                 container.appendChild(labelContainer);
                 
-                // Create simple 3D directional markers with primitive shapes
+                // Function to create 3D directional markers - disabled for now
                 function create3DDirectionMarkers(scene) {
-                    // Define positions and labels for direction markers
-                    const directions = [
-                        { x: 0, y: 0, z: -280, text: 'N', color: 0x3366ff },  // North
-                        { x: 0, y: 0, z: 280, text: 'S', color: 0xff6633 },   // South
-                        { x: 280, y: 0, z: 0, text: 'E', color: 0x66cc33 },   // East
-                        { x: -280, y: 0, z: 0, text: 'W', color: 0xcc66ff }   // West
-                    ];
-                    
-                    // Create each direction marker as a simple colored sphere
-                    directions.forEach(dir => {
-                        // Create a sphere for the marker
-                        const geometry = new THREE.SphereGeometry(15, 16, 16);
-                        const material = new THREE.MeshBasicMaterial({ color: dir.color });
-                        const sphere = new THREE.Mesh(geometry, material);
-                        sphere.position.set(dir.x, dir.y, dir.z);
-                        scene.add(sphere);
-                        
-                        // Create a label for the marker
-                        const labelInfo = labelSystem.addLabel(sphere, dir.text, dir.color);
-                        if (labelInfo) {
-                            labelInfo.position.y = 0; // Position label at center of sphere
-                        }
-                    });
+                    // This function is disabled to fix rendering issues
+                    // Will be implemented in future updates
                 }
                 
                 // Add lights
@@ -684,11 +681,11 @@ function loadCoreModules() {
         // Initialize label system
         const labelSystem = labelsModule.setupLabelSystem(labelContainer);
         
-        // Store labelSystem reference in visualization mount for direct access
-        container._labelSystem = labelSystem;
-        
-        // Now that labelSystem is initialized, create direction markers
-        create3DDirectionMarkers(scene);
+        // Add compass markers to the container
+        addCompassMarkers(container);
+                
+                // Store labelSystem reference in visualization mount for direct access
+                container._labelSystem = labelSystem;
         
         resolve({
             scene,
