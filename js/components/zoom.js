@@ -26,96 +26,40 @@ function initZoomControls(container, camera) {
     // Track event listeners for cleanup
     const listeners = [];
     
-    // Create zoom buttons
-    const zoomInButton = document.createElement('button');
-    zoomInButton.id = 'zoom-in';
-    zoomInButton.className = 'control-button';
-    zoomInButton.textContent = 'Zoom In';
+    // Create container for navigation hint
+    const navigationHintContainer = document.createElement('div');
+    navigationHintContainer.className = 'navigation-hint-container';
     
-    const zoomOutButton = document.createElement('button');
-    zoomOutButton.id = 'zoom-out';
-    zoomOutButton.className = 'control-button';
-    zoomOutButton.textContent = 'Zoom Out';
-    
-    // Create container for zoom controls
-    const zoomControlsContainer = document.createElement('div');
-    zoomControlsContainer.className = 'zoom-controls-container';
-    
-    // Create zoom indicator
-    const zoomIndicator = document.createElement('div');
-    zoomIndicator.className = 'zoom-indicator';
-    zoomIndicator.innerHTML = `
-        <div class="zoom-label">Zoom: <span id="zoom-value">100%</span></div>
-        <div class="zoom-slider-container">
-            <div class="zoom-slider-track"></div>
-            <div class="zoom-slider-fill" id="zoom-slider-fill"></div>
+    // Create navigation hint
+    const navigationHint = document.createElement('div');
+    navigationHint.className = 'navigation-hint';
+    navigationHint.innerHTML = `
+        <div class="hint-text">
+            <p>Mouse: Drag to rotate & elevate</p>
+            <p>Scroll: Zoom in/out</p>
+            <p>Shift+Scroll: Move up/down</p>
         </div>
-        <div class="elevation-hint">Tip: Use mouse drag to rotate & elevate</div>
     `;
     
-    // Add zoom elements to container
-    zoomControlsContainer.appendChild(zoomInButton);
-    zoomControlsContainer.appendChild(zoomOutButton);
-    zoomControlsContainer.appendChild(zoomIndicator);
+    // Add hint to container
+    navigationHintContainer.appendChild(navigationHint);
     
     // Insert after the rotation button (typically the first control)
     const toggleRotationButton = document.getElementById('toggle-rotation');
     if (toggleRotationButton) {
-        toggleRotationButton.insertAdjacentElement('afterend', zoomControlsContainer);
+        toggleRotationButton.insertAdjacentElement('afterend', navigationHintContainer);
     } else {
         // If rotation button not found, just add to the controls
-        visualizationControls.appendChild(zoomControlsContainer);
+        visualizationControls.appendChild(navigationHintContainer);
     }
     
     // Add necessary styles to document
     addZoomStyles();
     
-    // Get elements for updating the zoom indicator
-    const zoomValueElement = document.getElementById('zoom-value');
-    const zoomSliderFill = document.getElementById('zoom-slider-fill');
-    
-    // Update the zoom indicator display
-    function updateZoomIndicator() {
-        if (zoomValueElement) {
-            const zoomPercent = Math.round(state.zoomLevel * 100);
-            zoomValueElement.textContent = `${zoomPercent}%`;
-        }
-        
-        if (zoomSliderFill) {
-            // Calculate fill percentage
-            const zoomRange = state.maxZoom - state.minZoom;
-            const zoomPosition = state.zoomLevel - state.minZoom;
-            const fillPercent = (zoomPosition / zoomRange) * 100;
-            zoomSliderFill.style.width = `${fillPercent}%`;
-        }
-        
-        // Update CONFIG with new zoom level
-        if (window.CONFIG) {
-            window.CONFIG.currentZoom = state.zoomLevel;
-        }
-    }
-    
-    // Initial indicator updates
-    updateZoomIndicator();
-    
     // Set initial zoom in CONFIG
     if (window.CONFIG) {
         window.CONFIG.currentZoom = state.zoomLevel;
         window.CONFIG.labelSize = state.labelSize;
-    }
-    
-    // Zoom in handler
-    function handleZoomIn() {
-        state.zoomLevel = Math.min(state.zoomLevel + 0.2, state.maxZoom);
-        updateZoomIndicator();
-        console.log('Zoomed in to:', state.zoomLevel);
-    }
-    
-    // Zoom out handler
-    function handleZoomOut() {
-        state.zoomLevel = Math.max(state.zoomLevel - 0.2, state.minZoom);
-        updateZoomIndicator();
-        console.log('Zoomed out to:', state.zoomLevel);
     }
     
     // Mouse wheel handler - still keep Shift+wheel for elevation as an alternative
@@ -146,20 +90,20 @@ function initZoomControls(container, camera) {
                 Math.min(state.maxZoom, state.zoomLevel + zoomChange)
             );
             
-            updateZoomIndicator();
+            // Update CONFIG with new zoom level
+            if (window.CONFIG) {
+                window.CONFIG.currentZoom = state.zoomLevel;
+            }
+            
             console.log('Mouse wheel zoom:', state.zoomLevel);
         }
     }
     
     // Add event listeners
-    zoomInButton.addEventListener('click', handleZoomIn);
-    zoomOutButton.addEventListener('click', handleZoomOut);
     container.addEventListener('wheel', handleMouseWheel, { passive: false });
     
     // Track listeners for cleanup
     listeners.push(
-        { element: zoomInButton, event: 'click', handler: handleZoomIn },
-        { element: zoomOutButton, event: 'click', handler: handleZoomOut },
         { element: container, event: 'wheel', handler: handleMouseWheel }
     );
     
@@ -184,8 +128,8 @@ function initZoomControls(container, camera) {
             });
             
             // Remove DOM elements
-            if (zoomControlsContainer && zoomControlsContainer.parentNode) {
-                zoomControlsContainer.parentNode.removeChild(zoomControlsContainer);
+            if (navigationHintContainer && navigationHintContainer.parentNode) {
+                navigationHintContainer.parentNode.removeChild(navigationHintContainer);
             }
         }
     };
@@ -202,71 +146,27 @@ function addZoomStyles() {
     const styleElement = document.createElement('style');
     styleElement.id = 'zoom-controls-styles';
     
-    // Add CSS for zoom controls (without elevation controls)
+    // Add CSS for navigation hints
     styleElement.textContent = `
-        .zoom-controls-container {
+        .navigation-hint-container {
             margin-bottom: 12px;
+            padding: 8px;
+            background-color: rgba(26, 42, 58, 0.7);
+            border-radius: 5px;
         }
         
-        #zoom-in, #zoom-out {
-            display: inline-block;
-            width: calc(50% - 5px);
-            text-align: center;
-            margin-bottom: 6px;
-        }
-        
-        #zoom-in {
-            margin-right: 5px;
-        }
-        
-        #zoom-out {
-            margin-left: 5px;
-        }
-        
-        .zoom-indicator {
+        .navigation-hint {
             width: 100%;
-            margin-top: 2px;
         }
         
-        .zoom-label {
-            font-size: 12px;
-            margin-bottom: 4px;
-            color: #333;
-            display: flex;
-            justify-content: space-between;
+        .hint-text {
+            font-size: 11px;
+            color: white;
+            line-height: 1.4;
         }
         
-        .elevation-hint {
-            font-size: 10px;
-            color: #666;
-            text-align: right;
-            margin-top: 2px;
-            font-style: italic;
-        }
-        
-        .zoom-slider-container {
-            position: relative;
-            width: 100%;
-            height: 24px;
-            background: #e0e0e0;
-            border-radius: 3px;
-            overflow: hidden;
-            margin-bottom: 8px;
-        }
-        
-        .zoom-slider-track {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background: #e0e0e0;
-        }
-        
-        .zoom-slider-fill {
-            position: absolute;
-            width: 32%;
-            height: 100%;
-            background: #1a2a3a;
-            transition: width 0.2s ease;
+        .hint-text p {
+            margin: 2px 0;
         }
     `;
     
