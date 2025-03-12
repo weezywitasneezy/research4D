@@ -1,7 +1,5 @@
 // Configuration settings and constants
-
-// Define CONFIG object globally
-window.CONFIG = {
+const defaultConfig = {
     // Current state tracking (used for scaling labels, etc.)
     currentZoom: 1.0, // Default zoom level
     labelSize: 1.5,  // Default label size multiplier
@@ -80,9 +78,34 @@ window.CONFIG = {
     animation: {
         enabled: true,
         rotationSpeed: 0.002,
-        dragEnabled: true,      // Always enable drag to rotate
-        dragPausesRotation: true // Pause auto-rotation while dragging
-    }
+        dragEnabled: true,
+        dragPausesRotation: true
+    },
+
+    // Elevation limits
+    minElevation: -300,
+    maxElevation: 200
 };
 
-console.log('CONFIG loaded');
+class Config {
+    constructor(initialConfig = defaultConfig) {
+        this._config = initialConfig;
+    }
+
+    get(path) {
+        return path.split('.').reduce((obj, key) => obj?.[key], this._config);
+    }
+
+    set(path, value) {
+        const keys = path.split('.');
+        const lastKey = keys.pop();
+        const target = keys.reduce((obj, key) => obj[key] = obj[key] || {}, this._config);
+        target[lastKey] = value;
+    }
+
+    getConfig() {
+        return this._config;
+    }
+}
+
+export const config = new Config();

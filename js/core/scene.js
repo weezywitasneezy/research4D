@@ -1,24 +1,24 @@
 // Scene initialization and management
-import { CONFIG } from './config.js';
+import { config } from './config.js';
 
 // Initialize the scene, camera, and renderer
 export function initScene(container) {
     // Scene setup
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(CONFIG.scene.backgroundColor);
+    scene.background = new THREE.Color(config.get('scene.backgroundColor'));
 
     // Camera setup
     const camera = new THREE.PerspectiveCamera(
-        CONFIG.camera.fov, 
-        container.clientWidth / container.clientHeight, 
-        CONFIG.camera.near, 
-        CONFIG.camera.far
+        config.get('camera.fov'),
+        container.clientWidth / container.clientHeight,
+        config.get('camera.near'),
+        config.get('camera.far')
     );
     
     // Position camera
-    const zoomFactor = CONFIG.camera.zoomFactor;
-    const cameraRadius = CONFIG.camera.radius * zoomFactor;
-    const cameraHeight = CONFIG.camera.height * zoomFactor;
+    const zoomFactor = config.get('camera.zoomFactor');
+    const cameraRadius = config.get('camera.radius') * zoomFactor;
+    const cameraHeight = config.get('camera.height') * zoomFactor;
     
     camera.position.set(cameraRadius, cameraHeight, cameraRadius);
     camera.lookAt(0, 0, 0);
@@ -68,9 +68,9 @@ export function initScene(container) {
     document.addEventListener('MSFullscreenChange', handleResize);
     
     return {
-        scene, 
-        camera, 
-        renderer, 
+        scene,
+        camera,
+        renderer,
         labelContainer,
         cleanup: () => {
             window.removeEventListener('resize', handleResize);
@@ -96,8 +96,8 @@ function addLights(scene) {
 // Add base plane (sea level)
 function addBasePlane(scene) {
     const baseGeometry = new THREE.PlaneGeometry(400, 400);
-    const baseMaterial = new THREE.MeshLambertMaterial({ 
-        color: CONFIG.scene.waterColor,
+    const baseMaterial = new THREE.MeshLambertMaterial({
+        color: config.get('scene.waterColor'),
         side: THREE.DoubleSide,
         transparent: true,
         opacity: 0.8
