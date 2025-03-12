@@ -118,6 +118,26 @@ function loadCoreModules() {
                 labelContainer.style.overflow = 'hidden';
                 container.appendChild(labelContainer);
                 
+                // Create direction indicators
+                function createDirectionIndicators(container) {
+                    const directions = [
+                        { text: 'N', class: 'direction-north' },
+                        { text: 'S', class: 'direction-south' },
+                        { text: 'E', class: 'direction-east' },
+                        { text: 'W', class: 'direction-west' }
+                    ];
+                    
+                    directions.forEach(dir => {
+                        const indicator = document.createElement('div');
+                        indicator.className = `direction-indicator ${dir.class}`;
+                        indicator.textContent = dir.text;
+                        container.appendChild(indicator);
+                    });
+                }
+                
+                // Add direction indicators to the container
+                createDirectionIndicators(container);
+                
                 // Add lights
                 const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
                 scene.add(ambientLight);
@@ -174,6 +194,20 @@ function loadCoreModules() {
                             labelContainer.style.width = '100%';
                             labelContainer.style.height = '100%';
                         }
+                        
+                        // Update directional indicators
+                        const indicators = container.querySelectorAll('.direction-indicator');
+                        indicators.forEach(indicator => {
+                            if (indicator.classList.contains('direction-north')) {
+                                indicator.style.top = '30px';
+                            } else if (indicator.classList.contains('direction-south')) {
+                                indicator.style.bottom = '30px';
+                            } else if (indicator.classList.contains('direction-east')) {
+                                indicator.style.right = '30px';
+                            } else if (indicator.classList.contains('direction-west')) {
+                                indicator.style.left = '30px';
+                            }
+                        });
                     } else {
                         width = container.clientWidth;
                         height = container.clientHeight;
