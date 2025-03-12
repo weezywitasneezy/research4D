@@ -277,7 +277,7 @@ function loadCoreModules() {
                     toggleRotationButton.id = 'toggle-rotation';
                     toggleRotationButton.className = 'icon-button';
                     
-                    // Create icon element for play/pause
+                        // Create icon element for play/pause
                     const rotationIcon = document.createElement('div');
                     rotationIcon.className = state.isRotating ? 'pause-icon' : 'play-icon';
                     toggleRotationButton.appendChild(rotationIcon);
@@ -290,10 +290,9 @@ function loadCoreModules() {
                 fullscreenButton.id = 'toggle-fullscreen';
                 fullscreenButton.className = 'icon-button';
                 
-                // Create fullscreen icon
-                const fullscreenIcon = document.createElement('div');
-                fullscreenIcon.className = 'fullscreen-icon';
-                fullscreenButton.appendChild(fullscreenIcon);
+                // Create fullscreen icon as text (using symbol)
+                fullscreenButton.innerHTML = '⤢';
+                fullscreenButton.style.fontSize = '20px';
                 
                 // Insert fullscreen button after rotation button
                 if (toggleRotationButton) {
@@ -333,21 +332,14 @@ function loadCoreModules() {
                 
                 // Update fullscreen button icon based on fullscreen state
                 const updateFullscreenButtonIcon = function() {
-                    // Get or create icon
-                    let icon = fullscreenButton.querySelector('.fullscreen-icon, .exit-fullscreen-icon');
-                    if (!icon) {
-                        icon = document.createElement('div');
-                        fullscreenButton.appendChild(icon);
-                    }
-                    
-                    // Update icon class based on fullscreen state
+                    // Update icon based on fullscreen state
                     if (document.fullscreenElement || 
                         document.mozFullScreenElement || 
                         document.webkitFullscreenElement || 
                         document.msFullscreenElement) {
-                        icon.className = 'exit-fullscreen-icon';
+                        fullscreenButton.innerHTML = '⤣'; // Unicode character for exit fullscreen
                     } else {
-                        icon.className = 'fullscreen-icon';
+                        fullscreenButton.innerHTML = '⤢'; // Unicode character for enter fullscreen
                     }
                 };
                 

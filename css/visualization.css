@@ -100,74 +100,24 @@
     border-radius: 2px;
 }
 
-/* Fullscreen icon - simpler and more modern */
+/* Basic fullscreen icon - just arrows */
 .fullscreen-icon {
     position: relative;
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14"><path fill="white" d="M0,4 L0,0 L4,0 M10,0 L14,0 L14,4 M0,10 L0,14 L4,14 M14,10 L14,14 L10,14" stroke="white" stroke-width="2"/></svg>');
+    background-repeat: no-repeat;
+    background-position: center;
 }
 
-.fullscreen-icon::before {
-    content: '';
-    position: absolute;
-    width: 5px;
-    height: 5px;
-    border-top: 2px solid white;
-    border-right: 2px solid white;
-    top: 0;
-    right: 0;
-}
-
-.fullscreen-icon::after {
-    content: '';
-    position: absolute;
-    width: 5px;
-    height: 5px;
-    border-bottom: 2px solid white;
-    border-left: 2px solid white;
-    bottom: 0;
-    left: 0;
-}
-
-/* Additional corners for fullscreen icon */
-.fullscreen-icon::before,
-.fullscreen-icon::after {
-    box-shadow: -7px 7px 0 0 white, 7px -7px 0 0 white;
-}
-
-/* Exit fullscreen icon - simpler and more modern */
+/* Exit fullscreen icon */
 .exit-fullscreen-icon {
     position: relative;
-    width: 16px;
-    height: 16px;
-}
-
-.exit-fullscreen-icon::before {
-    content: '';
-    position: absolute;
-    width: 5px;
-    height: 5px;
-    border-top: 2px solid white;
-    border-left: 2px solid white;
-    top: 0;
-    left: 0;
-}
-
-.exit-fullscreen-icon::after {
-    content: '';
-    position: absolute;
-    width: 5px;
-    height: 5px;
-    border-bottom: 2px solid white;
-    border-right: 2px solid white;
-    bottom: 0;
-    right: 0;
-}
-
-/* Additional corners for exit fullscreen icon */
-.exit-fullscreen-icon::before,
-.exit-fullscreen-icon::after {
-    box-shadow: 7px 7px 0 0 white, -7px -7px 0 0 white;
+    width: 14px;
+    height: 14px;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14"><path fill="white" d="M2,0 L0,2 M0,0 L4,0 L4,4 L0,4 L0,0 M14,2 L12,0 M10,0 L14,0 L14,4 L10,4 L10,0 M0,12 L2,14 M0,10 L0,14 L4,14 L4,10 L0,10 M12,14 L14,12 M10,10 L14,10 L14,14 L10,14 L10,10" stroke="white" stroke-width="2"/></svg>');
+    background-repeat: no-repeat;
+    background-position: center;
 }
 
 /* Label styles for 3D objects */
