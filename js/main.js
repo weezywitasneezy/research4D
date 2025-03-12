@@ -1,19 +1,7 @@
+// This function is replaced by the 3D implementation in compass.js
 function addCompassMarkers(container) {
-    // Define the compass directions
-    const directions = [
-        { text: 'N', class: 'compass-n' },
-        { text: 'S', class: 'compass-s' },
-        { text: 'E', class: 'compass-e' },
-        { text: 'W', class: 'compass-w' }
-    ];
-    
-    // Create each compass marker
-    directions.forEach(dir => {
-        const marker = document.createElement('div');
-        marker.className = `compass-marker ${dir.class}`;
-        marker.textContent = dir.text;
-        container.appendChild(marker);
-    });
+    // This function is kept for backward compatibility but not used anymore
+    console.log("HTML compass markers have been replaced with 3D markers");
 }
 
 // Main entry point for visualization
@@ -46,6 +34,11 @@ function initWorldVisualization() {
                 .then(regions => {
                     // Create connectors between regions
                     loadUtilsAndCreateConnectors(scene, regions);
+                    
+                    // Create 3D compass markers if the function is available
+                    if (typeof create3DCompassMarkers === 'function') {
+                        create3DCompassMarkers(scene, labelSystem);
+                    }
                     
                     // Load zoom controls
                     loadZoomControls(container, camera).then(zoomControls => {
@@ -681,8 +674,16 @@ function loadCoreModules() {
         // Initialize label system
         const labelSystem = labelsModule.setupLabelSystem(labelContainer);
         
-        // Add compass markers to the container
-        addCompassMarkers(container);
+        // Load and use 3D compass markers instead of HTML ones
+        const compassScript = document.createElement('script');
+                compassScript.src = 'js/components/compass.js';
+                compassScript.onload = function() {
+                    // Once compass module is loaded, remove old HTML markers and add 3D ones
+                    if (typeof removeHTMLCompassMarkers === 'function') {
+                        removeHTMLCompassMarkers(container);
+                    }
+                };
+                document.head.appendChild(compassScript);
                 
                 // Store labelSystem reference in visualization mount for direct access
                 container._labelSystem = labelSystem;

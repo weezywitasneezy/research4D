@@ -263,46 +263,23 @@
     transform: scale(0.95);
 }
 
-/* Simple compass markers */
+/* Compass markers - 3D implementation */
+.compass-label {
+    width: 30px !important;
+    height: 30px !important;
+    border-radius: 50% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-weight: bold !important;
+    background-color: rgba(0, 0, 0, 0.6) !important;
+    pointer-events: none !important;
+    user-select: none !important;
+}
+
+/* Legacy compass markers - no longer used */
 .compass-marker {
-    position: absolute;
-    width: 30px;
-    height: 30px;
-    background: rgba(0, 0, 0, 0.5);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 16px;
-    font-weight: bold;
-    z-index: 10;
-    pointer-events: none;
-    user-select: none;
-}
-
-.compass-n {
-    top: 15px;
-    left: 50%;
-    transform: translateX(-50%);
-}
-
-.compass-s {
-    bottom: 15px;
-    left: 50%;
-    transform: translateX(-50%);
-}
-
-.compass-e {
-    top: 50%;
-    right: 15px;
-    transform: translateY(-50%);
-}
-
-.compass-w {
-    top: 50%;
-    left: 15px;
-    transform: translateY(-50%);
+    display: none; /* Hide legacy markers */
 }
 
 /* Ensure 3D labels remain visible in fullscreen */
@@ -313,43 +290,13 @@
     z-index: 10;
 }
 
-/* Keep compass markers visible in fullscreen */
-.visualization-container:fullscreen .compass-marker,
-.visualization-container:-webkit-full-screen .compass-marker,
-.visualization-container:-moz-full-screen .compass-marker,
-.visualization-container:-ms-fullscreen .compass-marker {
-    position: fixed;
+/* Fullscreen styles for 3D compass labels */
+.visualization-container:fullscreen .compass-label,
+.visualization-container:-webkit-full-screen .compass-label,
+.visualization-container:-moz-full-screen .compass-label,
+.visualization-container:-ms-fullscreen .compass-label {
+    width: 40px !important; /* Bigger in fullscreen */
+    height: 40px !important;
+    font-size: 22px !important;
     z-index: 200;
-    width: 40px; /* Bigger in fullscreen */
-    height: 40px;
-    font-size: 22px;
-}
-
-/* Additional positioning for fullscreen compass markers */
-.visualization-container:fullscreen .compass-n,
-.visualization-container:-webkit-full-screen .compass-n,
-.visualization-container:-moz-full-screen .compass-n,
-.visualization-container:-ms-fullscreen .compass-n {
-    top: 25px;
-}
-
-.visualization-container:fullscreen .compass-s,
-.visualization-container:-webkit-full-screen .compass-s,
-.visualization-container:-moz-full-screen .compass-s,
-.visualization-container:-ms-fullscreen .compass-s {
-    bottom: 25px;
-}
-
-.visualization-container:fullscreen .compass-e,
-.visualization-container:-webkit-full-screen .compass-e,
-.visualization-container:-moz-full-screen .compass-e,
-.visualization-container:-ms-fullscreen .compass-e {
-    right: 25px;
-}
-
-.visualization-container:fullscreen .compass-w,
-.visualization-container:-webkit-full-screen .compass-w,
-.visualization-container:-moz-full-screen .compass-w,
-.visualization-container:-ms-fullscreen .compass-w {
-    left: 25px;
 }

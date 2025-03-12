@@ -430,5 +430,15 @@
 
     <!-- Load visualization module -->
     <script type="module" src="js/main.js"></script>
+    
+    <!-- Preload compass component -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Preload compass component for a smoother experience
+            const compassScript = document.createElement('script');
+            compassScript.src = 'js/components/compass.js';
+            document.head.appendChild(compassScript);
+        });
+    </script>
 </body>
 </html>
