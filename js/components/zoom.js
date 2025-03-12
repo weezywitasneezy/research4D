@@ -4,14 +4,6 @@
 function initZoomControls(container, camera) {
     console.log('Initializing zoom controls');
     
-    // Get the visualization controls container
-    const visualizationControls = document.querySelector('.visualization-controls');
-    
-    if (!visualizationControls) {
-        console.warn('Visualization controls not found for zoom functionality');
-        return { zoomLevel: () => 1.0, elevationOffset: () => 0 };
-    }
-    
     // State object
     const state = {
         zoomLevel: 1.0,
@@ -25,36 +17,6 @@ function initZoomControls(container, camera) {
     
     // Track event listeners for cleanup
     const listeners = [];
-    
-    // Create container for navigation hint
-    const navigationHintContainer = document.createElement('div');
-    navigationHintContainer.className = 'navigation-hint-container';
-    
-    // Create navigation hint
-    const navigationHint = document.createElement('div');
-    navigationHint.className = 'navigation-hint';
-    navigationHint.innerHTML = `
-        <div class="hint-text">
-            <p>Mouse: Drag to rotate & elevate</p>
-            <p>Scroll: Zoom in/out</p>
-            <p>Shift+Scroll: Move up/down</p>
-        </div>
-    `;
-    
-    // Add hint to container
-    navigationHintContainer.appendChild(navigationHint);
-    
-    // Insert after the rotation button (typically the first control)
-    const toggleRotationButton = document.getElementById('toggle-rotation');
-    if (toggleRotationButton) {
-        toggleRotationButton.insertAdjacentElement('afterend', navigationHintContainer);
-    } else {
-        // If rotation button not found, just add to the controls
-        visualizationControls.appendChild(navigationHintContainer);
-    }
-    
-    // Add necessary styles to document
-    addZoomStyles();
     
     // Set initial zoom in CONFIG
     if (window.CONFIG) {
@@ -126,52 +88,8 @@ function initZoomControls(container, camera) {
                     element.removeEventListener(event, handler);
                 }
             });
-            
-            // Remove DOM elements
-            if (navigationHintContainer && navigationHintContainer.parentNode) {
-                navigationHintContainer.parentNode.removeChild(navigationHintContainer);
-            }
         }
     };
-}
-
-// Add CSS styles for zoom controls
-function addZoomStyles() {
-    // Check if styles are already added
-    if (document.getElementById('zoom-controls-styles')) {
-        return;
-    }
-    
-    // Create style element
-    const styleElement = document.createElement('style');
-    styleElement.id = 'zoom-controls-styles';
-    
-    // Add CSS for navigation hints
-    styleElement.textContent = `
-        .navigation-hint-container {
-            margin-bottom: 12px;
-            padding: 8px;
-            background-color: rgba(26, 42, 58, 0.7);
-            border-radius: 5px;
-        }
-        
-        .navigation-hint {
-            width: 100%;
-        }
-        
-        .hint-text {
-            font-size: 11px;
-            color: white;
-            line-height: 1.4;
-        }
-        
-        .hint-text p {
-            margin: 2px 0;
-        }
-    `;
-    
-    // Add to document
-    document.head.appendChild(styleElement);
 }
 
 // Export functions
