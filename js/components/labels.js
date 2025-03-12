@@ -8,6 +8,9 @@ function setupLabelSystem(container) {
     // Keep track of hover state
     let isLabelHovered = false;
     
+    // Global flag for easier access from animation module
+    window.isLabelHovered = false;
+    
     // Function to add a label to a 3D object
     function addLabel(object, text, color) {
         // Convert hex color to CSS color string
@@ -23,6 +26,8 @@ function setupLabelSystem(container) {
         
         // Add hover event handlers for enhanced interaction
         const mouseEnterHandler = () => {
+            console.log(`Label hover start: ${text}`);
+            
             // Additional hover effects beyond CSS
             labelDiv.style.backgroundColor = 'rgba(20, 20, 30, 0.85)';
             
@@ -41,21 +46,14 @@ function setupLabelSystem(container) {
             // Add glow animation class
             labelDiv.classList.add('label3d-glow');
             
-            // Pause rotation when hovering over a label
+            // Set hover flags
             isLabelHovered = true;
-            
-            // Store rotation state to restore later
-            if (window.CONFIG && window.CONFIG.animation) {
-                // Store the current state only if we haven't already saved it
-                if (!window.CONFIG._wasRotatingBeforeLabel && window.CONFIG.animation.enabled) {
-                    window.CONFIG._wasRotatingBeforeLabel = true;
-                    // Temporarily disable rotation
-                    window.CONFIG.animation.enabled = false;
-                }
-            }
+            window.isLabelHovered = true;
         };
         
         const mouseLeaveHandler = () => {
+            console.log(`Label hover end: ${text}`);
+            
             // Restore original styles
             labelDiv.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
             labelDiv.style.color = labelDiv._originalColor;
@@ -63,16 +61,9 @@ function setupLabelSystem(container) {
             // Remove glow animation class
             labelDiv.classList.remove('label3d-glow');
             
-            // Resume rotation when no longer hovering over a label
+            // Clear hover flags
             isLabelHovered = false;
-            
-            // Restore rotation state
-            if (window.CONFIG && window.CONFIG.animation) {
-                if (window.CONFIG._wasRotatingBeforeLabel) {
-                    window.CONFIG.animation.enabled = true;
-                    window.CONFIG._wasRotatingBeforeLabel = false;
-                }
-            }
+            window.isLabelHovered = false;
         };
         
         // Add click event for future interaction
@@ -217,12 +208,7 @@ function setupLabelSystem(container) {
     function cleanup() {
         // Reset hover state
         isLabelHovered = false;
-        
-        // Restore rotation state if needed
-        if (window.CONFIG && window.CONFIG._wasRotatingBeforeLabel) {
-            window.CONFIG.animation.enabled = true;
-            window.CONFIG._wasRotatingBeforeLabel = false;
-        }
+        window.isLabelHovered = false;
         
         labelData.forEach(label => {
             if (label.element) {

@@ -184,8 +184,19 @@ function initAnimations(camera, isRotatingFn, zoomLevelFn, elevationOffsetFn) {
         radius = baseRadius / zoomLevel;
         height = (baseHeight / zoomLevel) + elevationOffset;
         
-        // Update angle from automatic rotation if enabled and not dragging
-        if (isRotatingFn && isRotatingFn() && !isDragging) {
+        // Check if the label system indicates a label is being hovered
+        let isLabelHovered = false;
+        if (window.isLabelHovered) {
+            isLabelHovered = true;
+        } else if (container && container._labelSystem && container._labelSystem.isHovered) {
+            isLabelHovered = container._labelSystem.isHovered();
+        }
+        
+        // Only update angle if:
+        // 1. Rotation is enabled via isRotatingFn
+        // 2. Not currently dragging
+        // 3. No label is being hovered
+        if (isRotatingFn && isRotatingFn() && !isDragging && !isLabelHovered) {
             const rotationSpeed = (window.CONFIG && window.CONFIG.camera) ? 
                 window.CONFIG.camera.rotationSpeed : 0.002;
             angle += rotationSpeed;
@@ -227,6 +238,11 @@ function startAnimationLoop(renderer, scene, camera, animations, labelSystem) {
     // Save zoom controls reference globally so animations can access it
     if (window.zoomControls === undefined && typeof zoomControls !== 'undefined') {
         window.zoomControls = zoomControls;
+    }
+    
+    // Save label system reference for future access
+    if (labelSystem) {
+        window.labelSystem = labelSystem;
     }
     
     // Animation loop
