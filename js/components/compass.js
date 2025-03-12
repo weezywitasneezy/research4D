@@ -8,48 +8,32 @@ function create3DCompassMarkers(scene, labelSystem) {
     compassGroup.name = "CompassMarkers";
     
     // Define the compass directions and their positions
-    // Position them MUCH further away to ensure they're only visible when looking directly at them
-    // We'll position them so far away that they'll only appear when looking directly in their direction
-    const compassDistance = 3000; // Extremely far to ensure they only appear when looking directly at them
-    const compassHeight = 0;     // Keep at ground level for better orientation
-    
     const compassDirections = [
-        { text: 'N', position: new THREE.Vector3(0, compassHeight, -compassDistance), color: 0xFFFFFF },
-        { text: 'S', position: new THREE.Vector3(0, compassHeight, compassDistance), color: 0xFFFFFF },
-        { text: 'E', position: new THREE.Vector3(compassDistance, compassHeight, 0), color: 0xFFFFFF },
-        { text: 'W', position: new THREE.Vector3(-compassDistance, compassHeight, 0), color: 0xFFFFFF }
+        { text: 'N', position: new THREE.Vector3(0, 0, -250), color: 0xFFFFFF },
+        { text: 'S', position: new THREE.Vector3(0, 0, 250), color: 0xFFFFFF },
+        { text: 'E', position: new THREE.Vector3(250, 0, 0), color: 0xFFFFFF },
+        { text: 'W', position: new THREE.Vector3(-250, 0, 0), color: 0xFFFFFF }
     ];
     
     // Create each compass marker
     compassDirections.forEach(direction => {
-        // Create a simpler marker - just a small invisible sphere to hold the label
-        const markerGroup = new THREE.Group();
-        
-        // Create a tiny, nearly invisible sphere as an anchor point for the label
-        const sphereGeometry = new THREE.SphereGeometry(1, 8, 8);
-        const sphereMaterial = new THREE.MeshBasicMaterial({ 
-            color: 0xffffff,
+        // Create a small sphere as a marker point
+        const markerGeometry = new THREE.SphereGeometry(5, 16, 16);
+        const markerMaterial = new THREE.MeshBasicMaterial({ 
+            color: direction.color,
             transparent: true,
-            opacity: 0.01 // Nearly invisible
+            opacity: 0.7
         });
-        const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
-        markerGroup.add(sphere);
         
-        // Position the marker group at the compass point position
-        markerGroup.position.copy(direction.position);
-        markerGroup.name = `Compass${direction.text}`;
+        const marker = new THREE.Mesh(markerGeometry, markerMaterial);
+        marker.position.copy(direction.position);
+        marker.name = `Compass${direction.text}`;
         
-        // Add the marker group to the compass group
-        compassGroup.add(markerGroup);
+        // Add the marker to the compass group
+        compassGroup.add(marker);
         
-        // Add a label to the marker group using the existing label system
-        // Add a special type property to identify compass labels for special handling
-        const label = labelSystem.addLabel(markerGroup, direction.text, direction.color);
-        
-        // Mark this as a compass label for special handling in the updateLabels function
-        if (label) {
-            label.isCompass = true;
-        }
+        // Add a label to the marker using the existing label system
+        const label = labelSystem.addLabel(marker, direction.text, direction.color);
         
         // Style the label differently to make it stand out as a compass point
         if (label && label.element) {

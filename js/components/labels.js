@@ -156,20 +156,9 @@ function setupLabelSystem(container) {
             const y = (-screenPosition.y * 0.5 + 0.5) * container.clientHeight;
             
             // Check if the label is in front of the camera and within screen bounds
-            // Special handling for compass labels - they need stricter visibility rules
-            const isCompassLabel = label.isCompass === true;
-            
-            // For compass labels, use stricter bounds checking with margin
-            // This prevents them from sticking to the edges when they should be out of view
-            const margin = isCompassLabel ? 30 : 0; // 30px margin for compass labels
-            
-            const inBounds = x > margin && 
-                           x < (container.clientWidth - margin) && 
-                           y > margin && 
-                           y < (container.clientHeight - margin);
-                           
-            // Also make sure it's in front of the camera
-            if (screenPosition.z < 1 && inBounds) {
+            if (screenPosition.z < 1 && 
+                x > 0 && x < container.clientWidth && 
+                y > 0 && y < container.clientHeight) {
                 
                 // Calculate distance to camera for size scaling
                 const dist = camera.position.distanceTo(worldPosition);
@@ -178,48 +167,6 @@ function setupLabelSystem(container) {
                 // Enhanced distance and zoom scaling for better visibility
                 const distanceScale = Math.max(0.5, Math.min(1.5, 900 / dist));
                 const zoomScale = Math.max(0.5, Math.min(1.5, currentZoom));
-                
-                // Special handling for compass labels
-                if (isCompassLabel) {
-                    // Use a much stricter angle threshold to hide compass markers
-                    // that aren't directly in our field of view
-                    const cameraDirection = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
-                    const toMarker = new THREE.Vector3().subVectors(worldPosition, camera.position).normalize();
-                    const angleToMarker = cameraDirection.angleTo(toMarker);
-                    
-                    // Use an extremely small threshold angle (10 degrees)
-                    // This ensures compass points are only visible when looking almost directly at them
-                    if (angleToMarker > Math.PI / 18) {
-                        label.element.style.display = 'none';
-                        return;
-                    }
-                    
-                    // Use much larger edge threshold for compass labels
-                    // This keeps them from appearing unless they're well within the viewport
-                    const edgeThreshold = Math.min(container.clientWidth, container.clientHeight) * 0.3; // 30% of viewport size
-                    
-                    // Check if the marker is not well within the center portion of the viewport
-                    const nearEdge = x < edgeThreshold || 
-                                     x > (container.clientWidth - edgeThreshold) ||
-                                     y < edgeThreshold ||
-                                     y > (container.clientHeight - edgeThreshold);
-                                     
-                    // If the compass label is near the edge or outside center area, hide it
-                    if (nearEdge) {
-                        label.element.style.display = 'none';
-                        return;
-                    }
-                    
-                    // For compass labels, we only want them visible from certain distances
-                    // If too close or too far away, hide them completely
-                    if (dist < 300 || dist > 5000) {
-                        label.element.style.display = 'none';
-                        return;
-                    }
-                    
-                    // Set a fixed opacity for compass labels
-                    label.element.style.opacity = '0.8';
-                }
                 
                 // Calculate final font size - automatic scaling based on zoom and distance
                 const baseFontSize = 14;
@@ -235,13 +182,9 @@ function setupLabelSystem(container) {
                 const paddingH = Math.max(4, Math.min(12, 8 * fullscreenMultiplier));
                 label.element.style.padding = `${paddingV}px ${paddingH}px`;
                 
-                // Different opacity calculation based on label type
-                if (!isCompassLabel) {
-                    // Regular labels - standard opacity calculation
-                    const opacity = Math.max(0.3, Math.min(1.0, 500 / dist));
-                    label.element.style.opacity = opacity.toString();
-                }
-                // For compass labels, we've already set the opacity in the compass-specific code above
+                // Adjust opacity based on distance
+                const opacity = Math.max(0.3, Math.min(1.0, 500 / dist));
+                label.element.style.opacity = opacity.toString();
                 
                 // Only add borders in fullscreen mode with high zoom
                 if (isFullscreen && currentZoom > 1.5) {
