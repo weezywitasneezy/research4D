@@ -31,6 +31,9 @@ function initWorldVisualization() {
                     
                     // Load zoom controls
                     loadZoomControls(container, camera).then(zoomControls => {
+                        // Store zoomControls globally for access by other components
+                        window.zoomControls = zoomControls;
+                        
                         // Setup animations with zoom controls
                         setupAnimations(camera, controls, labelSystem, renderer, scene, zoomControls);
                     });
@@ -45,6 +48,10 @@ function initWorldVisualization() {
                             labelSystem.cleanup();
                         }
                         
+                        if (window.zoomControls && window.zoomControls.cleanup) {
+                            window.zoomControls.cleanup();
+                        }
+                        
                         // Dispose of all scene resources
                         scene.traverse((object) => {
                             if (object.geometry) object.geometry.dispose();
@@ -56,6 +63,9 @@ function initWorldVisualization() {
                                 }
                             }
                         });
+                        
+                        // Clear global references
+                        window.zoomControls = null;
                     };
                 });
         })
@@ -783,12 +793,12 @@ function loadZoomControls(container, camera) {
                 resolve(zoomControls);
             } else {
                 console.warn('Zoom controls function not found');
-                resolve({ zoomLevel: () => 1.0 }); // Return dummy zoom control
+                resolve({ zoomLevel: () => 1.0, elevationOffset: () => 0 }); // Return dummy zoom control
             }
         };
         script.onerror = function() {
             console.error('Failed to load zoom controls script');
-            resolve({ zoomLevel: () => 1.0 }); // Fallback
+            resolve({ zoomLevel: () => 1.0, elevationOffset: () => 0 }); // Fallback
         };
         document.head.appendChild(script);
     });
@@ -803,20 +813,6 @@ function setupAnimations(camera, controls, labelSystem, renderer, scene, zoomCon
         if (typeof initAnimations === 'function' && typeof startAnimationLoop === 'function') {
             const animations = initAnimations(camera, controls.isRotating, zoomControls.zoomLevel, zoomControls.elevationOffset);
             startAnimationLoop(renderer, scene, camera, animations, labelSystem);
-            
-            // Add event listener for label size changes
-            window.addEventListener('labelSizeChanged', function(event) {
-                console.log('Label size change detected by animation loop:', event.detail.size);
-                // Force a redraw - make sure to use the correct camera reference
-                if (labelSystem && labelSystem.updateLabels) {
-                    console.log('Updating labels with new size...');
-                    labelSystem.updateLabels(camera);
-                    // Force a render
-                    renderer.render(scene, camera);
-                } else {
-                    console.warn('Cannot update labels - labelSystem not available');
-                }
-            });
         } else {
             console.warn('Animation functions not found, creating fallback');
             

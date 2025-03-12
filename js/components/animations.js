@@ -21,7 +21,8 @@ function initAnimations(camera, isRotatingFn, zoomLevelFn, elevationOffsetFn) {
     // Mouse drag control variables
     let isDragging = false;
     let previousMousePosition = { x: 0, y: 0 };
-    let dragSensitivity = 0.01; // Adjust this for faster/slower rotation
+    let dragSensitivityHorizontal = 0.01; // Adjust for horizontal rotation
+    let dragSensitivityVertical = 0.5;   // Adjust for vertical movement
     
     // Get the container element
     const container = document.getElementById('visualization-mount');
@@ -59,10 +60,45 @@ function initAnimations(camera, isRotatingFn, zoomLevelFn, elevationOffsetFn) {
             y: event.clientY - previousMousePosition.y
         };
         
-        // Only handle horizontal movement for now (around Y axis)
+        // Handle horizontal movement (around Y axis)
         if (deltaMove.x !== 0) {
             // Update camera angle
-            angle -= deltaMove.x * dragSensitivity;
+            angle -= deltaMove.x * dragSensitivityHorizontal;
+        }
+        
+        // Handle vertical movement (elevation)
+        if (deltaMove.y !== 0) {
+            // Get current elevation offset with fallback
+            let currentElevation = 0;
+            if (elevationOffsetFn && typeof elevationOffsetFn === 'function') {
+                try {
+                    currentElevation = elevationOffsetFn();
+                } catch (e) {
+                    console.warn('Error getting elevation offset:', e);
+                }
+            }
+            
+            // Calculate new elevation
+            // Moving mouse up (negative deltaY) increases elevation
+            // Moving mouse down (positive deltaY) decreases elevation
+            const elevationChange = -deltaMove.y * dragSensitivityVertical;
+            
+            // Get min/max elevation limits from CONFIG or use defaults
+            const minElevation = (window.CONFIG && window.CONFIG.minElevation) ? 
+                window.CONFIG.minElevation : -300;
+            const maxElevation = (window.CONFIG && window.CONFIG.maxElevation) ? 
+                window.CONFIG.maxElevation : 200;
+            
+            // Calculate new elevation with limits
+            const newElevation = Math.max(
+                minElevation, 
+                Math.min(maxElevation, currentElevation + elevationChange)
+            );
+            
+            // Update elevation if we have a setter function in zoomControls
+            if (window.zoomControls && window.zoomControls.setElevationOffset) {
+                window.zoomControls.setElevationOffset(newElevation);
+            }
         }
         
         previousMousePosition = {
@@ -188,6 +224,11 @@ function initAnimations(camera, isRotatingFn, zoomLevelFn, elevationOffsetFn) {
 
 // Start animation loop
 function startAnimationLoop(renderer, scene, camera, animations, labelSystem) {
+    // Save zoom controls reference globally so animations can access it
+    if (window.zoomControls === undefined && typeof zoomControls !== 'undefined') {
+        window.zoomControls = zoomControls;
+    }
+    
     // Animation loop
     function animate() {
         animations.setAnimationFrameId(requestAnimationFrame(animate));
