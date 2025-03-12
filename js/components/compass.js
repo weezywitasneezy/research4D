@@ -8,10 +8,10 @@ function create3DCompassMarkers(scene, labelSystem) {
     compassGroup.name = "CompassMarkers";
     
     // Define the compass directions and their positions
-    // Position them further away to ensure they're at the edges of the world
-    // And slightly elevate them to avoid collision with ground objects
-    const compassDistance = 300; // Increased distance to ensure they're well outside the main scene
-    const compassHeight = 30;   // Elevate them above ground level for better visibility
+    // Position them MUCH further away to ensure they're only visible when looking directly at them
+    // We'll position them so far away that they'll only appear when looking directly in their direction
+    const compassDistance = 3000; // Extremely far to ensure they only appear when looking directly at them
+    const compassHeight = 0;     // Keep at ground level for better orientation
     
     const compassDirections = [
         { text: 'N', position: new THREE.Vector3(0, compassHeight, -compassDistance), color: 0xFFFFFF },
@@ -22,44 +22,18 @@ function create3DCompassMarkers(scene, labelSystem) {
     
     // Create each compass marker
     compassDirections.forEach(direction => {
-        // Create a more visible marker with a small arrow-like shape pointing in the direction
+        // Create a simpler marker - just a small invisible sphere to hold the label
         const markerGroup = new THREE.Group();
         
-        // Create a small sphere as the main point
-        const sphereGeometry = new THREE.SphereGeometry(7, 16, 16);
+        // Create a tiny, nearly invisible sphere as an anchor point for the label
+        const sphereGeometry = new THREE.SphereGeometry(1, 8, 8);
         const sphereMaterial = new THREE.MeshBasicMaterial({ 
-            color: 0x3366ff,
+            color: 0xffffff,
             transparent: true,
-            opacity: 0.8
+            opacity: 0.01 // Nearly invisible
         });
         const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
         markerGroup.add(sphere);
-        
-        // Add a small directional indicator (cone pointing in the direction)
-        const coneGeometry = new THREE.ConeGeometry(4, 15, 8);
-        const coneMaterial = new THREE.MeshBasicMaterial({ 
-            color: 0xffffff,
-            transparent: true,
-            opacity: 0.9
-        });
-        const cone = new THREE.Mesh(coneGeometry, coneMaterial);
-        
-        // Position and rotate the cone to point in the correct direction
-        if (direction.text === 'N') {
-            cone.position.z = -12;
-            cone.rotation.x = Math.PI / 2;
-        } else if (direction.text === 'S') {
-            cone.position.z = 12;
-            cone.rotation.x = -Math.PI / 2;
-        } else if (direction.text === 'E') {
-            cone.position.x = 12;
-            cone.rotation.z = -Math.PI / 2;
-        } else if (direction.text === 'W') {
-            cone.position.x = -12;
-            cone.rotation.z = Math.PI / 2;
-        }
-        
-        markerGroup.add(cone);
         
         // Position the marker group at the compass point position
         markerGroup.position.copy(direction.position);

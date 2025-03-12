@@ -181,36 +181,44 @@ function setupLabelSystem(container) {
                 
                 // Special handling for compass labels
                 if (isCompassLabel) {
-                    // Calculate angle between camera look direction and direction to the compass marker
-                    // This helps determine if we're looking toward or away from the marker
+                    // Use a much stricter angle threshold to hide compass markers
+                    // that aren't directly in our field of view
                     const cameraDirection = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
                     const toMarker = new THREE.Vector3().subVectors(worldPosition, camera.position).normalize();
                     const angleToMarker = cameraDirection.angleTo(toMarker);
                     
-                    // If we're looking more than 90 degrees away from the marker, hide it
-                    // This prevents markers from showing up when we're looking in the opposite direction
-                    if (angleToMarker > Math.PI * 0.5) {
+                    // Use an extremely small threshold angle (10 degrees)
+                    // This ensures compass points are only visible when looking almost directly at them
+                    if (angleToMarker > Math.PI / 18) {
                         label.element.style.display = 'none';
                         return;
                     }
                     
-                    // Check if the marker is near the edge of the screen
-                    const edgeThreshold = 60; // pixels from edge
+                    // Use much larger edge threshold for compass labels
+                    // This keeps them from appearing unless they're well within the viewport
+                    const edgeThreshold = Math.min(container.clientWidth, container.clientHeight) * 0.3; // 30% of viewport size
+                    
+                    // Check if the marker is not well within the center portion of the viewport
                     const nearEdge = x < edgeThreshold || 
                                      x > (container.clientWidth - edgeThreshold) ||
                                      y < edgeThreshold ||
                                      y > (container.clientHeight - edgeThreshold);
                                      
-                    // If the compass label is near the edge, hide it
+                    // If the compass label is near the edge or outside center area, hide it
                     if (nearEdge) {
                         label.element.style.display = 'none';
                         return;
                     }
                     
-                    // Fade compass labels based on distance - keep them visible from farther away
-                    // This overrides the standard opacity calculation for regular labels
-                    const opacity = Math.max(0.5, Math.min(1.0, 800 / dist));
-                    label.element.style.opacity = opacity.toString();
+                    // For compass labels, we only want them visible from certain distances
+                    // If too close or too far away, hide them completely
+                    if (dist < 300 || dist > 5000) {
+                        label.element.style.display = 'none';
+                        return;
+                    }
+                    
+                    // Set a fixed opacity for compass labels
+                    label.element.style.opacity = '0.8';
                 }
                 
                 // Calculate final font size - automatic scaling based on zoom and distance
