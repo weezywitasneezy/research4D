@@ -22,7 +22,7 @@ function initAnimations(camera, isRotatingFn, zoomLevelFn, elevationOffsetFn) {
     let isDragging = false;
     let previousMousePosition = { x: 0, y: 0 };
     let dragSensitivityHorizontal = 0.01; // Adjust for horizontal rotation
-    let dragSensitivityVertical = 0.5;   // Adjust for vertical movement
+    let dragSensitivityVertical = 0.75;   // Increased by 50% for more responsive vertical movement
     
     // Get the container element
     const container = document.getElementById('visualization-mount');
