@@ -118,62 +118,32 @@ function loadCoreModules() {
                 labelContainer.style.overflow = 'hidden';
                 container.appendChild(labelContainer);
                 
-                // Create 3D directional markers in the scene
+                // Create simple 3D directional markers with primitive shapes
                 function create3DDirectionMarkers(scene) {
                     // Define positions and labels for direction markers
-                    const positions = [
-                        { x: 0, y: 0, z: -250, text: 'N', color: 0x3366ff },  // North
-                        { x: 0, y: 0, z: 250, text: 'S', color: 0xff6633 },   // South
-                        { x: 250, y: 0, z: 0, text: 'E', color: 0x66cc33 },   // East
-                        { x: -250, y: 0, z: 0, text: 'W', color: 0xcc66ff }   // West
+                    const directions = [
+                        { x: 0, y: 0, z: -280, text: 'N', color: 0x3366ff },  // North
+                        { x: 0, y: 0, z: 280, text: 'S', color: 0xff6633 },   // South
+                        { x: 280, y: 0, z: 0, text: 'E', color: 0x66cc33 },   // East
+                        { x: -280, y: 0, z: 0, text: 'W', color: 0xcc66ff }   // West
                     ];
                     
-                    // Create each direction marker
-                    positions.forEach(pos => {
-                        // Create text geometry
-                        const textGeometry = new THREE.TextGeometry(pos.text, {
-                            font: new THREE.Font(), // Placeholder - will replace with loaded font
-                            size: 25,
-                            height: 5,
-                            curveSegments: 4,
-                            bevelEnabled: false
-                        });
+                    // Create each direction marker as a simple colored sphere
+                    directions.forEach(dir => {
+                        // Create a sphere for the marker
+                        const geometry = new THREE.SphereGeometry(15, 16, 16);
+                        const material = new THREE.MeshBasicMaterial({ color: dir.color });
+                        const sphere = new THREE.Mesh(geometry, material);
+                        sphere.position.set(dir.x, dir.y, dir.z);
+                        scene.add(sphere);
                         
-                        // Fallback method - create a sphere with a canvas texture
-                        const canvas = document.createElement('canvas');
-                        canvas.width = 128;
-                        canvas.height = 128;
-                        const context = canvas.getContext('2d');
-                        
-                        // Draw background circle
-                        context.fillStyle = '#333333';
-                        context.beginPath();
-                        context.arc(64, 64, 60, 0, 2 * Math.PI);
-                        context.fill();
-                        
-                        // Draw direction text
-                        context.font = 'bold 80px Arial';
-                        context.fillStyle = '#ffffff';
-                        context.textAlign = 'center';
-                        context.textBaseline = 'middle';
-                        context.fillText(pos.text, 64, 64);
-                        
-                        // Create texture and material
-                        const texture = new THREE.CanvasTexture(canvas);
-                        const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true });
-                        
-                        // Create a billboard/sprite to always face camera
-                        const sprite = new THREE.Sprite(material);
-                        sprite.position.set(pos.x, pos.y, pos.z);
-                        sprite.scale.set(40, 40, 1);
-                        
-                        // Add to scene
-                        scene.add(sprite);
+                        // Create a label for the marker
+                        const labelInfo = labelSystem.addLabel(sphere, dir.text, dir.color);
+                        if (labelInfo) {
+                            labelInfo.position.y = 0; // Position label at center of sphere
+                        }
                     });
                 }
-                
-                // Add 3D direction markers to the scene
-                create3DDirectionMarkers(scene);
                 
                 // Add lights
                 const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
@@ -716,6 +686,9 @@ function loadCoreModules() {
         
         // Store labelSystem reference in visualization mount for direct access
         container._labelSystem = labelSystem;
+        
+        // Now that labelSystem is initialized, create direction markers
+        create3DDirectionMarkers(scene);
         
         resolve({
             scene,
