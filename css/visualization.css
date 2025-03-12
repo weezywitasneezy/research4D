@@ -265,16 +265,21 @@
 
 /* Compass markers - 3D implementation */
 .compass-label {
-    width: 30px !important;
-    height: 30px !important;
+    width: 36px !important;
+    height: 36px !important;
     border-radius: 50% !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     font-weight: bold !important;
-    background-color: rgba(0, 0, 0, 0.6) !important;
+    background-color: rgba(0, 10, 30, 0.7) !important;
+    border: 2px solid rgba(255, 255, 255, 0.7) !important;
+    color: white !important;
+    font-size: 18px !important;
     pointer-events: none !important;
     user-select: none !important;
+    box-shadow: 0 0 8px rgba(0, 100, 255, 0.8) !important;
+    transition: all 0.3s ease-in-out !important;
 }
 
 /* Legacy compass markers - no longer used */
