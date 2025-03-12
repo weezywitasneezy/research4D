@@ -233,7 +233,25 @@ function loadCoreModules() {
         const controlsModule = {
             setupControls: function(container) {
                 const visualizationContainer = document.querySelector('.visualization-container');
-                const visualizationControls = document.querySelector('.visualization-controls');
+                // Find or create visualization controls container
+                let visualizationControls = document.querySelector('.visualization-controls');
+                
+                // Remove any existing controls to start fresh
+                if (visualizationControls) {
+                    // Clear out all existing content
+                    visualizationControls.innerHTML = '';
+                } else {
+                    // Create the controls container if it doesn't exist
+                    visualizationControls = document.createElement('div');
+                    visualizationControls.className = 'visualization-controls';
+                    container.appendChild(visualizationControls);
+                }
+                
+                // Remove any location legend
+                const locationLegend = document.querySelector('.location-legend');
+                if (locationLegend && locationLegend.parentNode) {
+                    locationLegend.parentNode.removeChild(locationLegend);
+                }
                 
                 // State
                 const state = {
