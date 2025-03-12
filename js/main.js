@@ -118,25 +118,62 @@ function loadCoreModules() {
                 labelContainer.style.overflow = 'hidden';
                 container.appendChild(labelContainer);
                 
-                // Create direction indicators
-                function createDirectionIndicators(container) {
-                    const directions = [
-                        { text: 'N', class: 'direction-north' },
-                        { text: 'S', class: 'direction-south' },
-                        { text: 'E', class: 'direction-east' },
-                        { text: 'W', class: 'direction-west' }
+                // Create 3D directional markers in the scene
+                function create3DDirectionMarkers(scene) {
+                    // Define positions and labels for direction markers
+                    const positions = [
+                        { x: 0, y: 0, z: -250, text: 'N', color: 0x3366ff },  // North
+                        { x: 0, y: 0, z: 250, text: 'S', color: 0xff6633 },   // South
+                        { x: 250, y: 0, z: 0, text: 'E', color: 0x66cc33 },   // East
+                        { x: -250, y: 0, z: 0, text: 'W', color: 0xcc66ff }   // West
                     ];
                     
-                    directions.forEach(dir => {
-                        const indicator = document.createElement('div');
-                        indicator.className = `direction-indicator ${dir.class}`;
-                        indicator.textContent = dir.text;
-                        container.appendChild(indicator);
+                    // Create each direction marker
+                    positions.forEach(pos => {
+                        // Create text geometry
+                        const textGeometry = new THREE.TextGeometry(pos.text, {
+                            font: new THREE.Font(), // Placeholder - will replace with loaded font
+                            size: 25,
+                            height: 5,
+                            curveSegments: 4,
+                            bevelEnabled: false
+                        });
+                        
+                        // Fallback method - create a sphere with a canvas texture
+                        const canvas = document.createElement('canvas');
+                        canvas.width = 128;
+                        canvas.height = 128;
+                        const context = canvas.getContext('2d');
+                        
+                        // Draw background circle
+                        context.fillStyle = '#333333';
+                        context.beginPath();
+                        context.arc(64, 64, 60, 0, 2 * Math.PI);
+                        context.fill();
+                        
+                        // Draw direction text
+                        context.font = 'bold 80px Arial';
+                        context.fillStyle = '#ffffff';
+                        context.textAlign = 'center';
+                        context.textBaseline = 'middle';
+                        context.fillText(pos.text, 64, 64);
+                        
+                        // Create texture and material
+                        const texture = new THREE.CanvasTexture(canvas);
+                        const material = new THREE.MeshBasicMaterial({ map: texture, transparent: true });
+                        
+                        // Create a billboard/sprite to always face camera
+                        const sprite = new THREE.Sprite(material);
+                        sprite.position.set(pos.x, pos.y, pos.z);
+                        sprite.scale.set(40, 40, 1);
+                        
+                        // Add to scene
+                        scene.add(sprite);
                     });
                 }
                 
-                // Add direction indicators to the container
-                createDirectionIndicators(container);
+                // Add 3D direction markers to the scene
+                create3DDirectionMarkers(scene);
                 
                 // Add lights
                 const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
@@ -195,19 +232,7 @@ function loadCoreModules() {
                             labelContainer.style.height = '100%';
                         }
                         
-                        // Update directional indicators
-                        const indicators = container.querySelectorAll('.direction-indicator');
-                        indicators.forEach(indicator => {
-                            if (indicator.classList.contains('direction-north')) {
-                                indicator.style.top = '30px';
-                            } else if (indicator.classList.contains('direction-south')) {
-                                indicator.style.bottom = '30px';
-                            } else if (indicator.classList.contains('direction-east')) {
-                                indicator.style.right = '30px';
-                            } else if (indicator.classList.contains('direction-west')) {
-                                indicator.style.left = '30px';
-                            }
-                        });
+
                     } else {
                         width = container.clientWidth;
                         height = container.clientHeight;

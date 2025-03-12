@@ -250,55 +250,7 @@
     height: 100vh !important;
 }
 
-/* Direction indicators */
-.direction-indicator {
-    position: absolute;
-    width: 40px;
-    height: 40px;
-    background: rgba(0, 0, 0, 0.4);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 18px;
-    font-weight: bold;
-    z-index: 50;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-}
 
-.direction-north {
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-}
-
-.direction-south {
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-}
-
-.direction-east {
-    top: 50%;
-    right: 20px;
-    transform: translateY(-50%);
-}
-
-.direction-west {
-    top: 50%;
-    left: 20px;
-    transform: translateY(-50%);
-}
-
-.visualization-container:fullscreen .direction-indicator,
-.visualization-container:-webkit-full-screen .direction-indicator,
-.visualization-container:-moz-full-screen .direction-indicator,
-.visualization-container:-ms-fullscreen .direction-indicator {
-    width: 50px;
-    height: 50px;
-    font-size: 22px;
-}
 
 /* Control button styles */
 .control-button {
