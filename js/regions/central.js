@@ -135,11 +135,11 @@ function createForestedIslands(scene, labelSystem) {
 
     // Create several forested islands around the magic islands
     const forestedIslands = [
-        createForestedIsland(-40, -30, 15),
-        createForestedIsland(40, -40, 12),
-        createForestedIsland(50, 20, 14),
-        createForestedIsland(-50, 30, 13),
-        createForestedIsland(0, -45, 16)
+        createForestedIsland(-40, -150, 15),
+        createForestedIsland(40, -160, 12),
+        createForestedIsland(50, -100, 14),
+        createForestedIsland(-50, -90, 13),
+        createForestedIsland(0, -165, 16)
     ];
     
     // Add label to the first forested island
