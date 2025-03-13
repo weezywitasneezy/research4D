@@ -1,6 +1,5 @@
 // Scene initialization and management
 import { config } from './config.js';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 // Initialize the scene, camera, and renderer
 export function initScene(container) {
