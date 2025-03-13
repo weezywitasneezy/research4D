@@ -38,8 +38,8 @@ export async function initWorldVisualization() {
     
     try {
         // Setup core components
-        const { scene, camera, renderer } = setupScene(container);
-        const labelSystem = setupLabelSystem();
+        const { scene, camera, renderer, labelContainer } = setupScene(container);
+        const labelSystem = setupLabelSystem(labelContainer);
         const controls = setupControls(container);
         
         // Create regions

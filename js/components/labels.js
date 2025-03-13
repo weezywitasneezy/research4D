@@ -1,4 +1,5 @@
 // Label management system
+import * as THREE from 'three';
 import { CONFIG } from '../core/config.js';
 
 // Setup the label system
