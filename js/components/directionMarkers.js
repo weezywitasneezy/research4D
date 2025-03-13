@@ -12,7 +12,7 @@ export async function setupDirectionMarkers(scene) {
     const sphereMaterial = new THREE.MeshPhongMaterial({
         color: 0xffffff,
         transparent: true,
-        opacity: 0.7,
+        opacity: 0.35,
         side: THREE.DoubleSide
     });
     
@@ -64,15 +64,15 @@ export async function setupDirectionMarkers(scene) {
     };
     
     // Create markers for each direction
-    const distance = 220; // Position outside the grid
+    const distance = 240; // Position outside the grid (increased by 20)
     const height = 30; // Raised height
     
-    // North marker
-    const northMarker = createMarker('N', new THREE.Vector3(0, height, distance));
+    // North marker (now in south position)
+    const northMarker = createMarker('N', new THREE.Vector3(0, height, -distance));
     markers.add(northMarker);
     
-    // South marker
-    const southMarker = createMarker('S', new THREE.Vector3(0, height, -distance));
+    // South marker (now in north position)
+    const southMarker = createMarker('S', new THREE.Vector3(0, height, distance));
     markers.add(southMarker);
     
     // East marker - moved further out
