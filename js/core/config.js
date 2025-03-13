@@ -27,8 +27,8 @@ export const CONFIG = {
             continent: { x: 240, y: 6, z: 0 },
             farms: { x: 270, y: 13.5, z: -120 },
             industrial: { x: 360, y: 15, z: 30 },
-            capital: { x: 135, y: 16, z: 120 },
-            skyPalace: { x: 135, y: 80, z: 120 },
+            capital: { x: 240, y: 16, z: 0 },
+            skyPalace: { x: 240, y: 80, z: 0 },
             spaceFarms: { x: 240, y: 140, z: 20 },
             mines: { x: 375, y: -25, z: -40 },
             sewers: { x: 180, y: -15, z: 90 }
