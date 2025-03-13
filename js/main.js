@@ -11,12 +11,6 @@ import { createUnderwaterStructures } from './regions/underwater.js';
 import { createSkyStructures } from './regions/sky.js';
 import { createConnectors } from './core/utils.js';
 import { CONFIG } from './core/config.js';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { createScene } from './core/scene.js';
-import { createCamera } from './core/camera.js';
-import { createRenderer } from './core/renderer.js';
-import { createCompass } from './components/compass.js';
-import { createCentralRegion } from './regions/central.js';
 
 // This function is replaced by the 3D implementation in compass.js
 function addCompassMarkers(container) {
@@ -48,9 +42,6 @@ export async function initWorldVisualization() {
         const labelSystem = setupLabelSystem(labelContainer);
         const controls = setupControls(container);
         
-        // Create compass
-        const compass = createCompass(scene);
-        
         // Create regions
         const regions = {
             eastern: createEasternContinent(scene, labelSystem),
@@ -60,32 +51,32 @@ export async function initWorldVisualization() {
             sky: createSkyStructures(scene, labelSystem)
         };
         
-        // Create connectors between regions
+                    // Create connectors between regions
         createConnectors(scene, regions);
         
         // Setup zoom controls
         const zoomControls = await setupZoomControls(container, camera);
         
         // Setup animations
-        setupAnimations(camera, controls, labelSystem, renderer, scene, zoomControls);
-        
-        // Setup cleanup function
-        cleanup = function() {
-            if (controls && controls.cleanup) controls.cleanup();
+                        setupAnimations(camera, controls, labelSystem, renderer, scene, zoomControls);
+                    
+                    // Setup cleanup function
+                    cleanup = function() {
+                        if (controls && controls.cleanup) controls.cleanup();
             if (labelSystem && labelSystem.cleanup) labelSystem.cleanup();
             if (zoomControls && zoomControls.cleanup) zoomControls.cleanup();
-            
-            // Dispose of all scene resources
-            scene.traverse((object) => {
-                if (object.geometry) object.geometry.dispose();
-                if (object.material) {
-                    if (Array.isArray(object.material)) {
-                        object.material.forEach(material => material.dispose());
-                    } else {
-                        object.material.dispose();
-                    }
-                }
-            });
+                        
+                        // Dispose of all scene resources
+                        scene.traverse((object) => {
+                            if (object.geometry) object.geometry.dispose();
+                            if (object.material) {
+                                if (Array.isArray(object.material)) {
+                                    object.material.forEach(material => material.dispose());
+                                } else {
+                                    object.material.dispose();
+                                }
+                            }
+                        });
         };
         
         return cleanup;

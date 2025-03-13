@@ -1,9 +1,9 @@
-// Central region implementation
+// Central regions implementation
 import * as THREE from 'three';
 import { CONFIG } from '../core/config.js';
 
-// Create central region and all its sub-regions
-export function createCentralRegion(scene, labelSystem) {
+// Create Central islands and all related structures
+export function createCentralIslands(scene, labelSystem) {
     // Need to check if CONFIG is available
     if (typeof CONFIG === 'undefined') {
         console.error('CONFIG is not defined. Make sure config.js is loaded first.');
@@ -11,304 +11,261 @@ export function createCentralRegion(scene, labelSystem) {
     }
     
     const elements = {
-        central: createCentralBase(scene, labelSystem),
-        centralCity: createCentralCity(scene, labelSystem),
-        centralTower: createCentralTower(scene, labelSystem),
-        centralMarket: createCentralMarket(scene, labelSystem),
-        centralPark: createCentralPark(scene, labelSystem)
+        magicIslands: createMagicIslands(scene, labelSystem),
+        moonPalace: createMoonPalace(scene, labelSystem),
+        forestedIslands: createForestedIslands(scene, labelSystem),
+        smugglersIsland: createSmugglersIsland(scene, labelSystem),
+        belt: createBelt(scene, labelSystem),
+        caveIslands: createCaveIslands(scene, labelSystem)
     };
     
     return elements;
 }
 
-// Create central base
-function createCentralBase(scene, labelSystem) {
-    const centralGroup = new THREE.Group();
-    
-    // Main central platform
-    const baseGeometry = new THREE.BoxGeometry(200, 10, 200);
-    const baseMaterial = new THREE.MeshStandardMaterial({ 
-        color: CONFIG.colors.central,
-        metalness: 0.2,
-        roughness: 0.6
+// Create Magic Islands Capital
+function createMagicIslands(scene, labelSystem) {
+    // Magic Islands Capital
+    const magicIslandGeometry = new THREE.CylinderGeometry(35, 40, 15, 8);
+    const magicIslandMaterial = new THREE.MeshLambertMaterial({ 
+        color: CONFIG.colors.magicIslands
     });
-    const base = new THREE.Mesh(baseGeometry, baseMaterial);
-    base.castShadow = true;
-    base.receiveShadow = true;
-    centralGroup.add(base);
+    const magicIsland = new THREE.Mesh(magicIslandGeometry, magicIslandMaterial);
     
-    // Add decorative elements
-    for (let i = 0; i < 8; i++) {
-        const angle = (i / 8) * Math.PI * 2;
-        const radius = 80;
-        const x = Math.sin(angle) * radius;
-        const z = Math.cos(angle) * radius;
-        
-        const pillarGeometry = new THREE.CylinderGeometry(3, 3, 15, 8);
-        const pillarMaterial = new THREE.MeshStandardMaterial({
-            color: 0x666666,
-            metalness: 0.2,
-            roughness: 0.5
-        });
-        const pillar = new THREE.Mesh(pillarGeometry, pillarMaterial);
-        pillar.position.set(x, 7.5, z);
-        pillar.castShadow = true;
-        pillar.receiveShadow = true;
-        centralGroup.add(pillar);
-    }
+    // Position the magic island
+    const position = CONFIG.positions.central.magicIslands;
+    magicIsland.position.set(position.x, position.y, position.z);
+    scene.add(magicIsland);
     
-    // Position the central base
-    const position = CONFIG.positions.central.central;
-    centralGroup.position.set(position.x, position.y, position.z);
-    scene.add(centralGroup);
-    
-    // Add label
-    labelSystem.addLabel(centralGroup, "Central Region", CONFIG.colors.central);
-    
-    return centralGroup;
-}
-
-// Create central city
-function createCentralCity(scene, labelSystem) {
-    const cityGroup = new THREE.Group();
-    
-    // Main city base
-    const cityBaseGeometry = new THREE.BoxGeometry(150, 5, 150);
-    const cityBaseMaterial = new THREE.MeshStandardMaterial({ 
-        color: CONFIG.colors.centralCity,
-        metalness: 0.2,
-        roughness: 0.5
-    });
-    const cityBase = new THREE.Mesh(cityBaseGeometry, cityBaseMaterial);
-    cityBase.castShadow = true;
-    cityBase.receiveShadow = true;
-    cityGroup.add(cityBase);
-    
-    // Add buildings
-    for (let i = 0; i < 20; i++) {
-        const x = -70 + Math.random() * 140;
-        const z = -70 + Math.random() * 140;
-        const height = 15 + Math.random() * 25;
-        const width = 8 + Math.random() * 12;
-        
-        const buildingGeometry = new THREE.BoxGeometry(width, height, width);
-        const buildingMaterial = new THREE.MeshStandardMaterial({
-            color: 0x888888,
-            metalness: 0.1,
-            roughness: 0.4
-        });
-        const building = new THREE.Mesh(buildingGeometry, buildingMaterial);
-        building.position.set(x, height/2 + 2.5, z);
-        building.castShadow = true;
-        building.receiveShadow = true;
-        cityGroup.add(building);
-    }
-    
-    // Position the central city
-    const position = CONFIG.positions.central.centralCity;
-    cityGroup.position.set(position.x, position.y, position.z);
-    scene.add(cityGroup);
-    
-    // Add label
-    labelSystem.addLabel(cityGroup, "Central City", CONFIG.colors.centralCity);
-    
-    return cityGroup;
-}
-
-// Create central tower
-function createCentralTower(scene, labelSystem) {
-    const towerGroup = new THREE.Group();
-    
-    // Main tower structure
-    const towerGeometry = new THREE.CylinderGeometry(15, 20, 100, 8);
-    const towerMaterial = new THREE.MeshStandardMaterial({ 
-        color: CONFIG.colors.centralTower,
-        metalness: 0.3,
-        roughness: 0.4
-    });
-    const tower = new THREE.Mesh(towerGeometry, towerMaterial);
-    tower.castShadow = true;
-    tower.receiveShadow = true;
-    towerGroup.add(tower);
-    
-    // Add tower levels
-    for (let i = 0; i < 5; i++) {
-        const levelGeometry = new THREE.CylinderGeometry(18, 18, 2, 8);
-        const levelMaterial = new THREE.MeshStandardMaterial({
-            color: 0x999999,
-            metalness: 0.2,
-            roughness: 0.5
-        });
-        const level = new THREE.Mesh(levelGeometry, levelMaterial);
-        level.position.y = 20 + i * 15;
-        level.castShadow = true;
-        level.receiveShadow = true;
-        towerGroup.add(level);
-    }
-    
-    // Add top spire
-    const spireGeometry = new THREE.ConeGeometry(10, 20, 8);
-    const spireMaterial = new THREE.MeshStandardMaterial({
-        color: 0xaaaaaa,
-        metalness: 0.2,
-        roughness: 0.3
-    });
-    const spire = new THREE.Mesh(spireGeometry, spireMaterial);
-    spire.position.y = 95;
-    spire.castShadow = true;
-    spire.receiveShadow = true;
-    towerGroup.add(spire);
-    
-    // Position the central tower
-    const position = CONFIG.positions.central.centralTower;
-    towerGroup.position.set(position.x, position.y, position.z);
-    scene.add(towerGroup);
-    
-    // Add label
-    labelSystem.addLabel(towerGroup, "Central Tower", CONFIG.colors.centralTower);
-    
-    return towerGroup;
-}
-
-// Create central market
-function createCentralMarket(scene, labelSystem) {
-    const marketGroup = new THREE.Group();
-    
-    // Main market structure
-    const marketGeometry = new THREE.BoxGeometry(80, 15, 80);
-    const marketMaterial = new THREE.MeshStandardMaterial({ 
-        color: CONFIG.colors.centralMarket,
-        metalness: 0.1,
-        roughness: 0.6
-    });
-    const market = new THREE.Mesh(marketGeometry, marketMaterial);
-    market.castShadow = true;
-    market.receiveShadow = true;
-    marketGroup.add(market);
-    
-    // Add market stalls
-    for (let i = 0; i < 12; i++) {
-        const angle = (i / 12) * Math.PI * 2;
-        const radius = 25;
-        const x = Math.sin(angle) * radius;
-        const z = Math.cos(angle) * radius;
-        
-        const stallGeometry = new THREE.BoxGeometry(8, 6, 8);
-        const stallMaterial = new THREE.MeshStandardMaterial({
-            color: 0x888888,
-            metalness: 0.1,
-            roughness: 0.5
-        });
-        const stall = new THREE.Mesh(stallGeometry, stallMaterial);
-        stall.position.set(x, 3, z);
-        stall.castShadow = true;
-        stall.receiveShadow = true;
-        marketGroup.add(stall);
-    }
-    
-    // Add central fountain
-    const fountainGeometry = new THREE.CylinderGeometry(5, 6, 3, 8);
-    const fountainMaterial = new THREE.MeshStandardMaterial({
-        color: 0x00bfff,
-        metalness: 0.1,
-        roughness: 0.2,
+    // Add some magical features
+    const crystalGeometry = new THREE.ConeGeometry(3, 12, 5);
+    const crystalMaterial = new THREE.MeshLambertMaterial({
+        color: 0xcc99ff,
         transparent: true,
-        opacity: 0.6
+        opacity: 0.8
     });
-    const fountain = new THREE.Mesh(fountainGeometry, fountainMaterial);
-    fountain.position.y = 1.5;
-    fountain.castShadow = true;
-    fountain.receiveShadow = true;
-    marketGroup.add(fountain);
     
-    // Position the central market
-    const position = CONFIG.positions.central.centralMarket;
-    marketGroup.position.set(position.x, position.y, position.z);
-    scene.add(marketGroup);
-    
-    // Add label
-    labelSystem.addLabel(marketGroup, "Central Market", CONFIG.colors.centralMarket);
-    
-    return marketGroup;
-}
-
-// Create central park
-function createCentralPark(scene, labelSystem) {
-    const parkGroup = new THREE.Group();
-    
-    // Main park base
-    const parkBaseGeometry = new THREE.BoxGeometry(100, 2, 100);
-    const parkBaseMaterial = new THREE.MeshStandardMaterial({ 
-        color: CONFIG.colors.centralPark,
-        metalness: 0.1,
-        roughness: 0.7
-    });
-    const parkBase = new THREE.Mesh(parkBaseGeometry, parkBaseMaterial);
-    parkBase.castShadow = true;
-    parkBase.receiveShadow = true;
-    parkGroup.add(parkBase);
-    
-    // Add trees
-    for (let i = 0; i < 15; i++) {
-        const x = -45 + Math.random() * 90;
-        const z = -45 + Math.random() * 90;
+    // Create a ring of crystals on the island
+    for (let i = 0; i < 6; i++) {
+        const angle = (i / 6) * Math.PI * 2;
+        const radius = 25;
+        const x = Math.cos(angle) * radius;
+        const z = Math.sin(angle) * radius;
         
-        // Tree trunk
-        const trunkGeometry = new THREE.CylinderGeometry(1, 1.5, 8, 8);
-        const trunkMaterial = new THREE.MeshStandardMaterial({
-            color: 0x4a2f1a,
-            metalness: 0.1,
-            roughness: 0.8
-        });
-        const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
-        trunk.position.set(x, 4, z);
-        trunk.castShadow = true;
-        trunk.receiveShadow = true;
-        parkGroup.add(trunk);
-        
-        // Tree top
-        const topGeometry = new THREE.ConeGeometry(4, 6, 8);
-        const topMaterial = new THREE.MeshStandardMaterial({
-            color: 0x2d5a27,
-            metalness: 0.1,
-            roughness: 0.6
-        });
-        const top = new THREE.Mesh(topGeometry, topMaterial);
-        top.position.set(x, 10, z);
-        top.castShadow = true;
-        top.receiveShadow = true;
-        parkGroup.add(top);
+        const crystal = new THREE.Mesh(crystalGeometry, crystalMaterial);
+        crystal.position.set(x, 10, z);
+        crystal.rotation.x = Math.PI * 0.1;
+        crystal.rotation.z = angle;
+        magicIsland.add(crystal);
     }
     
-    // Add benches
+    // Add label
+    labelSystem.addLabel(magicIsland, "Magic Islands Capital", CONFIG.colors.magicIslands);
+    
+    return magicIsland;
+}
+
+// Create Moon Palace (floating above magic islands)
+function createMoonPalace(scene, labelSystem) {
+    // Moon Palace
+    const moonPalaceGeometry = new THREE.CylinderGeometry(20, 24, 18, 6);
+    const moonPalaceMaterial = new THREE.MeshLambertMaterial({ 
+        color: CONFIG.colors.moonPalace,
+        transparent: true,
+        opacity: 0.9
+    });
+    const moonPalace = new THREE.Mesh(moonPalaceGeometry, moonPalaceMaterial);
+    
+    // Add spires to the moon palace
+    const spireGeometry = new THREE.ConeGeometry(4, 15, 6);
+    const spireMaterial = new THREE.MeshLambertMaterial({ 
+        color: 0xd8bfd8, // Thistle
+        transparent: true,
+        opacity: 0.9
+    });
+    
+    // Create spires around the palace
+    for (let i = 0; i < 6; i++) {
+        const angle = (i / 6) * Math.PI * 2;
+        const radius = 15;
+        const x = Math.cos(angle) * radius;
+        const z = Math.sin(angle) * radius;
+        
+        const spire = new THREE.Mesh(spireGeometry, spireMaterial);
+        spire.position.set(x, 15, z);
+        moonPalace.add(spire);
+    }
+    
+    // Position the moon palace
+    const position = CONFIG.positions.central.moonPalace;
+    moonPalace.position.set(position.x, position.y, position.z);
+    scene.add(moonPalace);
+    
+    // Add label
+    labelSystem.addLabel(moonPalace, "Moon Palace", CONFIG.colors.moonPalace);
+    
+    return moonPalace;
+}
+
+// Create Forested Islands surrounding magic islands
+function createForestedIslands(scene, labelSystem) {
+    // Function to create a forested island
+    const createForestedIsland = (x, z, size) => {
+        const islandGroup = new THREE.Group();
+        
+        // Island base
+        const baseGeom = new THREE.CylinderGeometry(size, size * 1.1, size * 0.4, 8);
+        const baseMat = new THREE.MeshLambertMaterial({ color: 0x8b4513 }); // Saddle brown
+        const base = new THREE.Mesh(baseGeom, baseMat);
+        islandGroup.add(base);
+        
+        // Forest
+        const forestGeom = new THREE.ConeGeometry(size * 0.8, size * 1.2, 8);
+        const forestMat = new THREE.MeshLambertMaterial({ 
+            color: CONFIG.colors.forestFarms
+        });
+        const forest = new THREE.Mesh(forestGeom, forestMat);
+        forest.position.y = size * 0.8;
+        islandGroup.add(forest);
+        
+        islandGroup.position.set(x, CONFIG.positions.central.magicIslands.y, z);
+        scene.add(islandGroup);
+        
+        return islandGroup;
+    };
+
+    // Create several forested islands around the magic islands
+    const forestedIslands = [
+        createForestedIsland(-40, -30, 15),
+        createForestedIsland(40, -40, 12),
+        createForestedIsland(50, 20, 14),
+        createForestedIsland(-50, 30, 13),
+        createForestedIsland(0, -45, 16)
+    ];
+    
+    // Add label to the first forested island
+    labelSystem.addLabel(forestedIslands[0], "Forest Farms", CONFIG.colors.forestFarms);
+    
+    return forestedIslands;
+}
+
+// Create Smugglers Island (to the south)
+function createSmugglersIsland(scene, labelSystem) {
+    // Smugglers Island
+    const smugglersIslandGeometry = new THREE.CylinderGeometry(25, 30, 12, 8);
+    const smugglersIslandMaterial = new THREE.MeshLambertMaterial({ 
+        color: CONFIG.colors.smugglersIsland
+    });
+    const smugglersIsland = new THREE.Mesh(smugglersIslandGeometry, smugglersIslandMaterial);
+    
+    // Add smuggler hideouts
+    const hideoutGeometry = new THREE.BoxGeometry(8, 5, 8);
+    const hideoutMaterial = new THREE.MeshLambertMaterial({ 
+        color: 0x8b4513 // Saddle brown
+    });
+    
+    // Create hideouts around the island
+    for (let i = 0; i < 5; i++) {
+        const angle = (i / 5) * Math.PI * 2;
+        const radius = 20;
+        const x = Math.cos(angle) * radius;
+        const z = Math.sin(angle) * radius;
+        
+        const hideout = new THREE.Mesh(hideoutGeometry, hideoutMaterial);
+        hideout.position.set(x, 6, z);
+        smugglersIsland.add(hideout);
+    }
+    
+    // Position the smugglers island
+    const position = CONFIG.positions.central.smugglersIsland;
+    smugglersIsland.position.set(position.x, position.y, position.z);
+    scene.add(smugglersIsland);
+    
+    // Add label
+    labelSystem.addLabel(smugglersIsland, "Smugglers Island", CONFIG.colors.smugglersIsland);
+    
+    return smugglersIsland;
+}
+
+// Create The Belt (floating above smugglers island)
+function createBelt(scene, labelSystem) {
+    // The Belt
+    const beltGeometry = new THREE.TorusGeometry(20, 3, 16, 32);
+    const beltMaterial = new THREE.MeshLambertMaterial({ 
+        color: CONFIG.colors.belt,
+        transparent: true,
+        opacity: 0.9
+    });
+    const belt = new THREE.Mesh(beltGeometry, beltMaterial);
+    
+    // Add floating trading platforms on the belt
+    const platformGeometry = new THREE.BoxGeometry(6, 2, 6);
+    const platformMaterial = new THREE.MeshLambertMaterial({ 
+        color: 0xcd853f // Peru
+    });
+    
+    // Create platforms along the belt
     for (let i = 0; i < 8; i++) {
         const angle = (i / 8) * Math.PI * 2;
-        const radius = 30;
-        const x = Math.sin(angle) * radius;
-        const z = Math.cos(angle) * radius;
+        const x = Math.cos(angle) * 20;
+        const z = Math.sin(angle) * 20;
         
-        const benchGeometry = new THREE.BoxGeometry(4, 1, 2);
-        const benchMaterial = new THREE.MeshStandardMaterial({
-            color: 0x8b4513,
-            metalness: 0.1,
-            roughness: 0.7
-        });
-        const bench = new THREE.Mesh(benchGeometry, benchMaterial);
-        bench.position.set(x, 1, z);
-        bench.castShadow = true;
-        bench.receiveShadow = true;
-        parkGroup.add(bench);
+        const platform = new THREE.Mesh(platformGeometry, platformMaterial);
+        platform.position.set(x, 0, z);
+        platform.rotation.y = angle + Math.PI / 2;
+        belt.add(platform);
     }
     
-    // Position the central park
-    const position = CONFIG.positions.central.centralPark;
-    parkGroup.position.set(position.x, position.y, position.z);
-    scene.add(parkGroup);
+    // Position the belt
+    const position = CONFIG.positions.central.belt;
+    belt.position.set(position.x, position.y, position.z);
+    belt.rotation.x = Math.PI / 2;
+    scene.add(belt);
     
     // Add label
-    labelSystem.addLabel(parkGroup, "Central Park", CONFIG.colors.centralPark);
+    labelSystem.addLabel(belt, "The Belt", CONFIG.colors.belt);
     
-    return parkGroup;
+    return belt;
 }
 
-console.log('Central region module loaded!');
+// Create Cave Islands surrounding smugglers island
+function createCaveIslands(scene, labelSystem) {
+    // Function to create a cave island
+    const createCaveIsland = (x, z, size) => {
+        const caveGroup = new THREE.Group();
+        
+        // Island base
+        const baseGeom = new THREE.CylinderGeometry(size, size * 1.1, size * 0.3, 6);
+        const baseMat = new THREE.MeshLambertMaterial({ 
+            color: CONFIG.colors.caveIslands
+        });
+        const base = new THREE.Mesh(baseGeom, baseMat);
+        caveGroup.add(base);
+        
+        // Cave entrance (hole in the middle)
+        const caveGeom = new THREE.CylinderGeometry(size * 0.4, size * 0.4, size * 0.3, 8);
+        const caveMat = new THREE.MeshBasicMaterial({ color: 0x000000 }); // Black
+        const cave = new THREE.Mesh(caveGeom, caveMat);
+        cave.position.y = size * 0.01;
+        caveGroup.add(cave);
+        
+        caveGroup.position.set(x, CONFIG.positions.central.smugglersIsland.y, z);
+        scene.add(caveGroup);
+        
+        return caveGroup;
+    };
+
+    // Create several cave islands around smugglers island
+    const caveIslands = [
+        createCaveIsland(30, 110, 10),
+        createCaveIsland(-25, 115, 8),
+        createCaveIsland(15, 130, 9),
+        createCaveIsland(-15, 70, 7)
+    ];
+    
+    // Add label to the first cave island
+    labelSystem.addLabel(caveIslands[0], "Cave Islands", CONFIG.colors.caveIslands);
+    
+    return caveIslands;
+}
+
+console.log('Central regions module loaded!');

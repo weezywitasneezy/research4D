@@ -25,14 +25,9 @@ export function setupScene(container) {
     camera.lookAt(0, 0, 0);
 
     // Renderer setup
-    const renderer = new THREE.WebGLRenderer({ 
-        antialias: true,
-        alpha: true
-    });
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(container.clientWidth, container.clientHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     container.appendChild(renderer.domElement);
 
     // Create a container for HTML labels
@@ -90,47 +85,26 @@ export function setupScene(container) {
 
 // Add lights to the scene
 function addLights(scene) {
-    // Increased ambient light intensity
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1.0);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
     scene.add(ambientLight);
 
-    // Main directional light (sun-like)
-    const mainLight = new THREE.DirectionalLight(0xffffff, 1.0);
-    mainLight.position.set(50, 100, 50);
-    mainLight.castShadow = true;
-    mainLight.shadow.mapSize.width = 2048;
-    mainLight.shadow.mapSize.height = 2048;
-    mainLight.shadow.camera.near = 0.5;
-    mainLight.shadow.camera.far = 1000;
-    scene.add(mainLight);
-
-    // Secondary directional light (fill light)
-    const fillLight = new THREE.DirectionalLight(0xffffff, 0.5);
-    fillLight.position.set(-50, 50, -50);
-    fillLight.castShadow = true;
-    scene.add(fillLight);
-
-    // Back light (rim lighting)
-    const backLight = new THREE.DirectionalLight(0xffffff, 0.3);
-    backLight.position.set(0, 50, -100);
-    backLight.castShadow = true;
-    scene.add(backLight);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    directionalLight.position.set(50, 100, 50);
+    directionalLight.castShadow = true;
+    scene.add(directionalLight);
 }
 
 // Add base plane (sea level)
 function addBasePlane(scene) {
     const baseGeometry = new THREE.PlaneGeometry(400, 400);
-    const baseMaterial = new THREE.MeshStandardMaterial({ 
+    const baseMaterial = new THREE.MeshLambertMaterial({ 
         color: CONFIG.scene.waterColor,
         side: THREE.DoubleSide,
         transparent: true,
-        opacity: 0.8,
-        metalness: 0.1,
-        roughness: 0.2
+        opacity: 0.8
     });
     const basePlane = new THREE.Mesh(baseGeometry, baseMaterial);
     basePlane.rotation.x = -Math.PI / 2;
-    basePlane.receiveShadow = true;
     scene.add(basePlane);
 }
 
