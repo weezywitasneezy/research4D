@@ -25,13 +25,13 @@ export const CONFIG = {
     positions: {
         eastern: {
             continent: { x: 240, y: 6, z: 0 },
-            farms: { x: 270, y: 13.5, z: -120 },
-            industrial: { x: 360, y: 15, z: 30 },
-            capital: { x: 220, y: 16, z: 0 },
-            skyPalace: { x: 220, y: 80, z: 0 },
-            spaceFarms: { x: 240, y: 140, z: 20 },
-            mines: { x: 375, y: -25, z: -40 },
-            sewers: { x: 180, y: -15, z: 90 }
+            farms: { x: 240, y: 4, z: -100 },
+            industrial: { x: 240, y: 3, z: 100 },
+            capital: { x: 180, y: 16, z: 0 },
+            skyPalace: { x: 180, y: 80, z: 0 },
+            spaceFarms: { x: 240, y: 0, z: 150 },
+            mines: { x: 240, y: -20, z: -150 },
+            sewers: { x: 240, y: -10, z: 50 }
         },
         central: {
             magicIslands: { x: 0, y: 7.5, z: -120 },

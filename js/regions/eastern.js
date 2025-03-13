@@ -165,7 +165,7 @@ function createIndustrialArea(scene, labelSystem) {
         factory.position.set(x, height/2 + 3, z);
         industrialAreaGroup.add(factory);
         
-        // Add chimney
+        // Add chimney with smoke
         if (height > 15) {
             const chimneyGeometry = new THREE.CylinderGeometry(width/8, width/6, height/2, 8);
             const chimneyMaterial = new THREE.MeshLambertMaterial({ 
@@ -174,6 +174,51 @@ function createIndustrialArea(scene, labelSystem) {
             const chimney = new THREE.Mesh(chimneyGeometry, chimneyMaterial);
             chimney.position.set(x + width/4, height + height/4, z - depth/4);
             industrialAreaGroup.add(chimney);
+
+            // Create smoke particle system
+            const smokeGeometry = new THREE.BufferGeometry();
+            const smokeCount = 50;
+            const smokePositions = new Float32Array(smokeCount * 3);
+            const smokeColors = new Float32Array(smokeCount * 3);
+            const smokeVelocities = new Float32Array(smokeCount * 3);
+            const smokeSizes = new Float32Array(smokeCount);
+
+            // Initialize smoke particles
+            for (let i = 0; i < smokeCount; i++) {
+                const i3 = i * 3;
+                smokePositions[i3] = x + width/4;     // x
+                smokePositions[i3 + 1] = height + height/2;  // y
+                smokePositions[i3 + 2] = z - depth/4; // z
+                
+                smokeVelocities[i3] = (Math.random() - 0.5) * 0.2;     // x velocity
+                smokeVelocities[i3 + 1] = Math.random() * 0.3;         // y velocity
+                smokeVelocities[i3 + 2] = (Math.random() - 0.5) * 0.2; // z velocity
+                
+                const color = new THREE.Color(0x808080);
+                color.setHSL(0, 0, Math.random() * 0.3 + 0.2);
+                smokeColors[i3] = color.r;
+                smokeColors[i3 + 1] = color.g;
+                smokeColors[i3 + 2] = color.b;
+                
+                smokeSizes[i] = Math.random() * 2 + 1;
+            }
+
+            smokeGeometry.setAttribute('position', new THREE.BufferAttribute(smokePositions, 3));
+            smokeGeometry.setAttribute('color', new THREE.BufferAttribute(smokeColors, 3));
+            smokeGeometry.setAttribute('size', new THREE.BufferAttribute(smokeSizes, 1));
+
+            const smokeMaterial = new THREE.PointsMaterial({
+                size: 1,
+                vertexColors: true,
+                transparent: true,
+                opacity: 0.6,
+                sizeAttenuation: true
+            });
+
+            const smoke = new THREE.Points(smokeGeometry, smokeMaterial);
+            smoke.userData.velocities = smokeVelocities;
+            smoke.userData.originalPositions = smokePositions.slice();
+            industrialAreaGroup.add(smoke);
         }
     };
     
@@ -191,6 +236,50 @@ function createIndustrialArea(scene, labelSystem) {
     
     // Add label
     labelSystem.addLabel(industrialAreaGroup, "Industrial Area", CONFIG.colors.industrialArea);
+    
+    // Add animation for smoke
+    function animateSmoke() {
+        const smokeSystems = industrialAreaGroup.children.filter(child => child instanceof THREE.Points);
+        smokeSystems.forEach(smoke => {
+            const positions = smoke.geometry.attributes.position.array;
+            const velocities = smoke.userData.velocities;
+            const originalPositions = smoke.userData.originalPositions;
+            
+            for (let i = 0; i < positions.length; i += 3) {
+                // Update position
+                positions[i] += velocities[i];
+                positions[i + 1] += velocities[i + 1];
+                positions[i + 2] += velocities[i + 2];
+                
+                // Add some randomness to movement
+                velocities[i] += (Math.random() - 0.5) * 0.01;
+                velocities[i + 1] += (Math.random() - 0.5) * 0.01;
+                velocities[i + 2] += (Math.random() - 0.5) * 0.01;
+                
+                // Reset particle if it goes too far
+                const distance = Math.sqrt(
+                    Math.pow(positions[i] - originalPositions[i], 2) +
+                    Math.pow(positions[i + 1] - originalPositions[i + 1], 2) +
+                    Math.pow(positions[i + 2] - originalPositions[i + 2], 2)
+                );
+                
+                if (distance > 20) {
+                    positions[i] = originalPositions[i];
+                    positions[i + 1] = originalPositions[i + 1];
+                    positions[i + 2] = originalPositions[i + 2];
+                    velocities[i] = (Math.random() - 0.5) * 0.2;
+                    velocities[i + 1] = Math.random() * 0.3;
+                    velocities[i + 2] = (Math.random() - 0.5) * 0.2;
+                }
+            }
+            
+            smoke.geometry.attributes.position.needsUpdate = true;
+        });
+        
+        requestAnimationFrame(animateSmoke);
+    }
+    
+    animateSmoke();
     
     return industrialAreaGroup;
 }
