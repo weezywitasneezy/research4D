@@ -1,16 +1,17 @@
 // Animation and camera controls
+import { CONFIG } from '../core/config.js';
 
 // Initialize animations
-function initAnimations(camera, isRotatingFn, zoomLevelFn, elevationOffsetFn) {
+export function initAnimations(camera, isRotatingFn, zoomLevelFn, elevationOffsetFn) {
     console.log('Initializing animations with zoom and elevation support');
     
     // Camera rotation variables
     let angle = 0;
-    let radius = (window.CONFIG && window.CONFIG.camera) ? 
-        window.CONFIG.camera.radius * window.CONFIG.camera.zoomFactor : 
+    let radius = (CONFIG && CONFIG.camera) ? 
+        CONFIG.camera.radius * CONFIG.camera.zoomFactor : 
         480 * 0.7;
-    let height = (window.CONFIG && window.CONFIG.camera) ? 
-        window.CONFIG.camera.height * window.CONFIG.camera.zoomFactor : 
+    let height = (CONFIG && CONFIG.camera) ? 
+        CONFIG.camera.height * CONFIG.camera.zoomFactor : 
         180 * 0.7;
     const centerX = 0;
     const centerZ = 0;
@@ -30,7 +31,7 @@ function initAnimations(camera, isRotatingFn, zoomLevelFn, elevationOffsetFn) {
     // Mouse event handlers for drag control
     function onMouseDown(event) {
         // Only enable dragging if it's allowed in the config
-        if (window.CONFIG && window.CONFIG.animation && window.CONFIG.animation.dragEnabled === false) {
+        if (CONFIG && CONFIG.animation && CONFIG.animation.dragEnabled === false) {
             return;
         }
         
@@ -41,9 +42,9 @@ function initAnimations(camera, isRotatingFn, zoomLevelFn, elevationOffsetFn) {
         };
         
         // Pause auto-rotation when user starts dragging
-        if (window.CONFIG && window.CONFIG.animation) {
-            window.CONFIG._wasRotating = isRotatingFn && isRotatingFn();
-            window.CONFIG.animation.enabled = false;
+        if (CONFIG && CONFIG.animation) {
+            CONFIG._wasRotating = isRotatingFn && isRotatingFn();
+            CONFIG.animation.enabled = false;
         }
         
         // Add class to container for visual feedback
@@ -84,10 +85,10 @@ function initAnimations(camera, isRotatingFn, zoomLevelFn, elevationOffsetFn) {
             const elevationChange = -deltaMove.y * dragSensitivityVertical;
             
             // Get min/max elevation limits from CONFIG or use defaults
-            const minElevation = (window.CONFIG && window.CONFIG.minElevation) ? 
-                window.CONFIG.minElevation : -300;
-            const maxElevation = (window.CONFIG && window.CONFIG.maxElevation) ? 
-                window.CONFIG.maxElevation : 200;
+            const minElevation = (CONFIG && CONFIG.minElevation) ? 
+                CONFIG.minElevation : -300;
+            const maxElevation = (CONFIG && CONFIG.maxElevation) ? 
+                CONFIG.maxElevation : 200;
             
             // Calculate new elevation with limits
             const newElevation = Math.max(
@@ -111,9 +112,9 @@ function initAnimations(camera, isRotatingFn, zoomLevelFn, elevationOffsetFn) {
         isDragging = false;
         
         // Resume auto-rotation if it was enabled before
-        if (window.CONFIG && window.CONFIG._wasRotating) {
-            window.CONFIG.animation.enabled = true;
-            delete window.CONFIG._wasRotating;
+        if (CONFIG && CONFIG._wasRotating) {
+            CONFIG.animation.enabled = true;
+            delete CONFIG._wasRotating;
         }
         
         // Remove class from container
@@ -130,7 +131,7 @@ function initAnimations(camera, isRotatingFn, zoomLevelFn, elevationOffsetFn) {
         
         // Also handle touch events for mobile
         container.addEventListener('touchstart', (e) => {
-            if (window.CONFIG && window.CONFIG.animation && window.CONFIG.animation.dragEnabled === false) {
+            if (CONFIG && CONFIG.animation && CONFIG.animation.dragEnabled === false) {
                 return;
             }
             
@@ -172,12 +173,12 @@ function initAnimations(camera, isRotatingFn, zoomLevelFn, elevationOffsetFn) {
         }
         
         // Get base values from CONFIG with fallbacks
-        const baseRadius = (window.CONFIG && window.CONFIG.camera) ? 
-            window.CONFIG.camera.radius * window.CONFIG.camera.zoomFactor : 
+        const baseRadius = (CONFIG && CONFIG.camera) ? 
+            CONFIG.camera.radius * CONFIG.camera.zoomFactor : 
             480 * 0.7;
             
-        const baseHeight = (window.CONFIG && window.CONFIG.camera) ? 
-            window.CONFIG.camera.height * window.CONFIG.camera.zoomFactor : 
+        const baseHeight = (CONFIG && CONFIG.camera) ? 
+            CONFIG.camera.height * CONFIG.camera.zoomFactor : 
             180 * 0.7;
         
         // Update camera values based on zoom and elevation
@@ -186,9 +187,7 @@ function initAnimations(camera, isRotatingFn, zoomLevelFn, elevationOffsetFn) {
         
         // Check if the label system indicates a label is being hovered
         let isLabelHovered = false;
-        if (window.isLabelHovered) {
-            isLabelHovered = true;
-        } else if (container && container._labelSystem && container._labelSystem.isHovered) {
+        if (container && container._labelSystem && container._labelSystem.isHovered) {
             isLabelHovered = container._labelSystem.isHovered();
         }
         
@@ -197,8 +196,8 @@ function initAnimations(camera, isRotatingFn, zoomLevelFn, elevationOffsetFn) {
         // 2. Not currently dragging
         // 3. No label is being hovered
         if (isRotatingFn && isRotatingFn() && !isDragging && !isLabelHovered) {
-            const rotationSpeed = (window.CONFIG && window.CONFIG.camera) ? 
-                window.CONFIG.camera.rotationSpeed : 0.002;
+            const rotationSpeed = (CONFIG && CONFIG.camera) ? 
+                CONFIG.camera.rotationSpeed : 0.002;
             angle += rotationSpeed;
         }
         
@@ -234,26 +233,16 @@ function initAnimations(camera, isRotatingFn, zoomLevelFn, elevationOffsetFn) {
 }
 
 // Start animation loop
-function startAnimationLoop(renderer, scene, camera, animations, labelSystem) {
-    // Save zoom controls reference globally so animations can access it
-    if (window.zoomControls === undefined && typeof zoomControls !== 'undefined') {
-        window.zoomControls = zoomControls;
-    }
-    
-    // Save label system reference for future access
-    if (labelSystem) {
-        window.labelSystem = labelSystem;
-    }
-    
+export function startAnimationLoop(renderer, scene, camera, animations, labelSystem) {
     // Animation loop
     function animate() {
         animations.setAnimationFrameId(requestAnimationFrame(animate));
         
-        // Update camera position for rotation
+        // Update camera position
         animations.updateCameraPosition();
         
-        // Update label positions
-        if (labelSystem && labelSystem.updateLabels) {
+        // Update labels if label system exists
+        if (labelSystem) {
             labelSystem.updateLabels(camera);
         }
         
@@ -265,8 +254,4 @@ function startAnimationLoop(renderer, scene, camera, animations, labelSystem) {
     animate();
 }
 
-// Make functions available globally
-window.initAnimations = initAnimations;
-window.startAnimationLoop = startAnimationLoop;
-
-console.log('Animations module loaded');
+console.log('Animation module loaded!');

@@ -1,7 +1,8 @@
 // Eastern regions implementation
+import { CONFIG } from '../core/config.js';
 
 // Create Eastern continent and all its sub-regions
-function createEasternContinent(scene, labelSystem) {
+export function createEasternContinent(scene, labelSystem) {
     // Need to check if CONFIG is available
     if (typeof CONFIG === 'undefined') {
         console.error('CONFIG is not defined. Make sure config.js is loaded first.');
@@ -499,5 +500,4 @@ function createSewers(scene, labelSystem) {
     return sewerGroup;
 }
 
-// Make the function available globally
-window.createEasternContinent = createEasternContinent;
+console.log('Eastern regions module loaded!');

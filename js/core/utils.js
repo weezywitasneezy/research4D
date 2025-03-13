@@ -1,7 +1,8 @@
 // Utility functions for the visualization
+import { CONFIG } from './config.js';
 
 // Create vertical connectors between different regions/layers
-function createConnectors(scene, elements) {
+export function createConnectors(scene, elements) {
     const connectors = [];
     
     // Helper function to create a single vertical connector line
@@ -158,8 +159,5 @@ function createConnectors(scene, elements) {
     
     return connectors;
 }
-
-// Make functions available globally
-window.createConnectors = createConnectors;
 
 console.log('Utils module loaded');

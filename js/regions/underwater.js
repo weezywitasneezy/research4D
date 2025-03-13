@@ -1,7 +1,8 @@
 // Underwater regions implementation
+import { CONFIG } from '../core/config.js';
 
 // Create all underwater structures
-function createUnderwaterStructures(scene, labelSystem) {
+export function createUnderwaterStructures(scene, labelSystem) {
     // Need to check if CONFIG is available
     if (typeof CONFIG === 'undefined') {
         console.error('CONFIG is not defined. Make sure config.js is loaded first.');
@@ -126,5 +127,4 @@ function createAtlantis(scene, labelSystem) {
     return atlantisGroup;
 }
 
-// Make functions available globally
-window.createUnderwaterStructures = createUnderwaterStructures;
+console.log('Underwater regions module loaded!');

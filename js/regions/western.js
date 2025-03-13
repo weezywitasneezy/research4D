@@ -1,7 +1,8 @@
 // Western regions implementation
+import { CONFIG } from '../core/config.js';
 
 // Create Western regions and related structures
-function createWesternRegions(scene, labelSystem) {
+export function createWesternRegions(scene, labelSystem) {
     // Need to check if CONFIG is available
     if (typeof CONFIG === 'undefined') {
         console.error('CONFIG is not defined. Make sure config.js is loaded first.');
@@ -178,7 +179,7 @@ return hellsGate;
 }
 
 // Add volcanic features to Hell's End (optional enhancement)
-function addVolcanicFeatures(scene, hellsEnd) {
+export function addVolcanicFeatures(scene, hellsEnd) {
 const hellsEndGroup = new THREE.Group();
 
 // Base is the existing Hell's End continent
@@ -224,5 +225,4 @@ scene.add(hellsEndGroup);
 return hellsEndGroup;
 }
 
-// Make the function available globally
-window.createWesternRegions = createWesternRegions;
+console.log('Western regions module loaded!');

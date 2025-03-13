@@ -1,7 +1,8 @@
 // Sky regions implementation
+import { CONFIG } from '../core/config.js';
 
 // Create all sky structures
-function createSkyStructures(scene, labelSystem) {
+export function createSkyStructures(scene, labelSystem) {
     // Need to check if CONFIG is available
     if (typeof CONFIG === 'undefined') {
         console.error('CONFIG is not defined. Make sure config.js is loaded first.');
@@ -144,7 +145,7 @@ function createSpaceFarms(scene, labelSystem) {
 }
 
 // Add orbital platforms around space farms (optional enhancement)
-function addOrbitalPlatforms(scene, spaceFarms, labelSystem) {
+export function addOrbitalPlatforms(scene, spaceFarms, labelSystem) {
     // Create orbital platform group
     const platformsGroup = new THREE.Group();
     
@@ -192,5 +193,4 @@ function addOrbitalPlatforms(scene, spaceFarms, labelSystem) {
     return platformsGroup;
 }
 
-// Make functions available globally
-window.createSkyStructures = createSkyStructures;
+console.log('Sky regions module loaded!');

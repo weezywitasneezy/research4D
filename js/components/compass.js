@@ -2,7 +2,7 @@
 // This replaces the HTML/CSS compass markers with 3D objects that have labels attached
 
 // Create 3D compass markers that will move and rotate with the scene
-function create3DCompassMarkers(scene, labelSystem) {
+export function create3DCompassMarkers(scene, labelSystem) {
     // Create a group to hold all compass markers
     const compassGroup = new THREE.Group();
     compassGroup.name = "CompassMarkers";
@@ -59,13 +59,9 @@ function create3DCompassMarkers(scene, labelSystem) {
 }
 
 // Function to remove HTML compass markers
-function removeHTMLCompassMarkers(container) {
+export function removeHTMLCompassMarkers(container) {
     const markers = container.querySelectorAll('.compass-marker');
     markers.forEach(marker => marker.remove());
 }
-
-// Export functions to global scope for access from other modules
-window.create3DCompassMarkers = create3DCompassMarkers;
-window.removeHTMLCompassMarkers = removeHTMLCompassMarkers;
 
 console.log('Compass markers module loaded!');

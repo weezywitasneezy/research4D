@@ -1,15 +1,13 @@
 // Label management system
+import { CONFIG } from '../core/config.js';
 
 // Setup the label system
-function setupLabelSystem(container) {
+export function setupLabelSystem(container) {
     // Store label data
     const labelData = [];
     
     // Keep track of hover state
     let isLabelHovered = false;
-    
-    // Global flag for easier access from animation module
-    window.isLabelHovered = false;
     
     // Function to add a label to a 3D object
     function addLabel(object, text, color) {
@@ -48,7 +46,6 @@ function setupLabelSystem(container) {
             
             // Set hover flags
             isLabelHovered = true;
-            window.isLabelHovered = true;
         };
         
         const mouseLeaveHandler = () => {
@@ -63,7 +60,6 @@ function setupLabelSystem(container) {
             
             // Clear hover flags
             isLabelHovered = false;
-            window.isLabelHovered = false;
         };
         
         // Add click event for future interaction
@@ -117,8 +113,8 @@ function setupLabelSystem(container) {
         // Get the current zoom level from CONFIG
         let currentZoom = 1.0;
         
-        if (window.CONFIG && window.CONFIG.currentZoom) {
-            currentZoom = window.CONFIG.currentZoom;
+        if (CONFIG && CONFIG.currentZoom) {
+            currentZoom = CONFIG.currentZoom;
         }
         
         // Apply different base sizes when not in fullscreen
@@ -208,7 +204,6 @@ function setupLabelSystem(container) {
     function cleanup() {
         // Reset hover state
         isLabelHovered = false;
-        window.isLabelHovered = false;
         
         labelData.forEach(label => {
             if (label.element) {
@@ -237,8 +232,5 @@ function setupLabelSystem(container) {
         labelData
     };
 }
-
-// Make function available globally
-window.setupLabelSystem = setupLabelSystem;
 
 console.log('Label system module loaded!');

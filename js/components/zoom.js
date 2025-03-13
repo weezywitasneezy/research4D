@@ -1,7 +1,8 @@
 // Zoom functionality for the 3D visualization
+import { CONFIG } from '../core/config.js';
 
 // Initialize zoom controls
-function initZoomControls(container, camera) {
+export function initZoomControls(container, camera) {
     console.log('Initializing zoom controls');
     
     // State object
@@ -19,9 +20,9 @@ function initZoomControls(container, camera) {
     const listeners = [];
     
     // Set initial zoom in CONFIG
-    if (window.CONFIG) {
-        window.CONFIG.currentZoom = state.zoomLevel;
-        window.CONFIG.labelSize = state.labelSize;
+    if (CONFIG) {
+        CONFIG.currentZoom = state.zoomLevel;
+        CONFIG.labelSize = state.labelSize;
     }
     
     // Mouse wheel handler - still keep Shift+wheel for elevation as an alternative
@@ -53,8 +54,8 @@ function initZoomControls(container, camera) {
             );
             
             // Update CONFIG with new zoom level
-            if (window.CONFIG) {
-                window.CONFIG.currentZoom = state.zoomLevel;
+            if (CONFIG) {
+                CONFIG.currentZoom = state.zoomLevel;
             }
             
             console.log('Mouse wheel zoom:', state.zoomLevel);
@@ -92,7 +93,4 @@ function initZoomControls(container, camera) {
     };
 }
 
-// Export functions
-window.initZoomControls = initZoomControls;
-
-console.log('Zoom controls module loaded');
+console.log('Zoom controls module loaded!');
