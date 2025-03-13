@@ -64,12 +64,23 @@ export async function initWorldVisualization() {
         // Setup animations
         setupAnimations(camera, controls, labelSystem, renderer, scene, zoomControls);
         
+        // Add event listener for label toggle
+        const handleLabelToggle = (event) => {
+            if (labelSystem && labelSystem.toggleLabels) {
+                labelSystem.toggleLabels();
+            }
+        };
+        window.addEventListener('toggleLabels', handleLabelToggle);
+        
         // Setup cleanup function
         cleanup = function() {
             if (controls && controls.cleanup) controls.cleanup();
             if (labelSystem && labelSystem.cleanup) labelSystem.cleanup();
             if (zoomControls && zoomControls.cleanup) zoomControls.cleanup();
             if (directionMarkers && directionMarkers.cleanup) directionMarkers.cleanup();
+            
+            // Remove label toggle event listener
+            window.removeEventListener('toggleLabels', handleLabelToggle);
             
             // Dispose of all scene resources
             scene.traverse((object) => {

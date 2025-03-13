@@ -10,6 +10,9 @@ export function setupLabelSystem(container) {
     // Keep track of hover state
     let isLabelHovered = false;
     
+    // Keep track of visibility state
+    let labelsVisible = true;
+    
     // Function to add a label to a 3D object
     function addLabel(object, text, color) {
         // Convert hex color to CSS color string
@@ -103,52 +106,41 @@ export function setupLabelSystem(container) {
         return labelInfo;
     }
     
-    // Function to update all label positions
+    // Function to update label positions
     function updateLabels(camera) {
         // Check if we're in fullscreen mode
-        const isFullscreen = !!(document.fullscreenElement ||
-            document.mozFullScreenElement ||
-            document.webkitFullscreenElement ||
+        const isFullscreen = !!(document.fullscreenElement || 
+            document.mozFullScreenElement || 
+            document.webkitFullscreenElement || 
             document.msFullscreenElement);
+            
+        // Get the container dimensions
+        const container = document.getElementById('visualization-mount');
+        if (!container) return;
         
-        // Get the current zoom level from CONFIG
-        let currentZoom = 1.0;
+        // Get current zoom level from CONFIG
+        const currentZoom = CONFIG.currentZoom || 1.0;
         
-        if (CONFIG && CONFIG.currentZoom) {
-            currentZoom = CONFIG.currentZoom;
-        }
+        // Calculate fullscreen multiplier for label sizing
+        const fullscreenMultiplier = isFullscreen ? 1.5 : 1.0;
         
-        // Apply different base sizes when not in fullscreen
-        const fullscreenMultiplier = isFullscreen ? 1.0 : 0.7;
-        
-        // Loop through all labels
+        // Update each label
         labelData.forEach(label => {
-            if (!label.visible) {
+            if (!label.visible || !labelsVisible) {
                 label.element.style.display = 'none';
                 return;
             }
             
-            // Get the object's world position
+            // Get world position of the label
             const worldPosition = new THREE.Vector3();
+            label.object.getWorldPosition(worldPosition);
+            worldPosition.add(label.position);
             
-            // If the object is a group, use its position directly
-            if (label.object.isGroup) {
-                worldPosition.copy(label.object.position);
-                worldPosition.y += label.position.y; // Add the label's y offset
-            } else {
-                // Get the object's world position and add the label's offset
-                label.object.updateMatrixWorld();
-                // Get the object's position in world space
-                label.object.getWorldPosition(worldPosition);
-                // Add the label's offset
-                worldPosition.y += label.position.y;
-            }
-            
-            // Project the world position to screen coordinates
+            // Project 3D position to 2D screen position
             const screenPosition = worldPosition.clone();
             screenPosition.project(camera);
             
-            // Convert to CSS coordinates
+            // Convert to screen coordinates
             const x = (screenPosition.x * 0.5 + 0.5) * container.clientWidth;
             const y = (-screenPosition.y * 0.5 + 0.5) * container.clientHeight;
             
@@ -182,55 +174,41 @@ export function setupLabelSystem(container) {
                 // Adjust opacity based on distance
                 const opacity = Math.max(0.3, Math.min(1.0, 500 / dist));
                 label.element.style.opacity = opacity.toString();
-                
-                // Only add borders in fullscreen mode with high zoom
-                if (isFullscreen && currentZoom > 1.5) {
-                    label.element.style.border = '1px solid rgba(255, 255, 255, 0.5)';
-                } else {
-                    label.element.style.border = 'none';
-                }
             } else {
-                // Hide the label if it's not visible
+                // Hide label if it's behind the camera or outside screen bounds
                 label.element.style.display = 'none';
             }
         });
     }
     
-    // Function to check if any label is currently hovered
-    function isHovered() {
-        return isLabelHovered;
+    // Function to toggle label visibility
+    function toggleLabels() {
+        labelsVisible = !labelsVisible;
+        return labelsVisible;
     }
     
-    // Function to remove all labels
-    function cleanup() {
-        // Reset hover state
-        isLabelHovered = false;
-        
-        labelData.forEach(label => {
-            if (label.element) {
-                // Remove event listeners
-                label.element.removeEventListener('mouseenter', label.element._mouseEnterHandler);
-                label.element.removeEventListener('mouseleave', label.element._mouseLeaveHandler);
-                label.element.removeEventListener('click', label.element._clickHandler);
-                
-                // Remove from DOM
-                if (label.element.parentNode) {
-                    label.element.parentNode.removeChild(label.element);
-                }
-            }
-        });
-        
-        // Clear the array
-        labelData.length = 0;
+    // Function to check if labels are visible
+    function areLabelsVisible() {
+        return labelsVisible;
     }
     
-    // Return the label system API
     return {
         addLabel,
         updateLabels,
-        isHovered,
-        cleanup,
-        labelData
+        toggleLabels,
+        areLabelsVisible,
+        isHovered: () => isLabelHovered,
+        cleanup: () => {
+            // Remove all labels and their event listeners
+            labelData.forEach(label => {
+                if (label.element) {
+                    label.element.removeEventListener('mouseenter', label.element._mouseEnterHandler);
+                    label.element.removeEventListener('mouseleave', label.element._mouseLeaveHandler);
+                    label.element.removeEventListener('click', label.element._clickHandler);
+                    label.element.remove();
+                }
+            });
+        }
     };
 }
 

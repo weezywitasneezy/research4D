@@ -7,7 +7,8 @@ export function setupControls(container) {
     
     // State
     const state = {
-        isRotating: true // Default to rotating
+        isRotating: true, // Default to rotating
+        labelsVisible: true // Default to labels visible
     };
     
     // Event listeners
@@ -45,8 +46,16 @@ export function setupControls(container) {
     fullscreenButton.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12"><path d="M3,3 L9,3 L9,5 L5,5 L5,9 L3,9 L3,3 Z M3,21 L3,15 L5,15 L5,19 L9,19 L9,21 L3,21 Z M21,3 L21,9 L19,9 L19,5 L15,5 L15,3 L21,3 Z M21,21 L15,21 L15,19 L19,19 L19,15 L21,15 L21,21 Z" fill="currentColor"/></svg>';
     fullscreenButton.title = 'Enter Fullscreen';
     
+    // Create labels toggle button with icon
+    const toggleLabelsButton = document.createElement('button');
+    toggleLabelsButton.id = 'toggle-labels';
+    toggleLabelsButton.className = 'icon-button';
+    toggleLabelsButton.innerHTML = '<svg viewBox="0 0 24 24" width="12" height="12"><text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" fill="currentColor" font-size="14" font-weight="bold">T</text></svg>';
+    toggleLabelsButton.title = 'Toggle Labels';
+    
     // Add buttons to container
     controlsContainer.appendChild(toggleRotationButton);
+    controlsContainer.appendChild(toggleLabelsButton);
     controlsContainer.appendChild(fullscreenButton);
     
     // Add container to controls
@@ -72,6 +81,21 @@ export function setupControls(container) {
         toggleFullScreen(visualizationContainer);
     };
     
+    // Toggle labels handler
+    const handleToggleLabels = function() {
+        state.labelsVisible = !state.labelsVisible;
+        
+        // Update button appearance based on state
+        this.style.opacity = state.labelsVisible ? '1' : '0.5';
+        this.title = state.labelsVisible ? 'Hide Labels' : 'Show Labels';
+        
+        // Dispatch custom event for label system to handle
+        const event = new CustomEvent('toggleLabels', { 
+            detail: { visible: state.labelsVisible }
+        });
+        window.dispatchEvent(event);
+    };
+    
     // Update fullscreen button icon based on fullscreen state
     const updateFullscreenButton = function() {
         const isFullscreen = !!(document.fullscreenElement || 
@@ -95,16 +119,18 @@ export function setupControls(container) {
     // Add event listeners
     toggleRotationButton.addEventListener('click', handleToggleRotation);
     fullscreenButton.addEventListener('click', handleToggleFullscreen);
+    toggleLabelsButton.addEventListener('click', handleToggleLabels);
     container.addEventListener('wheel', handleMouseWheel, { passive: false });
     document.addEventListener('fullscreenchange', updateFullscreenButton);
     document.addEventListener('mozfullscreenchange', updateFullscreenButton);
     document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
     document.addEventListener('MSFullscreenChange', updateFullscreenButton);
     
-    // Track listeners for cleanup
+    // Store event listeners for cleanup
     listeners.push(
         { element: toggleRotationButton, event: 'click', handler: handleToggleRotation },
         { element: fullscreenButton, event: 'click', handler: handleToggleFullscreen },
+        { element: toggleLabelsButton, event: 'click', handler: handleToggleLabels },
         { element: container, event: 'wheel', handler: handleMouseWheel },
         { element: document, event: 'fullscreenchange', handler: updateFullscreenButton },
         { element: document, event: 'mozfullscreenchange', handler: updateFullscreenButton },
@@ -112,10 +138,9 @@ export function setupControls(container) {
         { element: document, event: 'MSFullscreenChange', handler: updateFullscreenButton }
     );
     
-    return {
+    return { 
         isRotating: () => state.isRotating,
         cleanup: () => {
-            // Remove all event listeners
             listeners.forEach(({ element, event, handler }) => {
                 if (element) {
                     element.removeEventListener(event, handler);
