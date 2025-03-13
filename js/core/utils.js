@@ -1,147 +1,162 @@
-// Utility functions for visualization
-import { config } from './config.js';
+// Utility functions for the visualization
 
-// Create a line between two points
-function createLine(startPoint, endPoint, color) {
-    const material = new THREE.LineBasicMaterial({ color: color });
-    const geometry = new THREE.BufferGeometry().setFromPoints([startPoint, endPoint]);
-    return new THREE.Line(geometry, material);
-}
-
-// Create a tube between two points
-function createTube(startPoint, endPoint, radius, color) {
-    // Create a curve between the points
-    const curve = new THREE.CatmullRomCurve3([startPoint, endPoint]);
+// Create vertical connectors between different regions/layers
+function createConnectors(scene, elements) {
+    const connectors = [];
     
-    // Create tube geometry
-    const geometry = new THREE.TubeGeometry(curve, 20, radius, 8, false);
-    const material = new THREE.MeshLambertMaterial({ 
-        color: color,
-        transparent: true,
-        opacity: 0.7
-    });
+    // Helper function to create a single vertical connector line
+    function createVerticalConnector(startX, startY, startZ, endX, endY, endZ, color) {
+        const points = [
+            new THREE.Vector3(startX, startY, startZ),
+            new THREE.Vector3(endX, endY, endZ)
+        ];
+        
+        const geometry = new THREE.BufferGeometry().setFromPoints(points);
+        const material = new THREE.LineBasicMaterial({ 
+            color, 
+            linewidth: 2,
+            transparent: true,
+            opacity: 0.7
+        });
+        
+        const line = new THREE.Line(geometry, material);
+        scene.add(line);
+        connectors.push(line);
+        return line;
+    }
     
-    return new THREE.Mesh(geometry, material);
-}
-
-// Create connectors between regions
-export function createConnectors(scene) {
-    // Sky Palace to Space Farms connector
-    const skyPalaceToSpaceFarms = createTube(
-        new THREE.Vector3(0, 80, 0),
-        new THREE.Vector3(0, 140, 0),
-        2,
-        config.get('colors.skyPalace')
-    );
-    scene.add(skyPalaceToSpaceFarms);
-    
-    // Sky Palace to Seaside Capital connector
-    const skyPalaceToCapital = createTube(
-        new THREE.Vector3(0, 80, 0),
-        new THREE.Vector3(0, 16, 0),
-        2,
-        config.get('colors.skyPalace')
-    );
-    scene.add(skyPalaceToCapital);
-    
-    // Sewers to Mines connector
-    const sewersToMines = createTube(
-        new THREE.Vector3(180, -15, 90),
-        new THREE.Vector3(375, -25, -40),
-        3,
-        config.get('colors.sewers')
-    );
-    scene.add(sewersToMines);
-    
-    // Mines to Industrial Area connector
-    const minesToIndustrial = createTube(
-        new THREE.Vector3(375, -25, -40),
-        new THREE.Vector3(360, 15, 30),
-        3,
-        config.get('colors.mines')
-    );
-    scene.add(minesToIndustrial);
-    
-    // Moon Palace to Magic Islands connector
-    const moonPalaceToMagic = createTube(
-        new THREE.Vector3(0, 80, 0),
-        new THREE.Vector3(0, 7.5, 0),
-        2,
-        config.get('colors.moonPalace')
-    );
-    scene.add(moonPalaceToMagic);
-    
-    // Belt to Smugglers Island connector
-    const beltToSmuggler = createTube(
-        new THREE.Vector3(60, 70, 90),
-        new THREE.Vector3(60, 6, 90),
-        2,
-        config.get('colors.belt')
-    );
-    scene.add(beltToSmuggler);
-    
-    // Magic Islands to Atlantis connector
-    const magicToAtlantis = createTube(
-        new THREE.Vector3(0, 7.5, 0),
-        new THREE.Vector3(0, -50, 45),
-        3,
-        config.get('colors.magicIslands')
-    );
-    scene.add(magicToAtlantis);
-    
-    // Create connectors between major regions
-    if (config.get('positions')) {
-        // Space Farms to Sky Palace
-        const spaceToSky = createTube(
-            new THREE.Vector3(
-                config.get('positions.eastern.spaceFarms.x'),
-                config.get('positions.eastern.spaceFarms.y'),
-                config.get('positions.eastern.spaceFarms.z')
-            ),
-            new THREE.Vector3(
-                config.get('positions.eastern.skyPalace.x'),
-                config.get('positions.eastern.skyPalace.y'),
-                config.get('positions.eastern.skyPalace.z')
-            ),
-            4,
-            config.get('colors.skyPalace')
+    // Create connector if the start and end objects exist
+    function createConnectorBetweenObjects(startObject, endObject, color) {
+        if (!startObject || !endObject) {
+            console.warn('Cannot create connector: Missing objects');
+            return null;
+        }
+        
+        const startPos = new THREE.Vector3();
+        const endPos = new THREE.Vector3();
+        
+        startObject.getWorldPosition(startPos);
+        endObject.getWorldPosition(endPos);
+        
+        const connector = createVerticalConnector(
+            startPos.x, startPos.y, startPos.z,
+            endPos.x, endPos.y, endPos.z,
+            color
         );
-        scene.add(spaceToSky);
+        
+        return connector;
+    }
+    
+    // Connect Eastern regions
+    if (elements.eastern) {
+        // Space Farms to Sky Palace
+        if (elements.eastern.skyPalace && elements.sky && elements.sky.spaceFarms) {
+            createConnectorBetweenObjects(
+                elements.sky.spaceFarms,
+                elements.eastern.skyPalace,
+                CONFIG.colors.skyPalace
+            );
+        }
         
         // Sky Palace to Seaside Capital
-        const skyToCapital = createTube(
-            new THREE.Vector3(
-                config.get('positions.eastern.skyPalace.x'),
-                config.get('positions.eastern.skyPalace.y'),
-                config.get('positions.eastern.skyPalace.z')
-            ),
-            new THREE.Vector3(
-                config.get('positions.eastern.capital.x'),
-                config.get('positions.eastern.capital.y'),
-                config.get('positions.eastern.capital.z')
-            ),
-            4,
-            config.get('colors.skyPalace')
-        );
-        scene.add(skyToCapital);
+        if (elements.eastern.skyPalace && elements.eastern.capital) {
+            createConnectorBetweenObjects(
+                elements.eastern.skyPalace,
+                elements.eastern.capital,
+                CONFIG.colors.skyPalace
+            );
+        }
+        
+        // Seaside Capital to Sewers
+        if (elements.eastern.capital && elements.eastern.sewers) {
+            createConnectorBetweenObjects(
+                elements.eastern.capital,
+                elements.eastern.sewers,
+                CONFIG.colors.sewers
+            );
+        }
+        
+        // Industrial Area to Mines
+        if (elements.eastern.industrial && elements.eastern.mines) {
+            createConnectorBetweenObjects(
+                elements.eastern.industrial,
+                elements.eastern.mines,
+                CONFIG.colors.mines
+            );
+        }
+    }
+    
+    // Connect Central regions
+    if (elements.central) {
+        // Moon Palace to Magic Islands
+        if (elements.central.moonPalace && elements.central.magicIslands) {
+            createConnectorBetweenObjects(
+                elements.central.moonPalace,
+                elements.central.magicIslands,
+                CONFIG.colors.moonPalace
+            );
+        }
+        
+        // The Belt to Smugglers Island
+        if (elements.central.belt && elements.central.smugglersIsland) {
+            createConnectorBetweenObjects(
+                elements.central.belt,
+                elements.central.smugglersIsland,
+                CONFIG.colors.belt
+            );
+        }
         
         // Magic Islands to Atlantis
-        const magicToAtlantisConfig = createTube(
-            new THREE.Vector3(
-                config.get('positions.central.magicIslands.x'),
-                config.get('positions.central.magicIslands.y'),
-                config.get('positions.central.magicIslands.z')
-            ),
-            new THREE.Vector3(
-                config.get('positions.central.atlantis.x'),
-                config.get('positions.central.atlantis.y'),
-                config.get('positions.central.atlantis.z')
-            ),
-            4,
-            config.get('colors.magicIslands')
-        );
-        scene.add(magicToAtlantisConfig);
+        if (elements.central.magicIslands && elements.underwater && elements.underwater.atlantis) {
+            createConnectorBetweenObjects(
+                elements.central.magicIslands,
+                elements.underwater.atlantis,
+                CONFIG.colors.magicIslands
+            );
+        }
     }
+    
+    // If no position info available, use hardcoded fallbacks
+    if (connectors.length === 0) {
+        console.warn('Using fallback connectors with hardcoded positions');
+        
+        // Space to Sky Palace
+        if (CONFIG.positions) {
+            createVerticalConnector(
+                CONFIG.positions.eastern.spaceFarms.x, 
+                CONFIG.positions.eastern.spaceFarms.y, 
+                CONFIG.positions.eastern.spaceFarms.z, 
+                CONFIG.positions.eastern.skyPalace.x, 
+                CONFIG.positions.eastern.skyPalace.y, 
+                CONFIG.positions.eastern.skyPalace.z, 
+                CONFIG.colors.skyPalace
+            );
+            
+            // Sky Palace to Seaside Capital
+            createVerticalConnector(
+                CONFIG.positions.eastern.skyPalace.x, 
+                CONFIG.positions.eastern.skyPalace.y, 
+                CONFIG.positions.eastern.skyPalace.z, 
+                CONFIG.positions.eastern.capital.x, 
+                CONFIG.positions.eastern.capital.y, 
+                CONFIG.positions.eastern.capital.z, 
+                CONFIG.colors.skyPalace
+            );
+            
+            // Magic Islands to Atlantis
+            createVerticalConnector(
+                CONFIG.positions.central.magicIslands.x, 
+                CONFIG.positions.central.magicIslands.y, 
+                CONFIG.positions.central.magicIslands.z, 
+                CONFIG.positions.central.atlantis.x, 
+                CONFIG.positions.central.atlantis.y, 
+                CONFIG.positions.central.atlantis.z, 
+                CONFIG.colors.magicIslands
+            );
+        }
+    }
+    
+    return connectors;
 }
 
 // Make functions available globally

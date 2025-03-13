@@ -1,8 +1,13 @@
 // Underwater regions implementation
-import { config } from '../core/config.js';
 
 // Create all underwater structures
-export function createUnderwaterStructures(scene, labelSystem) {
+function createUnderwaterStructures(scene, labelSystem) {
+    // Need to check if CONFIG is available
+    if (typeof CONFIG === 'undefined') {
+        console.error('CONFIG is not defined. Make sure config.js is loaded first.');
+        return {};
+    }
+    
     const elements = {
         atlantis: createAtlantis(scene, labelSystem)
     };
@@ -18,7 +23,7 @@ function createAtlantis(scene, labelSystem) {
     // Create the main dome
     const domeGeometry = new THREE.DodecahedronGeometry(40, 1);
     const domeMaterial = new THREE.MeshLambertMaterial({ 
-        color: config.get('colors.atlantis'),
+        color: CONFIG.colors.atlantis,
         transparent: true,
         opacity: 0.7
     });
@@ -111,12 +116,15 @@ function createAtlantis(scene, labelSystem) {
     }
     
     // Position Atlantis
-    const position = config.get('positions.central.atlantis');
+    const position = CONFIG.positions.central.atlantis;
     atlantisGroup.position.set(position.x, position.y, position.z);
     scene.add(atlantisGroup);
     
     // Add label
-    labelSystem.addLabel(atlantisGroup, "Atlantis", config.get('colors.atlantis'));
+    labelSystem.addLabel(atlantisGroup, "Atlantis", CONFIG.colors.atlantis);
     
     return atlantisGroup;
 }
+
+// Make functions available globally
+window.createUnderwaterStructures = createUnderwaterStructures;

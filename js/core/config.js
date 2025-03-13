@@ -1,5 +1,7 @@
 // Configuration settings and constants
-const defaultConfig = {
+
+// Define CONFIG object globally
+window.CONFIG = {
     // Current state tracking (used for scaling labels, etc.)
     currentZoom: 1.0, // Default zoom level
     labelSize: 1.5,  // Default label size multiplier
@@ -12,12 +14,12 @@ const defaultConfig = {
     
     // Camera settings
     camera: {
-        fov: 60,
+        fov: 45,
         near: 0.1,
         far: 2000,
-        zoomFactor: 1.0,
-        radius: 300,
-        height: 150,
+        zoomFactor: 0.7,
+        radius: 480,
+        height: 180,
         rotationSpeed: 0.002
     },
     
@@ -78,34 +80,9 @@ const defaultConfig = {
     animation: {
         enabled: true,
         rotationSpeed: 0.002,
-        dragEnabled: true,
-        dragPausesRotation: true
-    },
-
-    // Elevation limits
-    minElevation: -300,
-    maxElevation: 200
+        dragEnabled: true,      // Always enable drag to rotate
+        dragPausesRotation: true // Pause auto-rotation while dragging
+    }
 };
 
-class Config {
-    constructor(initialConfig = defaultConfig) {
-        this._config = initialConfig;
-    }
-
-    get(path) {
-        return path.split('.').reduce((obj, key) => obj?.[key], this._config);
-    }
-
-    set(path, value) {
-        const keys = path.split('.');
-        const lastKey = keys.pop();
-        const target = keys.reduce((obj, key) => obj[key] = obj[key] || {}, this._config);
-        target[lastKey] = value;
-    }
-
-    getConfig() {
-        return this._config;
-    }
-}
-
-export const config = new Config();
+console.log('CONFIG loaded');
