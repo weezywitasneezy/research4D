@@ -64,7 +64,7 @@ export async function setupDirectionMarkers(scene) {
     };
     
     // Create markers for each direction
-    const distance = 240; // Position outside the grid (increased by 20)
+    const distance = 280; // Position outside the grid (increased by 40)
     const height = 30; // Raised height
     
     // North marker (now in south position)
