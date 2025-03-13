@@ -1,5 +1,6 @@
 // Scene initialization and management
 import { config } from './config.js';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 // Initialize the scene, camera, and renderer
 export function initScene(container) {
@@ -41,7 +42,7 @@ export function initScene(container) {
     container.appendChild(labelContainer);
 
     // Add orbit controls
-    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
     controls.screenSpacePanning = false;
