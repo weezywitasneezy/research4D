@@ -25,9 +25,14 @@ export function setupScene(container) {
     camera.lookAt(0, 0, 0);
 
     // Renderer setup
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    const renderer = new THREE.WebGLRenderer({ 
+        antialias: true,
+        alpha: true
+    });
     renderer.setSize(container.clientWidth, container.clientHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     container.appendChild(renderer.domElement);
 
     // Create a container for HTML labels
@@ -85,13 +90,46 @@ export function setupScene(container) {
 
 // Add lights to the scene
 function addLights(scene) {
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    // Ambient light for overall scene illumination
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.0);
     scene.add(ambientLight);
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    directionalLight.position.set(50, 100, 50);
-    directionalLight.castShadow = true;
-    scene.add(directionalLight);
+    // Main directional light (sun-like)
+    const mainLight = new THREE.DirectionalLight(0xffffff, 1.0);
+    mainLight.position.set(50, 100, 50);
+    mainLight.castShadow = true;
+    mainLight.shadow.mapSize.width = 2048;
+    mainLight.shadow.mapSize.height = 2048;
+    mainLight.shadow.camera.near = 0.5;
+    mainLight.shadow.camera.far = 500;
+    mainLight.shadow.camera.left = -100;
+    mainLight.shadow.camera.right = 100;
+    mainLight.shadow.camera.top = 100;
+    mainLight.shadow.camera.bottom = -100;
+    scene.add(mainLight);
+
+    // Secondary directional light for fill
+    const fillLight = new THREE.DirectionalLight(0xffffff, 0.5);
+    fillLight.position.set(-50, 50, -50);
+    scene.add(fillLight);
+
+    // Hemisphere light for environmental lighting
+    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.6);
+    hemiLight.position.set(0, 200, 0);
+    scene.add(hemiLight);
+
+    // Point lights for specific areas
+    const pointLight1 = new THREE.PointLight(0xffffff, 0.5, 100);
+    pointLight1.position.set(0, 50, 0);
+    scene.add(pointLight1);
+
+    const pointLight2 = new THREE.PointLight(0xffffff, 0.5, 100);
+    pointLight2.position.set(100, 50, 100);
+    scene.add(pointLight2);
+
+    const pointLight3 = new THREE.PointLight(0xffffff, 0.5, 100);
+    pointLight3.position.set(-100, 50, -100);
+    scene.add(pointLight3);
 }
 
 // Add base plane (sea level)
@@ -101,10 +139,13 @@ function addBasePlane(scene) {
         color: CONFIG.scene.waterColor,
         side: THREE.DoubleSide,
         transparent: true,
-        opacity: 0.8
+        opacity: 0.8,
+        emissive: 0x000000,
+        emissiveIntensity: 0.1
     });
     const basePlane = new THREE.Mesh(baseGeometry, baseMaterial);
     basePlane.rotation.x = -Math.PI / 2;
+    basePlane.receiveShadow = true;
     scene.add(basePlane);
 }
 
