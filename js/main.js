@@ -56,7 +56,7 @@ export async function initWorldVisualization() {
         createConnectors(scene, regions);
         
         // Setup direction markers
-        const directionMarkers = setupDirectionMarkers(scene);
+        const directionMarkers = await setupDirectionMarkers(scene);
         
         // Setup zoom controls
         const zoomControls = await setupZoomControls(container, camera);
