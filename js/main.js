@@ -62,8 +62,10 @@ function initWorldVisualization() {
     function animate() {
         animationFrameId = requestAnimationFrame(animate);
         
-        // Update controls
-        controls.update();
+        // Update controls if they exist
+        if (controls) {
+            controls.update();
+        }
         
         // Update all labels
         scene.traverse((object) => {
