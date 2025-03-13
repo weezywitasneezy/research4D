@@ -2,7 +2,7 @@
 import { CONFIG } from '../core/config.js';
 
 // Create Western regions and related structures
-export function createWesternRegions(scene, labelSystem) {
+export function createWesternRegion(scene, labelSystem) {
     // Need to check if CONFIG is available
     if (typeof CONFIG === 'undefined') {
         console.error('CONFIG is not defined. Make sure config.js is loaded first.');
