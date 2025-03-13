@@ -4,6 +4,7 @@ import { setupScene } from './core/scene.js';
 import { setupLabelSystem } from './components/labels.js';
 import { setupAnimations } from './components/animations.js';
 import { setupZoomControls } from './components/zoom.js';
+import { setupDirectionMarkers } from './components/directionMarkers.js';
 import { createEasternContinent } from './regions/eastern.js';
 import { createCentralIslands } from './regions/central.js';
 import { createWesternRegion } from './regions/western.js';
@@ -51,32 +52,36 @@ export async function initWorldVisualization() {
             sky: createSkyStructures(scene, labelSystem)
         };
         
-                    // Create connectors between regions
+        // Create connectors between regions
         createConnectors(scene, regions);
+        
+        // Setup direction markers
+        const directionMarkers = setupDirectionMarkers(scene);
         
         // Setup zoom controls
         const zoomControls = await setupZoomControls(container, camera);
         
         // Setup animations
-                        setupAnimations(camera, controls, labelSystem, renderer, scene, zoomControls);
-                    
-                    // Setup cleanup function
-                    cleanup = function() {
-                        if (controls && controls.cleanup) controls.cleanup();
+        setupAnimations(camera, controls, labelSystem, renderer, scene, zoomControls);
+        
+        // Setup cleanup function
+        cleanup = function() {
+            if (controls && controls.cleanup) controls.cleanup();
             if (labelSystem && labelSystem.cleanup) labelSystem.cleanup();
             if (zoomControls && zoomControls.cleanup) zoomControls.cleanup();
-                        
-                        // Dispose of all scene resources
-                        scene.traverse((object) => {
-                            if (object.geometry) object.geometry.dispose();
-                            if (object.material) {
-                                if (Array.isArray(object.material)) {
-                                    object.material.forEach(material => material.dispose());
-                                } else {
-                                    object.material.dispose();
-                                }
-                            }
-                        });
+            if (directionMarkers && directionMarkers.cleanup) directionMarkers.cleanup();
+            
+            // Dispose of all scene resources
+            scene.traverse((object) => {
+                if (object.geometry) object.geometry.dispose();
+                if (object.material) {
+                    if (Array.isArray(object.material)) {
+                        object.material.forEach(material => material.dispose());
+                    } else {
+                        object.material.dispose();
+                    }
+                }
+            });
         };
         
         return cleanup;
