@@ -1,7 +1,5 @@
 // Configuration settings and constants
-
-// Define CONFIG object globally
-window.CONFIG = {
+export const CONFIG = {
     // Current state tracking (used for scaling labels, etc.)
     currentZoom: 1.0, // Default zoom level
     labelSize: 1.5,  // Default label size multiplier

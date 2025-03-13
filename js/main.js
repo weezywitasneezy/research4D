@@ -1,3 +1,17 @@
+import * as THREE from 'three';
+import { setupControls } from './core/controls.js';
+import { setupScene } from './core/scene.js';
+import { setupLabelSystem } from './components/labels.js';
+import { setupAnimations } from './components/animations.js';
+import { setupZoomControls } from './components/zoom.js';
+import { createEasternContinent } from './regions/eastern.js';
+import { createCentralIslands } from './regions/central.js';
+import { createWesternRegion } from './regions/western.js';
+import { createUnderwaterStructures } from './regions/underwater.js';
+import { createSkyStructures } from './regions/sky.js';
+import { createConnectors } from './core/utils.js';
+import { CONFIG } from './core/config.js';
+
 // This function is replaced by the 3D implementation in compass.js
 function addCompassMarkers(container) {
     // This function is kept for backward compatibility but not used anymore
@@ -5,12 +19,10 @@ function addCompassMarkers(container) {
 }
 
 // Main entry point for visualization
-
-// Global state
 let cleanup = null;
 
 // Main initialization function
-function initWorldVisualization() {
+export async function initWorldVisualization() {
     // Initialize the scene, camera, and renderer
     const container = document.getElementById('visualization-mount');
     if (!container) {
@@ -24,68 +36,60 @@ function initWorldVisualization() {
     container.style.width = '100%';
     container.style.height = '100%';
     
-    // First load core modules
-    loadCoreModules()
-        .then(core => {
-            const { scene, camera, renderer, labelSystem, controls } = core;
+    try {
+        // Setup core components
+        const { scene, camera, renderer } = setupScene(container);
+        const labelSystem = setupLabelSystem();
+        const controls = setupControls(container);
+        
+        // Create regions
+        const regions = {
+            eastern: createEasternContinent(scene, labelSystem),
+            central: createCentralIslands(scene, labelSystem),
+            western: createWesternRegion(scene, labelSystem),
+            underwater: createUnderwaterStructures(scene, labelSystem),
+            sky: createSkyStructures(scene, labelSystem)
+        };
+        
+        // Create connectors between regions
+        createConnectors(scene, regions);
+        
+        // Setup zoom controls
+        const zoomControls = await setupZoomControls(container, camera);
+        
+        // Setup animations
+        setupAnimations(camera, controls, labelSystem, renderer, scene, zoomControls);
+        
+        // Setup cleanup function
+        cleanup = function() {
+            if (controls && controls.cleanup) controls.cleanup();
+            if (labelSystem && labelSystem.cleanup) labelSystem.cleanup();
+            if (zoomControls && zoomControls.cleanup) zoomControls.cleanup();
             
-            // Then load region modules
-            return loadRegionModules(scene, labelSystem)
-                .then(regions => {
-                    // Create connectors between regions
-                    loadUtilsAndCreateConnectors(scene, regions);
-                    
-                    // Create 3D compass markers if the function is available
-                    if (typeof create3DCompassMarkers === 'function') {
-                        create3DCompassMarkers(scene, labelSystem);
+            // Dispose of all scene resources
+            scene.traverse((object) => {
+                if (object.geometry) object.geometry.dispose();
+                if (object.material) {
+                    if (Array.isArray(object.material)) {
+                        object.material.forEach(material => material.dispose());
+                    } else {
+                        object.material.dispose();
                     }
-                    
-                    // Load zoom controls
-                    loadZoomControls(container, camera).then(zoomControls => {
-                        // Store zoomControls globally for access by other components
-                        window.zoomControls = zoomControls;
-                        
-                        // Setup animations with zoom controls
-                        setupAnimations(camera, controls, labelSystem, renderer, scene, zoomControls);
-                    });
-                    
-                    // Setup cleanup function
-                    cleanup = function() {
-                        // Cleanup code here...
-                        if (controls && controls.cleanup) controls.cleanup();
-                        if (core.cleanup) core.cleanup();
-                        
-                        if (labelSystem && labelSystem.cleanup) {
-                            labelSystem.cleanup();
-                        }
-                        
-                        if (window.zoomControls && window.zoomControls.cleanup) {
-                            window.zoomControls.cleanup();
-                        }
-                        
-                        // Dispose of all scene resources
-                        scene.traverse((object) => {
-                            if (object.geometry) object.geometry.dispose();
-                            if (object.material) {
-                                if (Array.isArray(object.material)) {
-                                    object.material.forEach(material => material.dispose());
-                                } else {
-                                    object.material.dispose();
-                                }
-                            }
-                        });
-                        
-                        // Clear global references
-                        window.zoomControls = null;
-                    };
-                });
-        })
-        .catch(error => {
-            console.error("Error initializing visualization:", error);
-        });
-    
-    return cleanup;
+                }
+            });
+        };
+        
+        return cleanup;
+    } catch (error) {
+        console.error("Error initializing visualization:", error);
+        throw error;
+    }
 }
+
+// Initialize when the DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    initWorldVisualization().catch(console.error);
+});
 
 // Load core modules (scene, controls, labels)
 function loadCoreModules() {
@@ -984,39 +988,6 @@ function loadUtilsAndCreateConnectors(scene, regions) {
     };
     document.head.appendChild(script);
 }
-
-// Load Three.js and initialize visualization
-document.addEventListener('DOMContentLoaded', function() {
-    // Load Three.js dynamically
-    const threeScript = document.createElement('script');
-    threeScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
-    
-    // Preload labels.js component
-    const labelsScript = document.createElement('script');
-    labelsScript.src = 'js/components/labels.js';
-    labelsScript.onload = function() {
-        console.log('Labels component loaded successfully');
-    };
-    labelsScript.onerror = function() {
-        console.warn('Could not load external labels module, using built-in fallback');
-    };
-    document.head.appendChild(labelsScript);
-    
-    threeScript.onload = function() {
-        console.log('THREE.js loaded, initializing visualization');
-        // Also load other components before initializing
-        const zoomScript = document.createElement('script');
-        zoomScript.src = 'js/components/zoom.js';
-        zoomScript.onload = function() {
-            cleanup = initWorldVisualization();
-        };
-        document.head.appendChild(zoomScript);
-    };
-    threeScript.onerror = function() {
-        console.error('Failed to load THREE.js library');
-    };
-    document.head.appendChild(threeScript);
-});
 
 // Handle cleanup on page unload
 window.addEventListener('beforeunload', function() {
