@@ -2,7 +2,7 @@
 import { CONFIG } from '../core/config.js';
 
 // Initialize animations
-export function initAnimations(camera, isRotatingFn, zoomLevelFn, elevationOffsetFn) {
+export function setupAnimations(camera, controls, labelSystem, renderer, scene, zoomControls) {
     console.log('Initializing animations with zoom and elevation support');
     
     // Camera rotation variables
@@ -43,7 +43,7 @@ export function initAnimations(camera, isRotatingFn, zoomLevelFn, elevationOffse
         
         // Pause auto-rotation when user starts dragging
         if (CONFIG && CONFIG.animation) {
-            CONFIG._wasRotating = isRotatingFn && isRotatingFn();
+            CONFIG._wasRotating = controls.isRotating();
             CONFIG.animation.enabled = false;
         }
         
@@ -69,15 +69,8 @@ export function initAnimations(camera, isRotatingFn, zoomLevelFn, elevationOffse
         
         // Handle vertical movement (elevation)
         if (deltaMove.y !== 0) {
-            // Get current elevation offset with fallback
-            let currentElevation = 0;
-            if (elevationOffsetFn && typeof elevationOffsetFn === 'function') {
-                try {
-                    currentElevation = elevationOffsetFn();
-                } catch (e) {
-                    console.warn('Error getting elevation offset:', e);
-                }
-            }
+            // Get current elevation offset from zoomControls
+            const currentElevation = zoomControls ? zoomControls.elevationOffset() : 0;
             
             // Calculate new elevation
             // Moving mouse up (negative deltaY) increases elevation
@@ -96,9 +89,9 @@ export function initAnimations(camera, isRotatingFn, zoomLevelFn, elevationOffse
                 Math.min(maxElevation, currentElevation + elevationChange)
             );
             
-            // Update elevation if we have a setter function in zoomControls
-            if (window.zoomControls && window.zoomControls.setElevationOffset) {
-                window.zoomControls.setElevationOffset(newElevation);
+            // Update elevation if we have zoomControls
+            if (zoomControls && zoomControls.setElevationOffset) {
+                zoomControls.setElevationOffset(newElevation);
             }
         }
         
@@ -152,25 +145,11 @@ export function initAnimations(camera, isRotatingFn, zoomLevelFn, elevationOffse
     
     // Camera rotation function
     function updateCameraPosition() {
-        // Get current zoom level with fallback
-        let zoomLevel = 1.0;
-        if (zoomLevelFn && typeof zoomLevelFn === 'function') {
-            try {
-                zoomLevel = zoomLevelFn();
-            } catch (e) {
-                console.warn('Error getting zoom level:', e);
-            }
-        }
+        // Get current zoom level from zoomControls
+        const zoomLevel = zoomControls ? zoomControls.zoomLevel() : 1.0;
         
-        // Get current elevation offset with fallback
-        let elevationOffset = 0;
-        if (elevationOffsetFn && typeof elevationOffsetFn === 'function') {
-            try {
-                elevationOffset = elevationOffsetFn();
-            } catch (e) {
-                console.warn('Error getting elevation offset:', e);
-            }
-        }
+        // Get current elevation offset from zoomControls
+        const elevationOffset = zoomControls ? zoomControls.elevationOffset() : 0;
         
         // Get base values from CONFIG with fallbacks
         const baseRadius = (CONFIG && CONFIG.camera) ? 
@@ -187,15 +166,15 @@ export function initAnimations(camera, isRotatingFn, zoomLevelFn, elevationOffse
         
         // Check if the label system indicates a label is being hovered
         let isLabelHovered = false;
-        if (container && container._labelSystem && container._labelSystem.isHovered) {
-            isLabelHovered = container._labelSystem.isHovered();
+        if (labelSystem && labelSystem.isHovered) {
+            isLabelHovered = labelSystem.isHovered();
         }
         
         // Only update angle if:
-        // 1. Rotation is enabled via isRotatingFn
+        // 1. Rotation is enabled via controls
         // 2. Not currently dragging
         // 3. No label is being hovered
-        if (isRotatingFn && isRotatingFn() && !isDragging && !isLabelHovered) {
+        if (controls.isRotating() && !isDragging && !isLabelHovered) {
             const rotationSpeed = (CONFIG && CONFIG.camera) ? 
                 CONFIG.camera.rotationSpeed : 0.002;
             angle += rotationSpeed;
@@ -207,6 +186,25 @@ export function initAnimations(camera, isRotatingFn, zoomLevelFn, elevationOffse
         camera.position.y = height;
         camera.lookAt(centerX, 0, centerZ);
     }
+    
+    // Start animation loop
+    function animate() {
+        animationFrameId = requestAnimationFrame(animate);
+        
+        // Update camera position
+        updateCameraPosition();
+        
+        // Update labels if label system exists
+        if (labelSystem) {
+            labelSystem.updateLabels(camera);
+        }
+        
+        // Render the scene
+        renderer.render(scene, camera);
+    }
+    
+    // Start the animation loop
+    animate();
     
     return {
         angle,
@@ -230,28 +228,6 @@ export function initAnimations(camera, isRotatingFn, zoomLevelFn, elevationOffse
             }
         }
     };
-}
-
-// Start animation loop
-export function startAnimationLoop(renderer, scene, camera, animations, labelSystem) {
-    // Animation loop
-    function animate() {
-        animations.setAnimationFrameId(requestAnimationFrame(animate));
-        
-        // Update camera position
-        animations.updateCameraPosition();
-        
-        // Update labels if label system exists
-        if (labelSystem) {
-            labelSystem.updateLabels(camera);
-        }
-        
-        // Render the scene
-        renderer.render(scene, camera);
-    }
-    
-    // Start the animation loop
-    animate();
 }
 
 console.log('Animation module loaded!');
