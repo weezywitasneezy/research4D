@@ -34,8 +34,8 @@ export const CONFIG = {
             sewers: { x: 180, y: -15, z: 90 }
         },
         central: {
-            magicIslands: { x: 0, y: 7.5, z: 0 },
-            moonPalace: { x: 0, y: 80, z: 0 },
+            magicIslands: { x: 0, y: 7.5, z: -120 },
+            moonPalace: { x: 0, y: 80, z: -120 },
             smugglersIsland: { x: 60, y: 6, z: 90 },
             belt: { x: 60, y: 70, z: 90 },
             atlantis: { x: 0, y: -50, z: 45 }
