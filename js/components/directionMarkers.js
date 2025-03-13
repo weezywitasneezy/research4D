@@ -16,12 +16,6 @@ export async function setupDirectionMarkers(scene) {
         side: THREE.DoubleSide
     });
     
-    const textMaterial = new THREE.MeshPhongMaterial({
-        color: 0x000000,
-        transparent: true,
-        opacity: 0.8
-    });
-    
     // Function to create a directional marker
     const createMarker = (letter, position) => {
         const markerGroup = new THREE.Group();
@@ -35,10 +29,6 @@ export async function setupDirectionMarkers(scene) {
         const context = canvas.getContext('2d');
         canvas.width = 128;
         canvas.height = 128;
-        
-        // Draw text with white background for better visibility
-        context.fillStyle = 'rgba(255, 255, 255, 0.9)';
-        context.fillRect(0, 0, 128, 128);
         
         // Draw text
         context.fillStyle = 'rgba(0, 0, 0, 1)';
@@ -75,21 +65,22 @@ export async function setupDirectionMarkers(scene) {
     
     // Create markers for each direction
     const distance = 220; // Position outside the grid
+    const height = 30; // Raised height
     
     // North marker
-    const northMarker = createMarker('N', new THREE.Vector3(0, 10, distance));
+    const northMarker = createMarker('N', new THREE.Vector3(0, height, distance));
     markers.add(northMarker);
     
     // South marker
-    const southMarker = createMarker('S', new THREE.Vector3(0, 10, -distance));
+    const southMarker = createMarker('S', new THREE.Vector3(0, height, -distance));
     markers.add(southMarker);
     
     // East marker - moved further out
-    const eastMarker = createMarker('E', new THREE.Vector3(distance + 20, 10, 0));
+    const eastMarker = createMarker('E', new THREE.Vector3(distance + 20, height, 0));
     markers.add(eastMarker);
     
     // West marker - moved further out
-    const westMarker = createMarker('W', new THREE.Vector3(-distance - 20, 10, 0));
+    const westMarker = createMarker('W', new THREE.Vector3(-distance - 20, height, 0));
     markers.add(westMarker);
     
     // Add markers to scene
@@ -102,7 +93,6 @@ export async function setupDirectionMarkers(scene) {
             // Dispose of geometries and materials
             sphereGeometry.dispose();
             sphereMaterial.dispose();
-            textMaterial.dispose();
         }
     };
 } 
