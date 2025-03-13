@@ -6,12 +6,13 @@ import { setupAnimations } from './components/animations.js';
 import { setupZoomControls } from './components/zoom.js';
 import { setupDirectionMarkers } from './components/directionMarkers.js';
 import { createEasternContinent } from './regions/eastern.js';
-import { createCentralIslands } from './regions/central.js';
-import { createWesternRegion } from './regions/western.js';
+import { createCentralContinent } from './regions/central.js';
+import { createWesternContinent } from './regions/western.js';
 import { createUnderwaterStructures } from './regions/underwater.js';
 import { createSkyStructures } from './regions/sky.js';
 import { createConnectors } from './core/utils.js';
 import { CONFIG } from './core/config.js';
+import { createBoats } from './components/boats.js';
 
 // This function is replaced by the 3D implementation in compass.js
 function addCompassMarkers(container) {
@@ -46,8 +47,8 @@ export async function initWorldVisualization() {
         // Create regions
         const regions = {
             eastern: createEasternContinent(scene, labelSystem),
-            central: createCentralIslands(scene, labelSystem),
-            western: createWesternRegion(scene, labelSystem),
+            central: createCentralContinent(scene, labelSystem),
+            western: createWesternContinent(scene, labelSystem),
             underwater: createUnderwaterStructures(scene, labelSystem),
             sky: createSkyStructures(scene, labelSystem)
         };
@@ -63,6 +64,9 @@ export async function initWorldVisualization() {
         
         // Setup animations
         setupAnimations(camera, controls, labelSystem, renderer, scene, zoomControls);
+        
+        // Create world elements
+        const boats = createBoats(scene, labelSystem);
         
         // Add event listener for label toggle
         const handleLabelToggle = (event) => {
@@ -93,6 +97,13 @@ export async function initWorldVisualization() {
                     }
                 }
             });
+            
+            scene.remove(regions.eastern);
+            scene.remove(regions.central);
+            scene.remove(regions.western);
+            scene.remove(regions.underwater);
+            scene.remove(regions.sky);
+            scene.remove(boats);
         };
         
         return cleanup;
