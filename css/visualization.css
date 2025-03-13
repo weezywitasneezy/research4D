@@ -11,11 +11,11 @@
 .visualization-container {
     position: relative;
     width: 100%;
-    height: 500px;
+    height: 600px;
     margin: 20px 0;
-    border-radius: 10px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
     overflow: hidden;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 /* Cursor styles for drag interaction */
@@ -25,28 +25,17 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: #87ceeb;
-    cursor: grab; /* Indicates the element is draggable */
-}
-
-#visualization-mount.dragging {
-    cursor: grabbing; /* Changes cursor during drag */
+    background-color: #000;
 }
 
 /* Minimal icon controls */
 .visualization-controls {
     position: absolute;
     bottom: 20px;
-    left: 20px;
+    right: 20px;
     z-index: 100;
     display: flex;
-    gap: 12px;
-    padding: 0;
-    background: rgba(0, 0, 0, 0.2);
-    backdrop-filter: blur(4px);
-    border-radius: 30px;
-    padding: 10px 15px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    gap: 10px;
 }
 
 .icon-controls-container {
@@ -58,23 +47,17 @@
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    background: rgba(0, 0, 0, 0.4);
     border: none;
+    background: rgba(255, 255, 255, 0.8);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
-    transition: background 0.2s, transform 0.1s;
-    padding: 0;
-    outline: none;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    font-size: 20px;
 }
 
 .icon-button:hover {
-    background: rgba(0, 0, 0, 0.6);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+    background: rgba(255, 255, 255, 1);
 }
 
 .icon-button:active {
@@ -83,21 +66,13 @@
 }
 
 /* Play icon - triangle pointing right */
-.play-icon {
-    width: 0;
-    height: 0;
-    border-style: solid;
-    border-width: 10px 0 10px 18px;
-    border-color: transparent transparent transparent white;
-    margin-left: 4px; /* Offset slightly to center it visually */
+.play-icon::before {
+    content: "▶";
 }
 
 /* Pause icon - square */
-.pause-icon {
-    width: 16px;
-    height: 16px;
-    background-color: white;
-    border-radius: 2px;
+.pause-icon::before {
+    content: "⏸";
 }
 
 /* Basic fullscreen icon - just arrows */
@@ -299,4 +274,20 @@
     height: 40px !important;
     font-size: 22px !important;
     z-index: 200;
+}
+
+.region-label {
+    position: absolute;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 14px;
+    pointer-events: none;
+    transform-origin: center;
+    transition: transform 0.2s;
+}
+
+.region-label:hover {
+    transform: scale(1.1);
 }
