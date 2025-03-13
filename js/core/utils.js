@@ -1,4 +1,5 @@
 // Utility functions for the visualization
+import * as THREE from 'three';
 import { CONFIG } from './config.js';
 
 // Create vertical connectors between different regions/layers
