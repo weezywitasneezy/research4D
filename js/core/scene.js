@@ -2,7 +2,7 @@
 import { CONFIG } from './config.js';
 
 // Initialize the scene, camera, and renderer
-export function initScene(container) {
+export function setupScene(container) {
     // Scene setup
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(CONFIG.scene.backgroundColor);
