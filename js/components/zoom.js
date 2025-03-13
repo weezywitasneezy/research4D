@@ -2,7 +2,7 @@
 import { CONFIG } from '../core/config.js';
 
 // Initialize zoom controls
-export function initZoomControls(container, camera) {
+export function setupZoomControls(container, camera) {
     console.log('Initializing zoom controls');
     
     // State object

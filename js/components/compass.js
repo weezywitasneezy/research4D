@@ -1,5 +1,6 @@
 // Compass markers component
 // This replaces the HTML/CSS compass markers with 3D objects that have labels attached
+import * as THREE from 'three';
 
 // Create 3D compass markers that will move and rotate with the scene
 export function create3DCompassMarkers(scene, labelSystem) {
