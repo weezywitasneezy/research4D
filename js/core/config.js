@@ -29,7 +29,7 @@ export const CONFIG = {
             industrial: { x: 240, y: 3, z: 100 },
             capital: { x: 180, y: 16, z: 0 },
             skyPalace: { x: 180, y: 80, z: 0 },
-            spaceFarms: { x: 240, y: 0, z: 150 },
+            spaceFarms: { x: 240, y: 140, z: 150 },
             mines: { x: 240, y: -20, z: -150 },
             sewers: { x: 240, y: -10, z: 50 }
         },
