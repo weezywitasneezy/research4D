@@ -2,8 +2,8 @@
 import * as THREE from 'three';
 import { CONFIG } from '../core/config.js';
 
-// Create all underwater structures
-export function createUnderwaterStructures(scene, labelSystem) {
+// Create underwater regions and related structures
+export function createUnderwaterRegion(scene, labelSystem) {
     // Need to check if CONFIG is available
     if (typeof CONFIG === 'undefined') {
         console.error('CONFIG is not defined. Make sure config.js is loaded first.');
@@ -11,121 +11,200 @@ export function createUnderwaterStructures(scene, labelSystem) {
     }
     
     const elements = {
-        atlantis: createAtlantis(scene, labelSystem)
+        abyss: createAbyss(scene, labelSystem),
+        trench: createTrench(scene, labelSystem),
+        coralReef: createCoralReef(scene, labelSystem)
     };
     
     return elements;
 }
 
-// Create Atlantis (underwater city)
-function createAtlantis(scene, labelSystem) {
-    // Main Atlantis structure
-    const atlantisGroup = new THREE.Group();
+// Create the Abyss
+function createAbyss(scene, labelSystem) {
+    const abyssGroup = new THREE.Group();
     
-    // Create the main dome
-    const domeGeometry = new THREE.DodecahedronGeometry(40, 1);
-    const domeMaterial = new THREE.MeshLambertMaterial({ 
-        color: CONFIG.colors.atlantis,
+    // Main abyss structure
+    const abyssGeometry = new THREE.CylinderGeometry(50, 60, 100, 8);
+    const abyssMaterial = new THREE.MeshStandardMaterial({ 
+        color: CONFIG.colors.abyss,
+        metalness: 0.1,
+        roughness: 0.9,
+        transparent: true,
+        opacity: 0.8
+    });
+    const abyss = new THREE.Mesh(abyssGeometry, abyssMaterial);
+    abyss.castShadow = true;
+    abyss.receiveShadow = true;
+    abyssGroup.add(abyss);
+    
+    // Add bioluminescent features
+    for (let i = 0; i < 20; i++) {
+        const angle = (i / 20) * Math.PI * 2;
+        const radius = 30 + Math.random() * 20;
+        const x = Math.sin(angle) * radius;
+        const z = Math.cos(angle) * radius;
+        const y = -20 - Math.random() * 60;
+        
+        const lightGeometry = new THREE.SphereGeometry(2, 8, 8);
+        const lightMaterial = new THREE.MeshStandardMaterial({
+            color: 0x00ffff,
+            metalness: 0.1,
+            roughness: 0.2,
+            emissive: 0x00ffff,
+            emissiveIntensity: 0.5
+        });
+        const light = new THREE.Mesh(lightGeometry, lightMaterial);
+        light.position.set(x, y, z);
+        light.castShadow = true;
+        light.receiveShadow = true;
+        abyssGroup.add(light);
+    }
+    
+    // Position the abyss
+    const position = CONFIG.positions.underwater.abyss;
+    abyssGroup.position.set(position.x, position.y, position.z);
+    scene.add(abyssGroup);
+    
+    // Add label
+    labelSystem.addLabel(abyssGroup, "The Abyss", CONFIG.colors.abyss);
+    
+    return abyssGroup;
+}
+
+// Create the Trench
+function createTrench(scene, labelSystem) {
+    const trenchGroup = new THREE.Group();
+    
+    // Main trench structure
+    const trenchGeometry = new THREE.BoxGeometry(200, 150, 30);
+    const trenchMaterial = new THREE.MeshStandardMaterial({ 
+        color: CONFIG.colors.trench,
+        metalness: 0.1,
+        roughness: 0.8,
         transparent: true,
         opacity: 0.7
     });
-    const dome = new THREE.Mesh(domeGeometry, domeMaterial);
-    atlantisGroup.add(dome);
+    const trench = new THREE.Mesh(trenchGeometry, trenchMaterial);
+    trench.castShadow = true;
+    trench.receiveShadow = true;
+    trenchGroup.add(trench);
     
-    // Add central tower
-    const towerGeometry = new THREE.CylinderGeometry(3, 5, 35, 6);
-    const towerMaterial = new THREE.MeshLambertMaterial({
-        color: 0x48d1cc, // Medium turquoise
+    // Add hydrothermal vents
+    for (let i = 0; i < 10; i++) {
+        const x = -90 + Math.random() * 180;
+        const z = -10 + Math.random() * 20;
+        const y = -70 - Math.random() * 10;
+        
+        const ventGeometry = new THREE.CylinderGeometry(3, 5, 20, 8);
+        const ventMaterial = new THREE.MeshStandardMaterial({
+            color: 0xff4500,
+            metalness: 0.2,
+            roughness: 0.6,
+            emissive: 0xff4500,
+            emissiveIntensity: 0.3
+        });
+        const vent = new THREE.Mesh(ventGeometry, ventMaterial);
+        vent.position.set(x, y, z);
+        vent.castShadow = true;
+        vent.receiveShadow = true;
+        trenchGroup.add(vent);
+        
+        // Add smoke/steam particles
+        const smokeGeometry = new THREE.ConeGeometry(5, 15, 8);
+        const smokeMaterial = new THREE.MeshStandardMaterial({
+            color: 0x808080,
+            transparent: true,
+            opacity: 0.3,
+            metalness: 0.1,
+            roughness: 0.9
+        });
+        const smoke = new THREE.Mesh(smokeGeometry, smokeMaterial);
+        smoke.position.set(x, y + 10, z);
+        smoke.castShadow = true;
+        smoke.receiveShadow = true;
+        trenchGroup.add(smoke);
+    }
+    
+    // Position the trench
+    const position = CONFIG.positions.underwater.trench;
+    trenchGroup.position.set(position.x, position.y, position.z);
+    scene.add(trenchGroup);
+    
+    // Add label
+    labelSystem.addLabel(trenchGroup, "The Trench", CONFIG.colors.trench);
+    
+    return trenchGroup;
+}
+
+// Create the Coral Reef
+function createCoralReef(scene, labelSystem) {
+    const reefGroup = new THREE.Group();
+    
+    // Main reef base
+    const reefBaseGeometry = new THREE.BoxGeometry(150, 40, 150);
+    const reefBaseMaterial = new THREE.MeshStandardMaterial({ 
+        color: CONFIG.colors.coralReef,
+        metalness: 0.1,
+        roughness: 0.7,
         transparent: true,
-        opacity: 0.85
+        opacity: 0.8
     });
-    const tower = new THREE.Mesh(towerGeometry, towerMaterial);
-    tower.position.y = 15;
-    atlantisGroup.add(tower);
+    const reefBase = new THREE.Mesh(reefBaseGeometry, reefBaseMaterial);
+    reefBase.castShadow = true;
+    reefBase.receiveShadow = true;
+    reefGroup.add(reefBase);
     
-    // Add smaller domes
-    const addSmallDome = (x, z, size) => {
-        const smallDomeGeometry = new THREE.SphereGeometry(size, 12, 12);
-        const smallDomeMaterial = new THREE.MeshLambertMaterial({
-            color: 0x7fffd4, // Aquamarine
-            transparent: true,
-            opacity: 0.6
-        });
-        const smallDome = new THREE.Mesh(smallDomeGeometry, smallDomeMaterial);
-        smallDome.position.set(x, size/2 - 10, z);
-        atlantisGroup.add(smallDome);
-    };
-    
-    // Add several small domes around the main structure
-    addSmallDome(20, 15, 12);
-    addSmallDome(-25, 10, 10);
-    addSmallDome(0, -28, 15);
-    addSmallDome(15, -15, 8);
-    addSmallDome(-18, -20, 9);
-    
-    // Add connecting tubes between domes
-    const addTube = (startX, startZ, endX, endZ) => {
-        // Find starting and ending y coordinates based on the domes
-        const startY = -10;
-        const endY = -10;
+    // Add coral formations
+    for (let i = 0; i < 30; i++) {
+        const x = -70 + Math.random() * 140;
+        const z = -70 + Math.random() * 140;
+        const y = -15 - Math.random() * 20;
         
-        // Create a curved path for the tube
-        const curve = new THREE.CatmullRomCurve3([
-            new THREE.Vector3(startX, startY, startZ),
-            new THREE.Vector3((startX + endX) / 2, startY - 5, (startZ + endZ) / 2),
-            new THREE.Vector3(endX, endY, endZ)
-        ]);
-        
-        const tubeGeometry = new THREE.TubeGeometry(curve, 20, 2, 8, false);
-        const tubeMaterial = new THREE.MeshLambertMaterial({
-            color: 0xb0e0e6, // Powder blue
+        const coralGeometry = new THREE.ConeGeometry(5 + Math.random() * 5, 10 + Math.random() * 15, 8);
+        const coralMaterial = new THREE.MeshStandardMaterial({
+            color: 0xff69b4,
+            metalness: 0.1,
+            roughness: 0.5,
             transparent: true,
-            opacity: 0.5
+            opacity: 0.8
         });
-        const tube = new THREE.Mesh(tubeGeometry, tubeMaterial);
-        atlantisGroup.add(tube);
-    };
+        const coral = new THREE.Mesh(coralGeometry, coralMaterial);
+        coral.position.set(x, y, z);
+        coral.castShadow = true;
+        coral.receiveShadow = true;
+        reefGroup.add(coral);
+    }
     
-    // Add connecting tubes between domes
-    addTube(0, 0, 20, 15);
-    addTube(0, 0, -25, 10);
-    addTube(0, 0, 0, -28);
-    addTube(0, -28, 15, -15);
-    addTube(0, -28, -18, -20);
-    
-    // Add some seafloor elements around Atlantis
-    const addSeafloorElement = (x, z, height, radius) => {
-        const seafloorGeometry = new THREE.ConeGeometry(radius, height, 5);
-        const seafloorMaterial = new THREE.MeshLambertMaterial({
-            color: 0x2f4f4f, // Dark slate gray
+    // Add sea anemones
+    for (let i = 0; i < 20; i++) {
+        const x = -70 + Math.random() * 140;
+        const z = -70 + Math.random() * 140;
+        const y = -15 - Math.random() * 10;
+        
+        const anemoneGeometry = new THREE.CylinderGeometry(2, 4, 8, 8);
+        const anemoneMaterial = new THREE.MeshStandardMaterial({
+            color: 0xff1493,
+            metalness: 0.1,
+            roughness: 0.4,
             transparent: true,
             opacity: 0.7
         });
-        const seafloorElement = new THREE.Mesh(seafloorGeometry, seafloorMaterial);
-        seafloorElement.position.set(x, -30, z);
-        atlantisGroup.add(seafloorElement);
-    };
-    
-    // Add various seafloor elements
-    for (let i = 0; i < 15; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const distance = 30 + Math.random() * 30;
-        const x = Math.cos(angle) * distance;
-        const z = Math.sin(angle) * distance;
-        const height = 5 + Math.random() * 15;
-        const radius = 3 + Math.random() * 5;
-        addSeafloorElement(x, z, height, radius);
+        const anemone = new THREE.Mesh(anemoneGeometry, anemoneMaterial);
+        anemone.position.set(x, y, z);
+        anemone.castShadow = true;
+        anemone.receiveShadow = true;
+        reefGroup.add(anemone);
     }
     
-    // Position Atlantis
-    const position = CONFIG.positions.central.atlantis;
-    atlantisGroup.position.set(position.x, position.y, position.z);
-    scene.add(atlantisGroup);
+    // Position the reef
+    const position = CONFIG.positions.underwater.coralReef;
+    reefGroup.position.set(position.x, position.y, position.z);
+    scene.add(reefGroup);
     
     // Add label
-    labelSystem.addLabel(atlantisGroup, "Atlantis", CONFIG.colors.atlantis);
+    labelSystem.addLabel(reefGroup, "Coral Reef", CONFIG.colors.coralReef);
     
-    return atlantisGroup;
+    return reefGroup;
 }
 
 console.log('Underwater regions module loaded!');

@@ -11,6 +11,12 @@ import { createUnderwaterStructures } from './regions/underwater.js';
 import { createSkyStructures } from './regions/sky.js';
 import { createConnectors } from './core/utils.js';
 import { CONFIG } from './core/config.js';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { createScene } from './core/scene.js';
+import { createCamera } from './core/camera.js';
+import { createRenderer } from './core/renderer.js';
+import { createCompass } from './components/compass.js';
+import { createCentralRegion } from './regions/central.js';
 
 // This function is replaced by the 3D implementation in compass.js
 function addCompassMarkers(container) {
@@ -41,6 +47,9 @@ export async function initWorldVisualization() {
         const { scene, camera, renderer, labelContainer } = setupScene(container);
         const labelSystem = setupLabelSystem(labelContainer);
         const controls = setupControls(container);
+        
+        // Create compass
+        const compass = createCompass(scene);
         
         // Create regions
         const regions = {
