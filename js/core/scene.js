@@ -41,13 +41,18 @@ export function initScene(container) {
     container.appendChild(labelContainer);
 
     // Add orbit controls
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.05;
-    controls.screenSpacePanning = false;
-    controls.minDistance = 100;
-    controls.maxDistance = 800;
-    controls.maxPolarAngle = Math.PI / 2;
+    let controls = null;
+    if (typeof OrbitControls !== 'undefined') {
+        controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.screenSpacePanning = false;
+        controls.minDistance = 100;
+        controls.maxDistance = 800;
+        controls.maxPolarAngle = Math.PI / 2;
+    } else {
+        console.error('OrbitControls not loaded. Camera controls will not be available.');
+    }
 
     // Add lights
     addLights(scene);
@@ -88,7 +93,9 @@ export function initScene(container) {
             document.removeEventListener('mozfullscreenchange', handleResize);
             document.removeEventListener('webkitfullscreenchange', handleResize);
             document.removeEventListener('MSFullscreenChange', handleResize);
-            controls.dispose();
+            if (controls) {
+                controls.dispose();
+            }
         }
     };
 }
