@@ -167,7 +167,7 @@ export function setupLabelSystem(container) {
                 label.element.style.fontSize = `${fontSize}px`;
                 
                 // Set appropriate padding based on screen mode and size
-                const paddingV = Math.max(2, Math.min(6, 4 * fullscreenMultiplier));
+                const paddingV = Math.max(1, Math.min(2, 1.2 * fullscreenMultiplier));
                 const paddingH = Math.max(4, Math.min(12, 8 * fullscreenMultiplier));
                 label.element.style.padding = `${paddingV}px ${paddingH}px`;
                 
