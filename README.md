@@ -4,6 +4,47 @@ AI assisted research into understanding 4 spatial dimensions throughout history 
 ## Project Overview
 This project visualizes research institutes studying the fourth spatial dimension through an interactive 3D world map. The visualization features multiple regions and vertical layers, from space farms to underwater structures, showing spatial relationships between research institutes.
 
+## Code Structure and Methodology
+
+### Architecture
+The project follows a modular architecture built with Three.js for 3D visualization:
+
+1. **Core Module System**
+   - ES6 modules for clean dependency management
+   - Centralized configuration through `config.js`
+   - Utility functions for common operations
+   - Scene management and camera controls
+
+2. **Component-Based Design**
+   - Reusable 3D components (labels, animations, zoom controls)
+   - Each component is self-contained with its own cleanup
+   - Event-driven architecture for user interactions
+
+3. **Region-Based Organization**
+   - Each region is implemented as a separate module
+   - Consistent interface across regions
+   - Shared resources and utilities
+   - Independent state management
+
+### Technical Implementation
+- **Three.js for 3D Rendering**
+  - Custom geometries for unique structures
+  - Advanced materials with transparency and effects
+  - Optimized rendering for performance
+  - Efficient resource management and cleanup
+
+- **State Management**
+  - Centralized configuration
+  - Event-based state updates
+  - Clean resource disposal
+  - Memory leak prevention
+
+- **Performance Optimization**
+  - Geometry reuse where possible
+  - Efficient material management
+  - Optimized rendering loops
+  - Resource cleanup on unmount
+
 ## File and Folder Structure
 
 ```
@@ -33,6 +74,43 @@ This project visualizes research institutes studying the fourth spatial dimensio
 └── music/                          // Audio files for the music player
 ```
 
+## World Regions and Structures
+
+### Eastern Region
+The most diverse and developed region, featuring:
+- **Vertical Farms**: Multiple farm towers with domes
+- **Industrial Area**: Factory buildings with chimneys
+- **Seaside Capital**: Central palace with surrounding buildings
+- **Space Farms**: Geodesic domes with connecting walkways
+- **Eastern Mines**: Underground caverns and tunnels
+- **Sewers**: Complex sewer system with processing tanks
+
+### Western Region
+Themed around fire and volcanic elements:
+- **Fire Islands**: Volcanic terrain
+- **Hell's End**: Continent with volcanic mountains and lava pools
+- **Hell's Gate**: Capital with flaming towers and gate structures
+
+### Central Region
+Floating and island-based structures:
+- **Magic Islands**: Central islands
+- **Moon Palace**: Floating palace with spires
+- **Forested Islands**: Islands with forest farms
+- **Smuggler's Island**: Hidden trading post
+- **Belt**: Aerial structure connecting islands
+- **Cave Islands**: Underground network of caves
+
+### Sky Region
+Floating structures with ethereal elements:
+- **Sky Palace**: Floating palace with cloud structures
+- **Space Farms**: Orbital ring with platforms
+
+### Underwater Region
+Submerged architectural marvels:
+- **Atlantis**: Main dome with central tower and smaller domes
+- Connected underwater structures
+- Seafloor elements and environmental features
+
 ## Features
 
 ### Interactive 3D Visualization
@@ -41,22 +119,6 @@ This project visualizes research institutes studying the fourth spatial dimensio
 - **Vertical Navigation**: Control camera elevation to explore above and below ground
   - Use "Go Up" and "Go Down" buttons or Shift+Mouse Wheel
   - Color-coded indicators show current position relative to ground level
-
-### Regions
-- **Eastern Continent**: Large landmass with various sub-regions:
-  - Vertical farms
-  - Industrial area
-  - Seaside capital
-  - Space farms (floating above)
-  - Underground mines and sewers
-
-- **Central Islands**: Magical islands at the center of the world
-  - Moon Palace research institute
-  - Smuggler's Island
-  - The Belt (aerial structure)
-  - Atlantis (underwater)
-
-- **Western Region**: Fire-themed islands and structures
 
 ### Vertical Layers
 The visualization is organized into multiple vertical layers:
