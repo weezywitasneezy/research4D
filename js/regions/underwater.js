@@ -1,4 +1,5 @@
 // Underwater regions implementation
+import * as THREE from 'three';
 import { CONFIG } from '../core/config.js';
 
 // Create all underwater structures

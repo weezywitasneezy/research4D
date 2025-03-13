@@ -1,4 +1,5 @@
 // Central regions implementation
+import * as THREE from 'three';
 import { CONFIG } from '../core/config.js';
 
 // Create Central islands and all related structures

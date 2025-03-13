@@ -1,4 +1,5 @@
 // Scene initialization and management
+import * as THREE from 'three';
 import { CONFIG } from './config.js';
 
 // Initialize the scene, camera, and renderer
