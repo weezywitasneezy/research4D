@@ -30,15 +30,15 @@ export const CONFIG = {
             capital: { x: 180, y: 16, z: 0 },
             skyPalace: { x: 180, y: 80, z: 0 },
             spaceFarms: { x: 240, y: 140, z: 150 },
-            mines: { x: 240, y: -20, z: -150 },
-            sewers: { x: 240, y: -10, z: 50 }
+            mines: { x: 240, y: -40, z: -150 },
+            sewers: { x: 240, y: -30, z: 50 }
         },
         central: {
             magicIslands: { x: 0, y: 7.5, z: -120 },
             moonPalace: { x: 0, y: 80, z: -120 },
             smugglersIsland: { x: 60, y: 6, z: 90 },
             belt: { x: 60, y: 70, z: 90 },
-            atlantis: { x: 0, y: -50, z: 45 }
+            atlantis: { x: 0, y: -60, z: 45 }
         },
         western: {
             fireIslands: { x: -135, y: 10, z: 0 },

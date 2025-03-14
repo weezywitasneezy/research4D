@@ -90,8 +90,16 @@ export function setupLabelSystem(container) {
         const objectHeight = box.max.y - box.min.y;
         
         // Create a position vector for the label
-        // We'll position it slightly above the object
-        const position = new THREE.Vector3(0, objectHeight / 2 + 10, 0);
+        // For underground structures (negative y position), position below
+        // For above-ground structures, position above
+        const worldPos = new THREE.Vector3();
+        object.getWorldPosition(worldPos);
+        const isUnderground = worldPos.y < 0;
+        const position = new THREE.Vector3(
+            0,
+            isUnderground ? -objectHeight / 2 - 10 : objectHeight / 2 + 10,
+            0
+        );
         
         // Store the label info for updating in the animation loop
         const labelInfo = {
