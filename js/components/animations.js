@@ -11,6 +11,7 @@ export function setupAnimations(camera, controls, labelSystem, renderer, scene, 
     let radius = CONFIG.camera.radius * CONFIG.camera.zoomFactor;
     let height = CONFIG.camera.height * CONFIG.camera.zoomFactor;
     let isDragging = false;
+    let previousX = 0;
     let animationFrameId = null;
     
     // Center point (can be adjusted if needed)
@@ -23,6 +24,11 @@ export function setupAnimations(camera, controls, labelSystem, renderer, scene, 
     // Mouse interaction handlers
     const onMouseDown = (event) => {
         isDragging = true;
+        
+        // Store initial position for drag calculation
+        const clientX = event.type === 'touchstart' ? 
+            event.touches[0].clientX : event.clientX;
+        previousX = clientX;
         
         // Prevent default behavior for touch events
         if (event.type === 'touchstart') {
@@ -43,10 +49,13 @@ export function setupAnimations(camera, controls, labelSystem, renderer, scene, 
         
         // Calculate rotation based on mouse movement
         const rotationSpeed = 0.005;
-        const movementX = (clientX - (event.type === 'touchmove' ? 
-            event.touches[0].clientX : event.clientX)) * rotationSpeed;
+        const movementX = (previousX - clientX) * rotationSpeed;
         
-        angle -= movementX;
+        // Update angle based on movement
+        angle += movementX;
+        
+        // Store current position for next frame
+        previousX = clientX;
     };
     
     // Add event listeners
