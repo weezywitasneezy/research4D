@@ -417,7 +417,7 @@ function createHellsGate(scene, labelSystem) {
     const hellsGateGroup = new THREE.Group();
 
     // Create terrain base that stretches north-south
-    const terrainGeometry = new THREE.PlaneGeometry(40, 400, 40, 200);
+    const terrainGeometry = new THREE.PlaneGeometry(100, 400, 40, 200); // Increased width
     const terrainVertices = terrainGeometry.attributes.position.array;
     
     // Add terrain details
@@ -438,11 +438,13 @@ function createHellsGate(scene, labelSystem) {
         color: CONFIG.colors.hellsGate,
         roughness: 0.8,
         metalness: 0.2,
-        flatShading: true
+        flatShading: true,
+        side: THREE.DoubleSide // Make terrain visible from both sides
     });
     
     const terrain = new THREE.Mesh(terrainGeometry, terrainMaterial);
     terrain.rotation.x = -Math.PI / 2;
+    terrain.position.set(0, 0, 0); // Reset position to center
     hellsGateGroup.add(terrain);
 
     // Create main platform with detailed geometry
@@ -475,6 +477,7 @@ function createHellsGate(scene, labelSystem) {
     });
     const platform = new THREE.Mesh(platformGeometry, platformMaterial);
     platform.position.y = 4; // Raise slightly above terrain
+    platform.position.x = -40; // Move platform to the western edge of terrain
     hellsGateGroup.add(platform);
 
     // Create main gate structure with intricate details
@@ -648,7 +651,7 @@ function createHellsGate(scene, labelSystem) {
 
     // Add the gate group to main group and rotate it to face west
     gateGroup.rotation.y = Math.PI / 2;
-    gateGroup.position.x = -20; // Move it to the edge of the platform
+    gateGroup.position.x = -40; // Align with platform
     hellsGateGroup.add(gateGroup);
 
     // Position Hell's Gate
