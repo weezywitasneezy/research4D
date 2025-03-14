@@ -1,0 +1,93 @@
+.label-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.label-modal {
+    background: #1a1a1a;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 1200px;
+    height: 80vh;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    color: white;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.label-modal-header {
+    padding: 20px;
+    border-bottom: 1px solid #333;
+}
+
+.label-modal-title {
+    font-size: 24px;
+    font-weight: bold;
+    margin: 0;
+}
+
+.label-modal-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+}
+
+.label-modal-close:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.label-modal-content {
+    display: flex;
+    padding: 20px;
+    gap: 20px;
+    flex: 1;
+    overflow: hidden;
+}
+
+.label-modal-video-container {
+    flex: 1;
+    background: #000;
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+}
+
+.label-modal-video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.label-modal-text {
+    flex: 1;
+    padding: 0 20px;
+    overflow-y: auto;
+    line-height: 1.6;
+}
+
+/* Show modal when active */
+.label-modal-overlay.active {
+    display: flex;
+} 

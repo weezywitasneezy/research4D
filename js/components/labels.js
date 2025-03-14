@@ -1,6 +1,7 @@
 // Label management system
 import * as THREE from 'three';
 import { CONFIG } from '../core/config.js';
+import { LabelModal } from './LabelModal.js';
 
 // Setup the label system
 export function setupLabelSystem(container) {
@@ -12,6 +13,9 @@ export function setupLabelSystem(container) {
     
     // Keep track of visibility state
     let labelsVisible = true;
+
+    // Create modal instance
+    const modal = new LabelModal();
 
     // Ensure container has correct pointer-event settings
     container.style.pointerEvents = 'none';
@@ -60,10 +64,12 @@ export function setupLabelSystem(container) {
             labelDiv.classList.remove('label3d-glow');
         };
         
-        // Add click event for future interaction
+        // Add click event for modal interaction
         const clickHandler = () => {
             console.log(`Clicked on: ${text}`);
-            // Additional functionality can be added here
+            // Convert text to kebab case for ID
+            const labelId = text.toLowerCase().replace(/\s+/g, '-');
+            modal.show(labelId);
         };
         
         // Store handlers for cleanup
