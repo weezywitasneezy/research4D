@@ -1,151 +1,94 @@
 // Animation and camera controls
 import { CONFIG } from '../core/config.js';
+import * as THREE from 'three';
 
 // Initialize animations
 export function setupAnimations(camera, controls, labelSystem, renderer, scene, zoomControls) {
     console.log('Initializing animations with zoom and elevation support');
     
-    // Camera rotation variables
+    // Animation state
     let angle = 0;
-    let radius = (CONFIG && CONFIG.camera) ? 
-        CONFIG.camera.radius * CONFIG.camera.zoomFactor : 
-        480 * 0.7;
-    let height = (CONFIG && CONFIG.camera) ? 
-        CONFIG.camera.height * CONFIG.camera.zoomFactor : 
-        180 * 0.7;
+    let radius = CONFIG.camera.radius * CONFIG.camera.zoomFactor;
+    let height = CONFIG.camera.height * CONFIG.camera.zoomFactor;
+    let isDragging = false;
+    let animationFrameId = null;
+    
+    // Center point (can be adjusted if needed)
     const centerX = 0;
     const centerZ = 0;
     
-    // Animation frame ID for cleanup
-    let animationFrameId = null;
+    // Get container for event handling
+    const container = renderer.domElement.parentElement;
     
-    // Mouse drag control variables
-    let isDragging = false;
-    let previousMousePosition = { x: 0, y: 0 };
-    let dragSensitivityHorizontal = 0.01; // Adjust for horizontal rotation
-    let dragSensitivityVertical = 0.75;   // Increased by 50% for more responsive vertical movement
-    
-    // Get the container element
-    const container = document.getElementById('visualization-mount');
-    
-    // Mouse event handlers for drag control
-    function onMouseDown(event) {
-        // Only enable dragging if it's allowed in the config
-        if (CONFIG && CONFIG.animation && CONFIG.animation.dragEnabled === false) {
-            return;
-        }
-
-        // Don't start dragging if we clicked on a label
-        if (event.target.classList.contains('label3d')) {
-            return;
-        }
-        
+    // Mouse interaction handlers
+    const onMouseDown = (event) => {
         isDragging = true;
-        previousMousePosition = {
-            x: event.clientX,
-            y: event.clientY
-        };
         
-        // Pause auto-rotation when user starts dragging
-        if (CONFIG && CONFIG.animation) {
-            CONFIG._wasRotating = controls.isRotating();
-            CONFIG.animation.enabled = false;
+        // Prevent default behavior for touch events
+        if (event.type === 'touchstart') {
+            event.preventDefault();
         }
-        
-        // Add class to container for visual feedback
-        if (container) {
-            container.classList.add('dragging');
-        }
-    }
+    };
     
-    function onMouseMove(event) {
-        if (!isDragging) return;
-        
-        const deltaMove = {
-            x: event.clientX - previousMousePosition.x,
-            y: event.clientY - previousMousePosition.y
-        };
-        
-        // Handle horizontal movement (around Y axis)
-        if (deltaMove.x !== 0) {
-            // Update camera angle
-            angle -= deltaMove.x * dragSensitivityHorizontal;
-        }
-        
-        // Handle vertical movement (elevation)
-        if (deltaMove.y !== 0) {
-            // Get current elevation offset from zoomControls
-            const currentElevation = zoomControls ? zoomControls.elevationOffset() : 0;
-            
-            // Calculate new elevation
-            // Moving mouse up (negative deltaY) increases elevation
-            // Moving mouse down (positive deltaY) decreases elevation
-            const elevationChange = -deltaMove.y * dragSensitivityVertical;
-            
-            // Get min/max elevation limits from CONFIG or use defaults
-            const minElevation = (CONFIG && CONFIG.minElevation) ? 
-                CONFIG.minElevation : -300;
-            const maxElevation = (CONFIG && CONFIG.maxElevation) ? 
-                CONFIG.maxElevation : 200;
-            
-            // Calculate new elevation with limits
-            const newElevation = Math.max(
-                minElevation, 
-                Math.min(maxElevation, currentElevation + elevationChange)
-            );
-            
-            // Update elevation if we have zoomControls
-            if (zoomControls && zoomControls.setElevationOffset) {
-                zoomControls.setElevationOffset(newElevation);
-            }
-        }
-        
-        previousMousePosition = {
-            x: event.clientX,
-            y: event.clientY
-        };
-    }
-    
-    function onMouseUp(event) {
+    const onMouseUp = () => {
         isDragging = false;
-        
-        // Resume auto-rotation if it was enabled before
-        if (CONFIG && CONFIG._wasRotating) {
-            CONFIG.animation.enabled = true;
-            delete CONFIG._wasRotating;
-        }
-        
-        // Remove class from container
-        if (container) {
-            container.classList.remove('dragging');
-        }
-    }
+    };
     
-    // Add mouse event listeners
+    const onMouseMove = (event) => {
+        if (!isDragging || !CONFIG.animation.dragEnabled) return;
+        
+        // Handle both mouse and touch events
+        const clientX = event.type === 'touchmove' ? 
+            event.touches[0].clientX : event.clientX;
+        
+        // Calculate rotation based on mouse movement
+        const rotationSpeed = 0.005;
+        const movementX = (clientX - (event.type === 'touchmove' ? 
+            event.touches[0].clientX : event.clientX)) * rotationSpeed;
+        
+        angle -= movementX;
+    };
+    
+    // Add event listeners
     if (container) {
         container.addEventListener('mousedown', onMouseDown);
         window.addEventListener('mousemove', onMouseMove);
         window.addEventListener('mouseup', onMouseUp);
         
-        // Also handle touch events for mobile
-        container.addEventListener('touchstart', (e) => {
-            if (CONFIG && CONFIG.animation && CONFIG.animation.dragEnabled === false) {
-                return;
+        // Add touch event support
+        container.addEventListener('touchstart', onMouseDown, { passive: false });
+        window.addEventListener('touchmove', onMouseMove);
+        window.addEventListener('touchend', onMouseUp);
+    }
+    
+    // Function to update particle systems
+    function updateParticleSystems() {
+        // Find all particle systems in the scene
+        scene.traverse(object => {
+            if (object instanceof THREE.Points) {
+                const positions = object.geometry.attributes.position.array;
+                const velocities = object.userData.velocities;
+                const originalPositions = object.userData.originalPositions;
+                
+                // Update each particle
+                for (let i = 0; i < positions.length; i += 3) {
+                    // Apply velocity
+                    positions[i] += velocities[i];
+                    positions[i + 1] += velocities[i + 1];
+                    positions[i + 2] += velocities[i + 2];
+                    
+                    // Reset particles that go too high
+                    if (positions[i + 1] > originalPositions[i + 1] + 20) {
+                        positions[i] = originalPositions[i];
+                        positions[i + 1] = originalPositions[i + 1];
+                        positions[i + 2] = originalPositions[i + 2];
+                    }
+                }
+                
+                // Mark the attribute as needing update
+                object.geometry.attributes.position.needsUpdate = true;
             }
-            
-            e.preventDefault();
-            const touch = e.touches[0];
-            onMouseDown({ clientX: touch.clientX, clientY: touch.clientY });
-        }, { passive: false });
-        
-        window.addEventListener('touchmove', (e) => {
-            if (!isDragging) return;
-            e.preventDefault();
-            const touch = e.touches[0];
-            onMouseMove({ clientX: touch.clientX, clientY: touch.clientY });
-        }, { passive: false });
-        
-        window.addEventListener('touchend', onMouseUp, { passive: false });
+        });
     }
     
     // Camera rotation function
@@ -198,6 +141,9 @@ export function setupAnimations(camera, controls, labelSystem, renderer, scene, 
         
         // Update camera position
         updateCameraPosition();
+        
+        // Update particle systems
+        updateParticleSystems();
         
         // Update labels if label system exists
         if (labelSystem) {
