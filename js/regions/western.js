@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { CONFIG } from '../core/config.js';
 
 // Create Western regions and related structures
-export function createWesternRegion(scene, labelSystem, animations) {
+export function createWesternRegion(scene, labelSystem) {
     // Need to check if CONFIG is available
     if (typeof CONFIG === 'undefined') {
         console.error('CONFIG is not defined. Make sure config.js is loaded first.');
@@ -11,239 +11,324 @@ export function createWesternRegion(scene, labelSystem, animations) {
     }
     
     const elements = {
-        fireIslands: createFireIslands(scene, labelSystem, animations),
-        hellsEnd: createHellsEnd(scene, labelSystem, animations),
-        hellsGate: createHellsGate(scene, labelSystem, animations)
+        fireIslands: createFireIslands(scene, labelSystem),
+        hellsEnd: createHellsEnd(scene, labelSystem),
+        hellsGate: createHellsGate(scene, labelSystem)
     };
     
     return elements;
 }
 
 // Create Fire Islands
-function createFireIslands(scene, labelSystem, animations) {
+function createFireIslands(scene, labelSystem) {
     const fireIslandsGroup = new THREE.Group();
     
-    // Function to create a volcanic island
+    // Function to create a volcanic island with advanced geometry
     function createVolcanicIsland(radius, height, x, z, scale = 1.0) {
         const islandGroup = new THREE.Group();
         
-        // Create more detailed base with irregular edges
-        const baseSegments = 16;
-        const baseGeometry = new THREE.CylinderBufferGeometry(radius, radius * 1.3, height, baseSegments);
-        // Modify vertices to create irregular edges
-        const basePositions = baseGeometry.attributes.position.array;
-        for (let i = 0; i < basePositions.length; i += 3) {
-            if (basePositions[i + 1] > 0) { // Only modify top vertices
-                const angle = Math.atan2(basePositions[i + 2], basePositions[i]);
-                const distortion = (Math.sin(angle * 3) * 0.2 + Math.cos(angle * 2) * 0.3) * radius;
-                basePositions[i] *= 1 + distortion;
-                basePositions[i + 2] *= 1 + distortion;
+        // Create a more detailed island base with noise-based terrain
+        const baseSegments = 32; // Higher segment count for more detail
+        const baseGeometry = new THREE.CylinderBufferGeometry(
+            radius, radius * 1.3, height * 0.6, baseSegments, 4, false
+        );
+        
+        // Apply noise to the vertices for a more natural look
+        const basePositions = baseGeometry.attributes.position;
+        const baseVertices = basePositions.count;
+        
+        for (let i = 0; i < baseVertices; i++) {
+            const idx = i * 3;
+            const x = basePositions.array[idx];
+            const y = basePositions.array[idx + 1];
+            const z = basePositions.array[idx + 2];
+            
+            // Skip bottom vertices to keep the base flat
+            if (y > -height * 0.25) {
+                // Apply noise based on position
+                const noiseScale = 0.1;
+                const noise = (Math.sin(x * noiseScale) + Math.cos(z * noiseScale)) * radius * 0.15;
+                
+                // Apply more noise to the sides than the top
+                const yFactor = 1 - Math.abs(y) / (height * 0.3);
+                basePositions.array[idx] += noise * yFactor;
+                basePositions.array[idx + 2] += noise * yFactor;
             }
         }
-        const baseMaterial = new THREE.MeshPhongMaterial({ 
+        
+        // Update normals
+        baseGeometry.computeVertexNormals();
+        
+        // Create a more realistic material with color variation
+        const baseMaterial = new THREE.MeshStandardMaterial({ 
             color: CONFIG.colors.fireIslands,
-            shininess: 10,
+            roughness: 0.8,
+            metalness: 0.1,
             flatShading: true
         });
+        
         const base = new THREE.Mesh(baseGeometry, baseMaterial);
         islandGroup.add(base);
         
-        // Create detailed volcano with terraced layers
-        const volcanoLayers = 5;
-        const layerHeight = height * 1.2 / volcanoLayers;
-        for (let i = 0; i < volcanoLayers; i++) {
-            const layerRadius = radius * 0.7 * (1 - i / volcanoLayers);
-            const layerGeometry = new THREE.CylinderBufferGeometry(
-                layerRadius,
-                layerRadius * 1.2,
-                layerHeight,
-                12
-            );
-            // Add surface detail to each layer
-            const layerPositions = layerGeometry.attributes.position.array;
-            for (let j = 0; j < layerPositions.length; j += 3) {
-                layerPositions[j] += (Math.random() - 0.5) * layerRadius * 0.1;
-                layerPositions[j + 2] += (Math.random() - 0.5) * layerRadius * 0.1;
-            }
-            const layerMaterial = new THREE.MeshPhongMaterial({
-                color: new THREE.Color(0xb22222).multiplyScalar(1 - i * 0.1),
-                shininess: 5,
-                flatShading: true
-            });
-            const layer = new THREE.Mesh(layerGeometry, layerMaterial);
-            layer.position.y = height * 0.6 + i * layerHeight;
-            islandGroup.add(layer);
+        // Create a more detailed volcano cone
+        const volcanoSegments = 24;
+        const volcanoGeometry = new THREE.ConeBufferGeometry(
+            radius * 0.8, height * 1.4, volcanoSegments, 6, false
+        );
+        
+        // Apply noise to the volcano cone
+        const volcanoPositions = volcanoGeometry.attributes.position;
+        const volcanoVertices = volcanoPositions.count;
+        
+        for (let i = 0; i < volcanoVertices; i++) {
+            const idx = i * 3;
+            const x = volcanoPositions.array[idx];
+            const y = volcanoPositions.array[idx + 1];
+            const z = volcanoPositions.array[idx + 2];
+            
+            // Apply noise based on position
+            const noiseScale = 0.2;
+            const noise = (Math.sin(x * noiseScale * 2) + Math.cos(z * noiseScale * 2)) * radius * 0.1;
+            
+            // Apply more noise to the sides than the top
+            const yFactor = 1 - Math.abs(y) / (height * 0.7);
+            volcanoPositions.array[idx] += noise * yFactor;
+            volcanoPositions.array[idx + 2] += noise * yFactor;
         }
         
-        // Create detailed crater with inner structure
-        const craterGroup = new THREE.Group();
+        // Update normals
+        volcanoGeometry.computeVertexNormals();
         
-        // Outer crater rim
-        const rimGeometry = new THREE.TorusBufferGeometry(radius * 0.4, radius * 0.1, 16, 32);
-        const rimMaterial = new THREE.MeshPhongMaterial({
-            color: 0x8b0000,
-            shininess: 20,
+        // Create a more realistic material with color variation
+        const volcanoMaterial = new THREE.MeshStandardMaterial({ 
+            color: 0xb22222, // Firebrick
+            roughness: 0.9,
+            metalness: 0.1,
             flatShading: true
         });
-        const rim = new THREE.Mesh(rimGeometry, rimMaterial);
-        rim.rotation.x = Math.PI / 2;
-        rim.position.y = height * 1.2;
-        craterGroup.add(rim);
         
-        // Inner crater with lava
-        const innerCraterGeometry = new THREE.CylinderBufferGeometry(radius * 0.35, radius * 0.3, height * 0.3, 16);
-        const innerCraterMaterial = new THREE.MeshPhongMaterial({
-            color: 0xff4500,
-            emissive: 0xff2200,
-            emissiveIntensity: 0.5,
-            transparent: true,
-            opacity: 0.9
+        const volcano = new THREE.Mesh(volcanoGeometry, volcanoMaterial);
+        volcano.position.y = height * 0.3; // Position on top of the base
+        islandGroup.add(volcano);
+        
+        // Create a detailed crater with inner structure
+        const craterOuterRadius = radius * 0.5;
+        const craterInnerRadius = radius * 0.35;
+        const craterDepth = height * 0.3;
+        
+        // Outer crater rim
+        const craterRimGeometry = new THREE.TorusBufferGeometry(
+            craterOuterRadius, radius * 0.1, 16, 32
+        );
+        const craterRimMaterial = new THREE.MeshStandardMaterial({
+            color: 0x8b0000, // Dark red
+            roughness: 0.8,
+            metalness: 0.2,
+            flatShading: true
         });
-        const innerCrater = new THREE.Mesh(innerCraterGeometry, innerCraterMaterial);
-        innerCrater.position.y = height * 1.1;
-        craterGroup.add(innerCrater);
+        const craterRim = new THREE.Mesh(craterRimGeometry, craterRimMaterial);
+        craterRim.rotation.x = Math.PI / 2; // Rotate to horizontal
+        craterRim.position.y = height * 1.3;
+        islandGroup.add(craterRim);
         
-        // Add glowing lava particles with improved effect
+        // Inner crater
+        const craterGeometry = new THREE.CylinderBufferGeometry(
+            craterInnerRadius, craterInnerRadius * 1.2, craterDepth, 24, 3, true
+        );
+        
+        // Apply noise to the crater
+        const craterPositions = craterGeometry.attributes.position;
+        const craterVertices = craterPositions.count;
+        
+        for (let i = 0; i < craterVertices; i++) {
+            const idx = i * 3;
+            const x = craterPositions.array[idx];
+            const y = craterPositions.array[idx + 1];
+            const z = craterPositions.array[idx + 2];
+            
+            // Apply noise based on position
+            const noiseScale = 0.3;
+            const noise = (Math.sin(x * noiseScale * 3) + Math.cos(z * noiseScale * 3)) * radius * 0.05;
+            
+            craterPositions.array[idx] += noise;
+            craterPositions.array[idx + 2] += noise;
+        }
+        
+        // Update normals
+        craterGeometry.computeVertexNormals();
+        
+        const craterMaterial = new THREE.MeshStandardMaterial({ 
+            color: 0x8b0000, // Dark red
+            roughness: 0.7,
+            metalness: 0.3,
+            side: THREE.DoubleSide,
+            flatShading: true
+        });
+        
+        const crater = new THREE.Mesh(craterGeometry, craterMaterial);
+        crater.position.y = height * 1.15;
+        islandGroup.add(crater);
+        
+        // Lava pool at the bottom of the crater
+        const lavaGeometry = new THREE.CircleBufferGeometry(craterInnerRadius * 0.9, 24);
+        const lavaMaterial = new THREE.MeshBasicMaterial({ 
+            color: 0xff4500, // OrangeRed
+            transparent: true,
+            opacity: 0.9,
+            emissive: 0xff4500,
+            emissiveIntensity: 0.5
+        });
+        
+        const lava = new THREE.Mesh(lavaGeometry, lavaMaterial);
+        lava.rotation.x = -Math.PI / 2; // Rotate to horizontal
+        lava.position.y = height * 1.0;
+        islandGroup.add(lava);
+        
+        // Enhanced lava particle system
         const particleCount = 100;
         const lavaParticlesGeometry = new THREE.BufferGeometry();
         const lavaPositions = new Float32Array(particleCount * 3);
         const lavaSizes = new Float32Array(particleCount);
         const lavaColors = new Float32Array(particleCount * 3);
         const lavaVelocities = new Float32Array(particleCount * 3);
-
+        
         for (let i = 0; i < particleCount; i++) {
+            // Distribute particles in a circle within the crater
             const theta = Math.random() * Math.PI * 2;
-            const r = Math.random() * radius * 0.3;
-            const height_offset = Math.random() * height * 0.2;
+            const r = Math.random() * craterInnerRadius * 0.8;
             lavaPositions[i * 3] = Math.cos(theta) * r;
-            lavaPositions[i * 3 + 1] = height * 1.1 + height_offset;
+            lavaPositions[i * 3 + 1] = height * 1.0 + Math.random() * 0.5; // Start at lava surface
             lavaPositions[i * 3 + 2] = Math.sin(theta) * r;
             
-            lavaSizes[i] = (Math.random() * 3 + 2) * scale;
+            // Vary particle sizes for more realism
+            lavaSizes[i] = (Math.random() * 2 + 1) * scale;
             
-            const temp = Math.random();
-            lavaColors[i * 3] = Math.min(1, 0.7 + temp * 0.3);
-            lavaColors[i * 3 + 1] = Math.max(0, temp * 0.5);
-            lavaColors[i * 3 + 2] = Math.max(0, temp * 0.2);
+            // Create a gradient of colors from yellow to red
+            const colorFactor = Math.random();
+            lavaColors[i * 3] = 1.0; // Red always high
+            lavaColors[i * 3 + 1] = Math.random() * 0.5 + 0.2; // Green varies
+            lavaColors[i * 3 + 2] = Math.random() * 0.1; // Blue very low
             
-            const speed = Math.random() * 0.15 + 0.05;
-            lavaVelocities[i * 3] = (Math.random() - 0.5) * speed;
-            lavaVelocities[i * 3 + 1] = Math.random() * speed * 2;
-            lavaVelocities[i * 3 + 2] = (Math.random() - 0.5) * speed;
+            // Add more varied velocities
+            lavaVelocities[i * 3] = (Math.random() - 0.5) * 0.03;
+            lavaVelocities[i * 3 + 1] = Math.random() * 0.15 + 0.05;
+            lavaVelocities[i * 3 + 2] = (Math.random() - 0.5) * 0.03;
         }
-
+        
         lavaParticlesGeometry.setAttribute('position', new THREE.BufferAttribute(lavaPositions, 3));
         lavaParticlesGeometry.setAttribute('size', new THREE.BufferAttribute(lavaSizes, 1));
         lavaParticlesGeometry.setAttribute('color', new THREE.BufferAttribute(lavaColors, 3));
-
+        
         const lavaParticlesMaterial = new THREE.PointsMaterial({
             size: 2,
             vertexColors: true,
             transparent: true,
             opacity: 0.8,
-            sizeAttenuation: true,
-            blending: THREE.AdditiveBlending
+            sizeAttenuation: true
         });
-
+        
         const lavaParticles = new THREE.Points(lavaParticlesGeometry, lavaParticlesMaterial);
         lavaParticles.userData.velocities = lavaVelocities;
         lavaParticles.userData.originalPositions = lavaPositions.slice();
-        lavaParticles.userData.maxHeight = height * 1.3;
-        lavaParticles.userData.baseHeight = height * 1.1;
-        craterGroup.add(lavaParticles);
-
-        // Register lava particles with animation system
-        if (animations) {
-            animations.registerHellsEndParticles(lavaParticles);
-        }
-
-        // Enhanced smoke system with better visuals
+        islandGroup.add(lavaParticles);
+        
+        // Enhanced smoke particle system
         const smokeCount = 60;
         const smokeGeometry = new THREE.BufferGeometry();
         const smokePositions = new Float32Array(smokeCount * 3);
         const smokeSizes = new Float32Array(smokeCount);
         const smokeColors = new Float32Array(smokeCount * 3);
         const smokeVelocities = new Float32Array(smokeCount * 3);
-        const smokeLifetimes = new Float32Array(smokeCount);
-
+        
         for (let i = 0; i < smokeCount; i++) {
+            // Distribute particles in a circle within the crater
             const theta = Math.random() * Math.PI * 2;
-            const r = Math.random() * radius * 0.2;
+            const r = Math.random() * craterInnerRadius * 0.7;
             smokePositions[i * 3] = Math.cos(theta) * r;
-            smokePositions[i * 3 + 1] = height * 1.3;
+            smokePositions[i * 3 + 1] = height * 1.3; // Start at crater top
             smokePositions[i * 3 + 2] = Math.sin(theta) * r;
             
+            // Vary particle sizes for more realism
             smokeSizes[i] = (Math.random() * 4 + 3) * scale;
             
-            const brightness = Math.random() * 0.3 + 0.4;
-            const warmth = Math.random() * 0.1;
-            smokeColors[i * 3] = brightness + warmth;
-            smokeColors[i * 3 + 1] = brightness + warmth * 0.5;
-            smokeColors[i * 3 + 2] = brightness;
+            // Create a gradient of gray colors
+            const gray = Math.random() * 0.4 + 0.3;
+            smokeColors[i * 3] = gray;
+            smokeColors[i * 3 + 1] = gray;
+            smokeColors[i * 3 + 2] = gray;
             
-            const windSpeed = Math.random() * 0.1 + 0.05;
-            smokeVelocities[i * 3] = (Math.random() - 0.5) * windSpeed;
-            smokeVelocities[i * 3 + 1] = Math.random() * windSpeed + 0.05;
-            smokeVelocities[i * 3 + 2] = (Math.random() - 0.5) * windSpeed;
-            
-            smokeLifetimes[i] = Math.random();
+            // Add more varied velocities
+            smokeVelocities[i * 3] = (Math.random() - 0.5) * 0.08;
+            smokeVelocities[i * 3 + 1] = Math.random() * 0.15 + 0.08;
+            smokeVelocities[i * 3 + 2] = (Math.random() - 0.5) * 0.08;
         }
-
+        
         smokeGeometry.setAttribute('position', new THREE.BufferAttribute(smokePositions, 3));
         smokeGeometry.setAttribute('size', new THREE.BufferAttribute(smokeSizes, 1));
         smokeGeometry.setAttribute('color', new THREE.BufferAttribute(smokeColors, 3));
-
+        
         const smokeMaterial = new THREE.PointsMaterial({
             size: 2,
             vertexColors: true,
             transparent: true,
             opacity: 0.4,
-            sizeAttenuation: true,
-            blending: THREE.AdditiveBlending
+            sizeAttenuation: true
         });
-
+        
         const smoke = new THREE.Points(smokeGeometry, smokeMaterial);
         smoke.userData.velocities = smokeVelocities;
         smoke.userData.originalPositions = smokePositions.slice();
-        smoke.userData.lifetimes = smokeLifetimes;
-        smoke.userData.maxHeight = height * 1.8;
-        smoke.userData.baseHeight = height * 1.3;
-        craterGroup.add(smoke);
-
-        // Register smoke particles with animation system
-        if (animations) {
-            animations.registerHellsEndParticles(smoke);
-        }
-
-        islandGroup.add(craterGroup);
-
-        // Add detailed rocky formations around the base
-        const rockCount = 12;
+        islandGroup.add(smoke);
+        
+        // Add detailed rocky outcrops and terrain features
+        const rockCount = 12; // More rocks for detail
         for (let i = 0; i < rockCount; i++) {
             const angle = (i / rockCount) * Math.PI * 2;
-            const distance = radius * (0.7 + Math.random() * 0.3);
+            const distance = radius * (0.6 + Math.random() * 0.4);
             
             // Create more complex rock geometry
-            const rockGeometry = new THREE.DodecahedronBufferGeometry(radius * 0.2);
-            // Distort vertices for more natural look
-            const rockPositions = rockGeometry.attributes.position.array;
-            for (let j = 0; j < rockPositions.length; j += 3) {
-                rockPositions[j] *= 1 + (Math.random() - 0.5) * 0.3;
-                rockPositions[j + 1] *= 1 + (Math.random() - 0.5) * 0.3;
-                rockPositions[j + 2] *= 1 + (Math.random() - 0.5) * 0.3;
+            const rockDetail = 3 + Math.floor(Math.random() * 3);
+            const rockGeometry = new THREE.DodecahedronBufferGeometry(
+                radius * (0.1 + Math.random() * 0.15),
+                rockDetail
+            );
+            
+            // Apply noise to the rock vertices
+            const rockPositions = rockGeometry.attributes.position;
+            const rockVertices = rockPositions.count;
+            
+            for (let j = 0; j < rockVertices; j++) {
+                const idx = j * 3;
+                const x = rockPositions.array[idx];
+                const y = rockPositions.array[idx + 1];
+                const z = rockPositions.array[idx + 2];
+                
+                // Apply noise based on position
+                const noiseScale = 1.0;
+                const noise = (Math.sin(x * noiseScale * 5) + Math.cos(z * noiseScale * 5)) * radius * 0.03;
+                
+                rockPositions.array[idx] += noise;
+                rockPositions.array[idx + 1] += noise;
+                rockPositions.array[idx + 2] += noise;
             }
             
-            const rockMaterial = new THREE.MeshPhongMaterial({
-                color: 0x8b0000,
-                shininess: 5,
+            // Update normals
+            rockGeometry.computeVertexNormals();
+            
+            // Create a more realistic rock material
+            const rockMaterial = new THREE.MeshStandardMaterial({
+                color: 0x8b0000, // Dark red
+                roughness: 0.9,
+                metalness: 0.1,
                 flatShading: true
             });
+            
             const rock = new THREE.Mesh(rockGeometry, rockMaterial);
             
-            // Position and rotate rocks naturally
+            // Position and rotate the rock
             rock.position.set(
                 Math.cos(angle) * distance,
-                height * 0.15,
+                height * (0.1 + Math.random() * 0.2),
                 Math.sin(angle) * distance
             );
             rock.rotation.set(
@@ -253,69 +338,65 @@ function createFireIslands(scene, labelSystem, animations) {
             );
             rock.scale.set(
                 1 + Math.random() * 0.5,
-                0.8 + Math.random() * 0.4,
+                1 + Math.random() * 1.0,
                 1 + Math.random() * 0.5
             );
             
             islandGroup.add(rock);
-            
-            // Add smaller debris around larger rocks
-            if (Math.random() > 0.5) {
-                const debrisCount = Math.floor(Math.random() * 3) + 2;
-                for (let k = 0; k < debrisCount; k++) {
-                    const debrisGeometry = new THREE.TetrahedronBufferGeometry(radius * 0.05);
-                    const debris = new THREE.Mesh(debrisGeometry, rockMaterial);
-                    const debrisAngle = angle + (Math.random() - 0.5) * 0.5;
-                    const debrisDistance = distance + (Math.random() - 0.5) * radius * 0.2;
-                    debris.position.set(
-                        Math.cos(debrisAngle) * debrisDistance,
-                        height * 0.1,
-                        Math.sin(debrisAngle) * debrisDistance
-                    );
-                    debris.rotation.set(
-                        Math.random() * Math.PI,
-                        Math.random() * Math.PI,
-                        Math.random() * Math.PI
-                    );
-                    islandGroup.add(debris);
-                }
-            }
         }
-
-        // Add lava flows on some sides
-        const flowCount = Math.floor(Math.random() * 3) + 2;
+        
+        // Add lava flows down the sides of the volcano
+        const flowCount = 3 + Math.floor(Math.random() * 3);
         for (let i = 0; i < flowCount; i++) {
-            const flowAngle = Math.random() * Math.PI * 2;
-            const flowStart = height * 0.8;
-            const flowLength = height * 0.6;
-            const flowWidth = radius * 0.15;
+            const angle = (i / flowCount) * Math.PI * 2;
             
-            const flowShape = new THREE.Shape();
-            flowShape.moveTo(-flowWidth / 2, 0);
-            flowShape.quadraticCurveTo(-flowWidth / 4, flowLength / 3, -flowWidth / 8, flowLength);
-            flowShape.quadraticCurveTo(0, flowLength * 1.1, flowWidth / 8, flowLength);
-            flowShape.quadraticCurveTo(flowWidth / 4, flowLength / 3, flowWidth / 2, 0);
-            flowShape.lineTo(-flowWidth / 2, 0);
+            // Create a curved lava flow path
+            const flowPoints = [];
+            const flowSegments = 10;
+            const startY = height * 1.0; // Start at the crater
+            const endY = height * 0.1; // End near the base
             
-            const flowGeometry = new THREE.ShapeGeometry(flowShape);
-            const flowMaterial = new THREE.MeshPhongMaterial({
-                color: 0xff4500,
-                emissive: 0xff2200,
-                emissiveIntensity: 0.5,
+            for (let j = 0; j <= flowSegments; j++) {
+                const t = j / flowSegments;
+                const curveX = Math.cos(angle) * (radius * 0.4 + t * radius * 0.6);
+                const curveY = startY - t * (startY - endY);
+                const curveZ = Math.sin(angle) * (radius * 0.4 + t * radius * 0.6);
+                
+                // Add some noise to the path
+                const noiseScale = 0.5;
+                const noise = (Math.sin(t * Math.PI * 2 * noiseScale) + Math.cos(t * Math.PI * 3 * noiseScale)) * radius * 0.1;
+                
+                flowPoints.push(new THREE.Vector3(
+                    curveX + noise * Math.cos(angle + Math.PI/2),
+                    curveY,
+                    curveZ + noise * Math.sin(angle + Math.PI/2)
+                ));
+            }
+            
+            // Create a smooth curve from the points
+            const flowCurve = new THREE.CatmullRomCurve3(flowPoints);
+            
+            // Create a tube geometry along the curve
+            const flowGeometry = new THREE.TubeBufferGeometry(
+                flowCurve,
+                20, // tubularSegments
+                radius * 0.05 + Math.random() * radius * 0.05, // radius
+                8, // radialSegments
+                false // closed
+            );
+            
+            const flowMaterial = new THREE.MeshBasicMaterial({
+                color: 0xff4500, // OrangeRed
                 transparent: true,
-                opacity: 0.8
+                opacity: 0.9,
+                emissive: 0xff4500,
+                emissiveIntensity: 0.5
             });
             
             const flow = new THREE.Mesh(flowGeometry, flowMaterial);
-            flow.position.set(
-                Math.cos(flowAngle) * radius * 0.5,
-                flowStart,
-                Math.sin(flowAngle) * radius * 0.5
-            );
-            flow.rotation.set(-Math.PI / 2, 0, flowAngle);
             islandGroup.add(flow);
         }
-
+        
         // Position the island
         islandGroup.position.set(x, 0, z);
         islandGroup.scale.set(scale, scale, scale);
@@ -323,13 +404,13 @@ function createFireIslands(scene, labelSystem, animations) {
         return islandGroup;
     }
 
-    // Create multiple volcanic islands with varied characteristics
+    // Create multiple volcanic islands of varying sizes
     const islands = [
         createVolcanicIsland(30, 20, 0, 0, 1.0),          // Main central island
-        createVolcanicIsland(20, 15, -70, 60, 0.8),       // Secondary island
-        createVolcanicIsland(25, 18, 60, -40, 0.9),       // Third island
-        createVolcanicIsland(15, 12, -40, -80, 0.7),      // Small island
-        createVolcanicIsland(18, 14, 40, -100, 0.75)      // Another small island
+        createVolcanicIsland(20, 15, -70, 60, 0.8),       // Secondary island, further out
+        createVolcanicIsland(25, 18, 60, -40, 0.9),       // Third island, spread east
+        createVolcanicIsland(15, 12, -40, -80, 0.7),      // Small island, further south
+        createVolcanicIsland(18, 14, 40, -100, 0.75)      // Another small island, far south
     ];
 
     // Add all islands to the group
@@ -337,275 +418,422 @@ function createFireIslands(scene, labelSystem, animations) {
 
     // Position the entire fire islands group
     const position = CONFIG.positions.western.fireIslands;
+    // Shift the entire group south
     fireIslandsGroup.position.set(
         position.x,
         position.y,
-        position.z + 50  // Moved south
+        position.z + 50  // Move 50 units south
     );
     scene.add(fireIslandsGroup);
     
     // Add label
     labelSystem.addLabel(fireIslandsGroup, "Fire Islands", CONFIG.colors.fireIslands);
     
+    // Return the group for animation updates
     return fireIslandsGroup;
 }
 
 // Create Hell's End Continent
-function createHellsEnd(scene, labelSystem, animations) {
+function createHellsEnd(scene, labelSystem) {
+    // Create a group for all Hell's End elements
     const hellsEndGroup = new THREE.Group();
-
-    // Create detailed terrain base
-    const terrainGeometry = new THREE.PlaneBufferGeometry(100, 400, 50, 200);
-    const terrainPositions = terrainGeometry.attributes.position.array;
     
-    // Generate realistic terrain using multiple noise passes
-    for (let i = 0; i < terrainPositions.length; i += 3) {
-        const x = terrainPositions[i];
-        const z = terrainPositions[i + 2];
+    // Create a more detailed base terrain with noise-based height map
+    const terrainWidth = 100;
+    const terrainLength = 400;
+    const terrainSegmentsX = 50;
+    const terrainSegmentsZ = 200;
+    
+    // Create a plane geometry with high segment count for detailed terrain
+    const terrainGeometry = new THREE.PlaneBufferGeometry(
+        terrainWidth, terrainLength, terrainSegmentsX, terrainSegmentsZ
+    );
+    
+    // Rotate to horizontal
+    terrainGeometry.rotateX(-Math.PI / 2);
+    
+    // Apply noise-based height map
+    const positions = terrainGeometry.attributes.position;
+    const vertexCount = positions.count;
+    
+    // Create height map with multiple noise frequencies
+    for (let i = 0; i < vertexCount; i++) {
+        const idx = i * 3;
+        const x = positions.array[idx];
+        const z = positions.array[idx + 2];
         
-        // Large scale features
-        let height = (Math.sin(x * 0.02) + Math.cos(z * 0.02)) * 5;
+        // Base height
+        let height = 0;
         
-        // Medium scale terrain variation
-        height += (Math.sin(x * 0.05 + z * 0.03) + Math.cos(x * 0.03 + z * 0.05)) * 3;
+        // Large scale terrain features
+        const largeScale = 0.005;
+        height += Math.sin(x * largeScale) * Math.cos(z * largeScale) * 8;
         
-        // Small scale roughness
-        height += (Math.random() - 0.5) * 2;
+        // Medium scale terrain features
+        const mediumScale = 0.02;
+        height += Math.sin(x * mediumScale * 2) * Math.cos(z * mediumScale) * 4;
         
-        terrainPositions[i + 1] = height + 15; // Base height
+        // Small scale terrain features (details)
+        const smallScale = 0.05;
+        height += Math.sin(x * smallScale * 3) * Math.cos(z * smallScale * 2) * 2;
+        
+        // Add some random noise for small details
+        height += (Math.random() - 0.5) * 1.5;
+        
+        // Ensure minimum height
+        height = Math.max(height, 0);
+        
+        // Apply height
+        positions.array[idx + 1] = height;
     }
     
-    // Create custom normal material for better lighting
-    const terrainMaterial = new THREE.MeshPhongMaterial({
+    // Update normals
+    terrainGeometry.computeVertexNormals();
+    
+    // Create a more realistic terrain material
+    const terrainMaterial = new THREE.MeshStandardMaterial({
         color: CONFIG.colors.hellsEnd,
-        shininess: 5,
-        flatShading: true
+        roughness: 0.9,
+        metalness: 0.1,
+        flatShading: true,
+        side: THREE.DoubleSide
     });
     
     const terrain = new THREE.Mesh(terrainGeometry, terrainMaterial);
-    terrain.rotation.x = -Math.PI / 2;
     hellsEndGroup.add(terrain);
-
-    // Create volcanic mountain range
-    const mountainCount = 15;
-    const mountains = new THREE.Group();
     
-    // Function to create a detailed volcanic mountain
-    const createVolcanicMountain = (x, z, scale) => {
-        const mountainGroup = new THREE.Group();
+    // Add volcanic mountains with detailed geometry
+    const mountainCount = 12;
+    const mountains = [];
+    
+    for (let i = 0; i < mountainCount; i++) {
+        // Position mountains across the terrain
+        const x = (Math.random() - 0.5) * terrainWidth * 0.8;
+        const z = (Math.random() - 0.5) * terrainLength * 0.8;
         
-        // Create layered mountain structure
-        const layers = 6;
-        const baseRadius = 10 * scale;
-        const baseHeight = 25 * scale;
+        // Vary mountain sizes
+        const height = 15 + Math.random() * 20;
+        const radius = 8 + Math.random() * 12;
         
-        for (let i = 0; i < layers; i++) {
-            const layerRadius = baseRadius * (1 - i / layers);
-            const layerHeight = baseHeight * (1 - i / layers * 0.7);
+        // Create detailed mountain geometry
+        const segments = 16 + Math.floor(Math.random() * 8);
+        const mountainGeometry = new THREE.ConeBufferGeometry(
+            radius, height, segments, 6, false
+        );
+        
+        // Apply noise to the mountain vertices
+        const mountainPositions = mountainGeometry.attributes.position;
+        const mountainVertices = mountainPositions.count;
+        
+        for (let j = 0; j < mountainVertices; j++) {
+            const idx = j * 3;
+            const vx = mountainPositions.array[idx];
+            const vy = mountainPositions.array[idx + 1];
+            const vz = mountainPositions.array[idx + 2];
             
-            const layerGeometry = new THREE.CylinderBufferGeometry(
-                layerRadius * 0.8,
-                layerRadius,
-                layerHeight,
-                12
+            // Skip the peak and base center
+            if (Math.abs(vx) > 0.1 || Math.abs(vz) > 0.1) {
+                // Apply noise based on position
+                const noiseScale = 0.3;
+                const noise = (Math.sin(vx * noiseScale * 5) + Math.cos(vz * noiseScale * 5)) * radius * 0.15;
+                
+                // Apply more noise to the sides than the top
+                const yFactor = 1 - Math.abs(vy) / (height * 0.5);
+                mountainPositions.array[idx] += noise * yFactor;
+                mountainPositions.array[idx + 2] += noise * yFactor;
+            }
+        }
+        
+        // Update normals
+        mountainGeometry.computeVertexNormals();
+        
+        // Create a more realistic mountain material with color variation
+        const mountainMaterial = new THREE.MeshStandardMaterial({
+            color: 0x8b0000, // Dark red
+            roughness: 0.9,
+            metalness: 0.1,
+            flatShading: true
+        });
+        
+        const mountain = new THREE.Mesh(mountainGeometry, mountainMaterial);
+        
+        // Position the mountain
+        mountain.position.set(x, height / 2, z);
+        
+        // Add some random rotation for variety
+        mountain.rotation.y = Math.random() * Math.PI * 2;
+        
+        hellsEndGroup.add(mountain);
+        mountains.push({
+            mesh: mountain,
+            position: new THREE.Vector3(x, height, z),
+            radius: radius,
+            height: height
+        });
+        
+        // Add crater to some mountains
+        if (Math.random() > 0.3) {
+            // Create crater rim
+            const craterRadius = radius * 0.4;
+            const rimGeometry = new THREE.TorusBufferGeometry(
+                craterRadius, radius * 0.1, 12, 24
             );
             
-            // Add surface detail
-            const positions = layerGeometry.attributes.position.array;
-            for (let j = 0; j < positions.length; j += 3) {
-                positions[j] *= 1 + (Math.random() - 0.5) * 0.2;
-                positions[j + 2] *= 1 + (Math.random() - 0.5) * 0.2;
-            }
-            
-            const layerMaterial = new THREE.MeshPhongMaterial({
-                color: new THREE.Color(0x8b0000).multiplyScalar(1 - i * 0.1),
-                shininess: 5,
+            const rimMaterial = new THREE.MeshStandardMaterial({
+                color: 0x8b0000, // Dark red
+                roughness: 0.8,
+                metalness: 0.2,
                 flatShading: true
             });
             
-            const layer = new THREE.Mesh(layerGeometry, layerMaterial);
-            layer.position.y = i * layerHeight * 0.8;
-            mountainGroup.add(layer);
-        }
-        
-        // Add crater at the top
-        const craterGeometry = new THREE.CylinderBufferGeometry(
-            baseRadius * 0.2,
-            baseRadius * 0.3,
-            baseHeight * 0.2,
-            12
-        );
-        const craterMaterial = new THREE.MeshPhongMaterial({
-            color: 0xff4500,
-            emissive: 0xff2200,
-            emissiveIntensity: 0.5,
-            shininess: 30
-        });
-        const crater = new THREE.Mesh(craterGeometry, craterMaterial);
-        crater.position.y = baseHeight;
-        mountainGroup.add(crater);
-        
-        // Add lava particles
-        const particleCount = 50;
-        const particlesGeometry = new THREE.BufferGeometry();
-        const positions = new Float32Array(particleCount * 3);
-        const colors = new Float32Array(particleCount * 3);
-        const sizes = new Float32Array(particleCount);
-        
-        for (let i = 0; i < particleCount; i++) {
-            const theta = Math.random() * Math.PI * 2;
-            const r = Math.random() * baseRadius * 0.2;
-            positions[i * 3] = Math.cos(theta) * r;
-            positions[i * 3 + 1] = baseHeight + Math.random() * 5;
-            positions[i * 3 + 2] = Math.sin(theta) * r;
+            const rim = new THREE.Mesh(rimGeometry, rimMaterial);
+            rim.rotation.x = Math.PI / 2; // Rotate to horizontal
+            rim.position.y = height;
+            mountain.add(rim);
             
-            const temp = Math.random();
-            colors[i * 3] = Math.min(1, 0.7 + temp * 0.3);
-            colors[i * 3 + 1] = Math.max(0, temp * 0.5);
-            colors[i * 3 + 2] = Math.max(0, temp * 0.2);
-            
-            sizes[i] = Math.random() * 2 + 1;
-        }
-        
-        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-        particlesGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-        particlesGeometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
-        
-        const particlesMaterial = new THREE.PointsMaterial({
-            size: 2,
-            vertexColors: true,
-            transparent: true,
-            opacity: 0.8,
-            sizeAttenuation: true,
-            blending: THREE.AdditiveBlending
-        });
-        
-        const particles = new THREE.Points(particlesGeometry, particlesMaterial);
-        particles.userData.maxHeight = baseHeight + 25;
-        particles.userData.baseHeight = baseHeight;
-        mountainGroup.add(particles);
-
-        // Register particles with animation system
-        if (animations) {
-            animations.registerHellsEndParticles(particles);
-        }
-        
-        // Add lava flows
-        const flowCount = Math.floor(Math.random() * 3) + 1;
-        for (let i = 0; i < flowCount; i++) {
-            const flowAngle = Math.random() * Math.PI * 2;
-            const flowStart = baseHeight * 0.7;
-            const flowLength = baseHeight * 0.6;
-            const flowWidth = baseRadius * 0.2;
-            
-            const flowShape = new THREE.Shape();
-            flowShape.moveTo(-flowWidth / 2, 0);
-            flowShape.quadraticCurveTo(-flowWidth / 4, flowLength / 3, -flowWidth / 8, flowLength);
-            flowShape.quadraticCurveTo(0, flowLength * 1.1, flowWidth / 8, flowLength);
-            flowShape.quadraticCurveTo(flowWidth / 4, flowLength / 3, flowWidth / 2, 0);
-            flowShape.lineTo(-flowWidth / 2, 0);
-            
-            const flowGeometry = new THREE.ShapeGeometry(flowShape);
-            const flowMaterial = new THREE.MeshPhongMaterial({
-                color: 0xff4500,
-                emissive: 0xff2200,
-                emissiveIntensity: 0.5,
+            // Create lava pool in crater
+            const poolGeometry = new THREE.CircleBufferGeometry(craterRadius * 0.8, 24);
+            const poolMaterial = new THREE.MeshBasicMaterial({
+                color: 0xff4500, // OrangeRed
                 transparent: true,
-                opacity: 0.8
+                opacity: 0.9,
+                emissive: 0xff4500,
+                emissiveIntensity: 0.5
             });
             
-            const flow = new THREE.Mesh(flowGeometry, flowMaterial);
-            flow.position.set(
-                Math.cos(flowAngle) * baseRadius * 0.7,
-                flowStart,
-                Math.sin(flowAngle) * baseRadius * 0.7
-            );
-            flow.rotation.set(-Math.PI / 2, 0, flowAngle);
-            mountainGroup.add(flow);
+            const pool = new THREE.Mesh(poolGeometry, poolMaterial);
+            pool.rotation.x = -Math.PI / 2; // Rotate to horizontal
+            pool.position.y = height - 0.5;
+            mountain.add(pool);
+            
+            // Add lava particles
+            const particleCount = 50;
+            const particlesGeometry = new THREE.BufferGeometry();
+            const positions = new Float32Array(particleCount * 3);
+            const sizes = new Float32Array(particleCount);
+            const colors = new Float32Array(particleCount * 3);
+            const velocities = new Float32Array(particleCount * 3);
+            
+            for (let k = 0; k < particleCount; k++) {
+                const theta = Math.random() * Math.PI * 2;
+                const r = Math.random() * craterRadius * 0.7;
+                positions[k * 3] = Math.cos(theta) * r;
+                positions[k * 3 + 1] = height - 0.5 + Math.random() * 0.5;
+                positions[k * 3 + 2] = Math.sin(theta) * r;
+                
+                sizes[k] = Math.random() * 2 + 1;
+                
+                colors[k * 3] = 1.0; // Red
+                colors[k * 3 + 1] = Math.random() * 0.5 + 0.2; // Green
+                colors[k * 3 + 2] = Math.random() * 0.1; // Blue
+                
+                velocities[k * 3] = (Math.random() - 0.5) * 0.03;
+                velocities[k * 3 + 1] = Math.random() * 0.1 + 0.05;
+                velocities[k * 3 + 2] = (Math.random() - 0.5) * 0.03;
+            }
+            
+            particlesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            particlesGeometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+            particlesGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+            
+            const particlesMaterial = new THREE.PointsMaterial({
+                size: 2,
+                vertexColors: true,
+                transparent: true,
+                opacity: 0.8,
+                sizeAttenuation: true
+            });
+            
+            const particles = new THREE.Points(particlesGeometry, particlesMaterial);
+            particles.userData.velocities = velocities;
+            particles.userData.originalPositions = positions.slice();
+            mountain.add(particles);
         }
-        
-        mountainGroup.position.set(x, 0, z);
-        return mountainGroup;
-    };
-    
-    // Create mountain range
-    for (let i = 0; i < mountainCount; i++) {
-        const x = (Math.random() - 0.5) * 80;
-        const z = (Math.random() - 0.5) * 380;
-        const scale = 0.5 + Math.random() * 0.5;
-        
-        const mountain = createVolcanicMountain(x, z, scale);
-        mountains.add(mountain);
     }
     
-    hellsEndGroup.add(mountains);
+    // Add lava rivers flowing across the terrain
+    const riverCount = 5;
     
-    // Add lava fields
-    const lavaFieldCount = 8;
-    for (let i = 0; i < lavaFieldCount; i++) {
-        const x = (Math.random() - 0.5) * 80;
-        const z = (Math.random() - 0.5) * 380;
-        const scale = 5 + Math.random() * 10;
+    for (let i = 0; i < riverCount; i++) {
+        // Create a curved path for the river
+        const points = [];
+        const segmentCount = 50;
         
-        const lavaGeometry = new THREE.CircleBufferGeometry(scale, 8);
-        const lavaMaterial = new THREE.MeshPhongMaterial({
-            color: 0xff4500,
-            emissive: 0xff2200,
-            emissiveIntensity: 0.5,
-            transparent: true,
-            opacity: 0.9
-        });
+        // Start from a random mountain with a crater
+        const startMountain = mountains[Math.floor(Math.random() * mountains.length)];
+        const startX = startMountain.position.x;
+        const startZ = startMountain.position.z;
         
-        const lavaPool = new THREE.Mesh(lavaGeometry, lavaMaterial);
-        lavaPool.rotation.x = -Math.PI / 2;
-        lavaPool.position.set(x, 16, z);
-        hellsEndGroup.add(lavaPool);
+        // End at the edge of the terrain
+        const endAngle = Math.random() * Math.PI * 2;
+        const endX = Math.cos(endAngle) * terrainWidth * 0.5;
+        const endZ = Math.sin(endAngle) * terrainLength * 0.5;
         
-        // Add glowing particles above lava pools
-        const particleCount = 20;
-        const particlesGeometry = new THREE.BufferGeometry();
-        const positions = new Float32Array(particleCount * 3);
-        const colors = new Float32Array(particleCount * 3);
-        const sizes = new Float32Array(particleCount);
-        
-        for (let j = 0; j < particleCount; j++) {
-            const theta = Math.random() * Math.PI * 2;
-            const r = Math.random() * scale * 0.8;
-            positions[j * 3] = x + Math.cos(theta) * r;
-            positions[j * 3 + 1] = 17 + Math.random() * 3;
-            positions[j * 3 + 2] = z + Math.sin(theta) * r;
+        // Create control points for a curved path
+        for (let j = 0; j <= segmentCount; j++) {
+            const t = j / segmentCount;
             
-            const temp = Math.random();
-            colors[j * 3] = Math.min(1, 0.7 + temp * 0.3);
-            colors[j * 3 + 1] = Math.max(0, temp * 0.5);
-            colors[j * 3 + 2] = Math.max(0, temp * 0.2);
+            // Use cubic interpolation for a natural curve
+            const tx = startX + (endX - startX) * (3 * t * t - 2 * t * t * t);
+            const tz = startZ + (endZ - startZ) * (3 * t * t - 2 * t * t * t);
             
-            sizes[j] = Math.random() * 2 + 1;
+            // Add some noise to the path
+            const noiseScale = 0.1;
+            const noise = (Math.sin(t * Math.PI * 2 * noiseScale) + Math.cos(t * Math.PI * 3 * noiseScale)) * 15;
+            
+            // Calculate height based on terrain
+            const heightScale = 1 - t; // Higher near the mountain, lower at the end
+            const y = 2 + heightScale * 5;
+            
+            points.push(new THREE.Vector3(
+                tx + noise * Math.cos(endAngle + Math.PI/2),
+                y,
+                tz + noise * Math.sin(endAngle + Math.PI/2)
+            ));
         }
         
-        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-        particlesGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-        particlesGeometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+        // Create a smooth curve from the points
+        const curve = new THREE.CatmullRomCurve3(points);
         
-        const particlesMaterial = new THREE.PointsMaterial({
-            size: 2,
-            vertexColors: true,
+        // Create a tube geometry along the curve
+        const riverWidth = 2 + Math.random() * 3;
+        const riverGeometry = new THREE.TubeBufferGeometry(
+            curve,
+            100, // tubularSegments
+            riverWidth, // radius
+            12, // radialSegments
+            false // closed
+        );
+        
+        const riverMaterial = new THREE.MeshBasicMaterial({
+            color: 0xff4500, // OrangeRed
             transparent: true,
-            opacity: 0.8,
-            sizeAttenuation: true,
-            blending: THREE.AdditiveBlending
+            opacity: 0.9,
+            emissive: 0xff4500,
+            emissiveIntensity: 0.5
         });
         
-        const particles = new THREE.Points(particlesGeometry, particlesMaterial);
-        particles.userData.maxHeight = 30;
-        particles.userData.baseHeight = 17;
-        hellsEndGroup.add(particles);
-
-        // Register particles with animation system
-        if (animations) {
-            animations.registerHellsEndParticles(particles);
-        }
+        const river = new THREE.Mesh(riverGeometry, riverMaterial);
+        hellsEndGroup.add(river);
     }
+    
+    // Add scattered rock formations
+    const rockCount = 50;
+    
+    for (let i = 0; i < rockCount; i++) {
+        // Position rocks across the terrain
+        const x = (Math.random() - 0.5) * terrainWidth * 0.9;
+        const z = (Math.random() - 0.5) * terrainLength * 0.9;
+        
+        // Vary rock sizes
+        const size = 2 + Math.random() * 5;
+        
+        // Create detailed rock geometry
+        const rockDetail = 2 + Math.floor(Math.random() * 2);
+        const rockType = Math.random();
+        
+        let rockGeometry;
+        
+        if (rockType < 0.33) {
+            rockGeometry = new THREE.DodecahedronBufferGeometry(size, rockDetail);
+        } else if (rockType < 0.66) {
+            rockGeometry = new THREE.OctahedronBufferGeometry(size, rockDetail);
+        } else {
+            rockGeometry = new THREE.TetrahedronBufferGeometry(size, rockDetail);
+        }
+        
+        // Apply noise to the rock vertices
+        const rockPositions = rockGeometry.attributes.position;
+        const rockVertices = rockPositions.count;
+        
+        for (let j = 0; j < rockVertices; j++) {
+            const idx = j * 3;
+            const vx = rockPositions.array[idx];
+            const vy = rockPositions.array[idx + 1];
+            const vz = rockPositions.array[idx + 2];
+            
+            // Apply noise based on position
+            const noiseScale = 0.5;
+            const noise = (Math.sin(vx * noiseScale * 5) + Math.cos(vz * noiseScale * 5)) * size * 0.2;
+            
+            rockPositions.array[idx] += noise;
+            rockPositions.array[idx + 1] += noise;
+            rockPositions.array[idx + 2] += noise;
+        }
+        
+        // Update normals
+        rockGeometry.computeVertexNormals();
+        
+        // Create a more realistic rock material
+        const rockMaterial = new THREE.MeshStandardMaterial({
+            color: Math.random() > 0.5 ? 0x8b0000 : 0x696969, // Dark red or dark gray
+            roughness: 0.9,
+            metalness: 0.1,
+            flatShading: true
+        });
+        
+        const rock = new THREE.Mesh(rockGeometry, rockMaterial);
+        
+        // Position the rock
+        rock.position.set(x, size / 2 + 1, z);
+        
+        // Add some random rotation for variety
+        rock.rotation.set(
+            Math.random() * Math.PI,
+            Math.random() * Math.PI,
+            Math.random() * Math.PI
+        );
+        
+        hellsEndGroup.add(rock);
+    }
+    
+    // Add smoke plumes from some mountains
+    mountains.forEach(mountain => {
+        if (Math.random() > 0.5) {
+            const smokeCount = 40;
+            const smokeGeometry = new THREE.BufferGeometry();
+            const smokePositions = new Float32Array(smokeCount * 3);
+            const smokeSizes = new Float32Array(smokeCount);
+            const smokeColors = new Float32Array(smokeCount * 3);
+            const smokeVelocities = new Float32Array(smokeCount * 3);
+            
+            for (let i = 0; i < smokeCount; i++) {
+                const theta = Math.random() * Math.PI * 2;
+                const r = Math.random() * mountain.radius * 0.3;
+                smokePositions[i * 3] = mountain.position.x + Math.cos(theta) * r;
+                smokePositions[i * 3 + 1] = mountain.position.y;
+                smokePositions[i * 3 + 2] = mountain.position.z + Math.sin(theta) * r;
+                
+                smokeSizes[i] = Math.random() * 5 + 3;
+                
+                const gray = Math.random() * 0.4 + 0.3;
+                smokeColors[i * 3] = gray;
+                smokeColors[i * 3 + 1] = gray;
+                smokeColors[i * 3 + 2] = gray;
+                
+                smokeVelocities[i * 3] = (Math.random() - 0.5) * 0.1;
+                smokeVelocities[i * 3 + 1] = Math.random() * 0.2 + 0.1;
+                smokeVelocities[i * 3 + 2] = (Math.random() - 0.5) * 0.1;
+            }
+            
+            smokeGeometry.setAttribute('position', new THREE.BufferAttribute(smokePositions, 3));
+            smokeGeometry.setAttribute('size', new THREE.BufferAttribute(smokeSizes, 1));
+            smokeGeometry.setAttribute('color', new THREE.BufferAttribute(smokeColors, 3));
+            
+            const smokeMaterial = new THREE.PointsMaterial({
+                size: 3,
+                vertexColors: true,
+                transparent: true,
+                opacity: 0.4,
+                sizeAttenuation: true
+            });
+            
+            const smoke = new THREE.Points(smokeGeometry, smokeMaterial);
+            smoke.userData.velocities = smokeVelocities;
+            smoke.userData.originalPositions = smokePositions.slice();
+            hellsEndGroup.add(smoke);
+        }
+    });
     
     // Position Hell's End
     const position = CONFIG.positions.western.hellsEnd;
@@ -618,236 +846,467 @@ function createHellsEnd(scene, labelSystem, animations) {
     return hellsEndGroup;
 }
 
-// Create Hell's Gate
-function createHellsGate(scene, labelSystem, animations) {
+// Create Hell's End Gate Capital
+function createHellsGate(scene, labelSystem) {
+    // Create a group for all Hell's Gate elements
     const hellsGateGroup = new THREE.Group();
     
-    // Create the main gate structure
-    const gateHeight = 80;
-    const gateWidth = 40;
-    const gateDepth = 15;
+    // Create a more detailed base platform
+    const baseRadius = 35;
+    const baseHeight = 10;
+    const baseSegments = 32;
     
-    // Create the main archway
-    const archShape = new THREE.Shape();
-    archShape.moveTo(-gateWidth/2, 0);
-    archShape.lineTo(-gateWidth/2, gateHeight * 0.7);
-    archShape.quadraticCurveTo(0, gateHeight, gateWidth/2, gateHeight * 0.7);
-    archShape.lineTo(gateWidth/2, 0);
-    archShape.lineTo(-gateWidth/2, 0);
+    // Create a detailed base with multiple layers
+    const baseGeometry = new THREE.CylinderBufferGeometry(
+        baseRadius, baseRadius * 1.2, baseHeight, baseSegments, 3, false
+    );
     
-    const extrudeSettings = {
-        steps: 10,
-        depth: gateDepth,
+    // Apply noise to the base vertices for a more natural look
+    const basePositions = baseGeometry.attributes.position;
+    const baseVertices = basePositions.count;
+    
+    for (let i = 0; i < baseVertices; i++) {
+        const idx = i * 3;
+        const x = basePositions.array[idx];
+        const y = basePositions.array[idx + 1];
+        const z = basePositions.array[idx + 2];
+        
+        // Skip bottom vertices to keep the base flat
+        if (y > -baseHeight * 0.4) {
+            // Apply noise based on position
+            const noiseScale = 0.1;
+            const noise = (Math.sin(x * noiseScale) + Math.cos(z * noiseScale)) * baseRadius * 0.05;
+            
+            // Apply more noise to the sides than the top
+            const yFactor = 1 - Math.abs(y) / (baseHeight * 0.5);
+            basePositions.array[idx] += noise * yFactor;
+            basePositions.array[idx + 2] += noise * yFactor;
+        }
+    }
+    
+    // Update normals
+    baseGeometry.computeVertexNormals();
+    
+    // Create a more realistic material with color variation
+    const baseMaterial = new THREE.MeshStandardMaterial({ 
+        color: CONFIG.colors.hellsGate,
+        roughness: 0.8,
+        metalness: 0.2,
+        flatShading: true
+    });
+    
+    const base = new THREE.Mesh(baseGeometry, baseMaterial);
+    hellsGateGroup.add(base);
+    
+    // Create a more detailed and impressive gate structure
+    const gateWidth = 60;
+    const gateHeight = 50;
+    const gateDepth = 20;
+    
+    // Main gate structure - more detailed with multiple parts
+    const gateGroup = new THREE.Group();
+    
+    // Create the main gate body with beveled edges
+    const gateGeometry = new THREE.BoxBufferGeometry(gateWidth, gateHeight, gateDepth, 10, 10, 10);
+    
+    // Apply noise to the gate vertices for a more detailed look
+    const gatePositions = gateGeometry.attributes.position;
+    const gateVertices = gatePositions.count;
+    
+    for (let i = 0; i < gateVertices; i++) {
+        const idx = i * 3;
+        const x = gatePositions.array[idx];
+        const y = gatePositions.array[idx + 1];
+        const z = gatePositions.array[idx + 2];
+        
+        // Apply noise based on position, more at the edges
+        const edgeFactor = Math.max(
+            Math.abs(x) / (gateWidth * 0.5),
+            Math.abs(y) / (gateHeight * 0.5),
+            Math.abs(z) / (gateDepth * 0.5)
+        );
+        
+        const noiseScale = 0.2;
+        const noise = (Math.sin(x * noiseScale * 2) + Math.cos(z * noiseScale * 2)) * 0.5;
+        
+        // Apply more noise near the edges
+        gatePositions.array[idx] += noise * edgeFactor * 0.5;
+        gatePositions.array[idx + 1] += noise * edgeFactor * 0.5;
+        gatePositions.array[idx + 2] += noise * edgeFactor * 0.5;
+    }
+    
+    // Update normals
+    gateGeometry.computeVertexNormals();
+    
+    // Create a more realistic gate material
+    const gateMaterial = new THREE.MeshStandardMaterial({
+        color: 0x8b0000, // Dark red
+        roughness: 0.7,
+        metalness: 0.3,
+        flatShading: true
+    });
+    
+    const gate = new THREE.Mesh(gateGeometry, gateMaterial);
+    gate.position.set(0, baseHeight + gateHeight / 2, 0);
+    gateGroup.add(gate);
+    
+    // Create a more detailed gate opening
+    const openingWidth = 25;
+    const openingHeight = 35;
+    const openingDepth = gateDepth + 2; // Slightly larger than the gate depth
+    
+    // Create a more interesting arch shape for the opening
+    const openingShape = new THREE.Shape();
+    openingShape.moveTo(-openingWidth / 2, -openingHeight / 2);
+    openingShape.lineTo(-openingWidth / 2, openingHeight / 2 - openingWidth / 4);
+    openingShape.quadraticCurveTo(
+        0, openingHeight / 2 + openingWidth / 8,
+        openingWidth / 2, openingHeight / 2 - openingWidth / 4
+    );
+    openingShape.lineTo(openingWidth / 2, -openingHeight / 2);
+    openingShape.lineTo(-openingWidth / 2, -openingHeight / 2);
+    
+    const openingExtrudeSettings = {
+        steps: 1,
+        depth: openingDepth,
         bevelEnabled: true,
         bevelThickness: 2,
+        bevelSize: 1,
+        bevelSegments: 5
+    };
+    
+    const openingGeometry = new THREE.ExtrudeBufferGeometry(openingShape, openingExtrudeSettings);
+    
+    // Rotate to face forward
+    openingGeometry.rotateX(Math.PI / 2);
+    
+    const openingMaterial = new THREE.MeshBasicMaterial({
+        color: 0x000000, // Black
+        side: THREE.DoubleSide
+    });
+    
+    const opening = new THREE.Mesh(openingGeometry, openingMaterial);
+    opening.position.set(0, baseHeight + gateHeight / 2 - 5, 0);
+    gateGroup.add(opening);
+    
+    // Add decorative elements to the gate
+    // Ornate border around the opening
+    const borderWidth = openingWidth + 4;
+    const borderHeight = openingHeight + 4;
+    
+    // Create a border shape that follows the opening shape
+    const borderShape = new THREE.Shape();
+    borderShape.moveTo(-borderWidth / 2, -borderHeight / 2);
+    borderShape.lineTo(-borderWidth / 2, borderHeight / 2 - borderWidth / 4);
+    borderShape.quadraticCurveTo(
+        0, borderHeight / 2 + borderWidth / 8,
+        borderWidth / 2, borderHeight / 2 - borderWidth / 4
+    );
+    borderShape.lineTo(borderWidth / 2, -borderHeight / 2);
+    borderShape.lineTo(-borderWidth / 2, -borderHeight / 2);
+    
+    // Create a hole in the shape for the opening
+    const holeShape = new THREE.Shape();
+    holeShape.moveTo(-openingWidth / 2, -openingHeight / 2);
+    holeShape.lineTo(-openingWidth / 2, openingHeight / 2 - openingWidth / 4);
+    holeShape.quadraticCurveTo(
+        0, openingHeight / 2 + openingWidth / 8,
+        openingWidth / 2, openingHeight / 2 - openingWidth / 4
+    );
+    holeShape.lineTo(openingWidth / 2, -openingHeight / 2);
+    holeShape.lineTo(-openingWidth / 2, -openingHeight / 2);
+    
+    borderShape.holes.push(holeShape);
+    
+    const borderExtrudeSettings = {
+        steps: 1,
+        depth: 2,
+        bevelEnabled: true,
+        bevelThickness: 1,
         bevelSize: 1,
         bevelSegments: 3
     };
     
-    const archGeometry = new THREE.ExtrudeGeometry(archShape, extrudeSettings);
-    const archMaterial = new THREE.MeshPhongMaterial({
-        color: 0x1a0f0f,
-        shininess: 30,
+    const borderGeometry = new THREE.ExtrudeBufferGeometry(borderShape, borderExtrudeSettings);
+    
+    // Rotate to face forward
+    borderGeometry.rotateX(Math.PI / 2);
+    
+    const borderMaterial = new THREE.MeshStandardMaterial({
+        color: 0xcd5c5c, // Indian Red
+        roughness: 0.5,
+        metalness: 0.5,
         flatShading: true
     });
     
-    const arch = new THREE.Mesh(archGeometry, archMaterial);
-    hellsGateGroup.add(arch);
+    const border = new THREE.Mesh(borderGeometry, borderMaterial);
+    border.position.set(0, baseHeight + gateHeight / 2 - 5, gateDepth / 2 + 0.5);
+    gateGroup.add(border);
     
-    // Add detailed pillars
-    const createPillar = (x) => {
-        const pillarGroup = new THREE.Group();
+    // Add towers on either side of the gate with more detail
+    const towerCount = 2;
+    const towerRadius = 7;
+    const towerHeight = 60;
+    const towerSegments = 16;
+    
+    for (let i = 0; i < towerCount; i++) {
+        const xPos = (i === 0 ? -1 : 1) * (gateWidth / 2 + towerRadius);
         
-        // Main pillar body
-        const pillarGeometry = new THREE.CylinderBufferGeometry(3, 4, gateHeight * 0.8, 8);
-        const pillarPositions = pillarGeometry.attributes.position.array;
+        // Create a more detailed tower geometry
+        const towerGeometry = new THREE.CylinderBufferGeometry(
+            towerRadius, towerRadius * 1.3, towerHeight, towerSegments, 8, false
+        );
         
-        // Add surface detail to pillar
-        for (let i = 0; i < pillarPositions.length; i += 3) {
-            const angle = Math.atan2(pillarPositions[i], pillarPositions[i+2]);
-            const height = pillarPositions[i+1];
+        // Apply noise to the tower vertices
+        const towerPositions = towerGeometry.attributes.position;
+        const towerVertices = towerPositions.count;
+        
+        for (let j = 0; j < towerVertices; j++) {
+            const idx = j * 3;
+            const x = towerPositions.array[idx];
+            const y = towerPositions.array[idx + 1];
+            const z = towerPositions.array[idx + 2];
             
-            pillarPositions[i] *= 1 + Math.sin(height * 0.2) * 0.1;
-            pillarPositions[i+2] *= 1 + Math.sin(height * 0.2) * 0.1;
+            // Apply noise based on position
+            const noiseScale = 0.3;
+            const noise = (Math.sin(x * noiseScale * 3 + y * noiseScale) + 
+                          Math.cos(z * noiseScale * 3 + y * noiseScale)) * towerRadius * 0.1;
+            
+            // Apply more noise to the middle than the top or bottom
+            const yFactor = 1 - 2 * Math.abs(y) / towerHeight;
+            towerPositions.array[idx] += noise * Math.max(0, yFactor);
+            towerPositions.array[idx + 2] += noise * Math.max(0, yFactor);
         }
         
-        const pillarMaterial = new THREE.MeshPhongMaterial({
-            color: 0x2a1f1f,
-            shininess: 20,
+        // Update normals
+        towerGeometry.computeVertexNormals();
+        
+        // Create a more realistic tower material
+        const towerMaterial = new THREE.MeshStandardMaterial({
+            color: 0x800000, // Maroon
+            roughness: 0.8,
+            metalness: 0.2,
             flatShading: true
         });
         
-        const pillar = new THREE.Mesh(pillarGeometry, pillarMaterial);
-        pillarGroup.add(pillar);
+        const tower = new THREE.Mesh(towerGeometry, towerMaterial);
+        tower.position.set(xPos, baseHeight + towerHeight / 2, 0);
+        gateGroup.add(tower);
         
-        // Add decorative rings
-        const ringCount = 5;
-        for (let i = 0; i < ringCount; i++) {
-            const ringGeometry = new THREE.TorusBufferGeometry(3.5, 0.5, 8, 16);
-            const ringMaterial = new THREE.MeshPhongMaterial({
-                color: 0x3a2f2f,
-                shininess: 30
-            });
-            
-            const ring = new THREE.Mesh(ringGeometry, ringMaterial);
-            ring.position.y = (i + 1) * (gateHeight * 0.8 / (ringCount + 1)) - gateHeight * 0.4;
-            ring.rotation.x = Math.PI / 2;
-            pillarGroup.add(ring);
-        }
+        // Add decorative elements to the tower
         
-        // Add pillar cap
-        const capGeometry = new THREE.CylinderBufferGeometry(4, 3, 5, 8);
-        const capMaterial = new THREE.MeshPhongMaterial({
-            color: 0x3a2f2f,
-            shininess: 30
-        });
+        // Add windows to the tower
+        const windowCount = 4;
+        const windowHeight = 5;
+        const windowWidth = 3;
+        const windowDepth = 1;
         
-        const cap = new THREE.Mesh(capGeometry, capMaterial);
-        cap.position.y = gateHeight * 0.4;
-        pillarGroup.add(cap);
-        
-        pillarGroup.position.set(x, 0, 0);
-        return pillarGroup;
-    };
-    
-    // Add pillars
-    hellsGateGroup.add(createPillar(-gateWidth/2 - 3));
-    hellsGateGroup.add(createPillar(gateWidth/2 + 3));
-    
-    // Add decorative elements
-    const addDecorations = () => {
-        // Add skull decorations
-        const skullCount = 8;
-        for (let i = 0; i < skullCount; i++) {
-            const skullGeometry = new THREE.SphereBufferGeometry(2, 8, 8);
-            const skullMaterial = new THREE.MeshPhongMaterial({
-                color: 0xeeeeee,
-                shininess: 10,
-                flatShading: true
-            });
+        for (let j = 0; j < windowCount; j++) {
+            const angle = (j / windowCount) * Math.PI * 2;
+            const windowX = Math.cos(angle) * (towerRadius - 0.5);
+            const windowZ = Math.sin(angle) * (towerRadius - 0.5);
             
-            const skull = new THREE.Mesh(skullGeometry, skullMaterial);
-            const angle = (i / skullCount) * Math.PI;
-            const x = Math.cos(angle) * (gateWidth/2 - 2);
-            const y = Math.sin(angle) * (gateHeight - 10) + 10;
+            const windowGeometry = new THREE.BoxBufferGeometry(
+                windowWidth, windowHeight, windowDepth
+            );
             
-            skull.position.set(x, y, gateDepth/2);
-            hellsGateGroup.add(skull);
-            
-            // Add eye sockets
-            const eyeGeometry = new THREE.SphereBufferGeometry(0.5, 4, 4);
-            const eyeMaterial = new THREE.MeshPhongMaterial({
-                color: 0x000000,
-                emissive: 0xff0000,
+            const windowMaterial = new THREE.MeshBasicMaterial({
+                color: 0xffa500, // Orange
+                transparent: true,
+                opacity: 0.7,
+                emissive: 0xffa500,
                 emissiveIntensity: 0.5
             });
             
-            const leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
-            const rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
-            
-            leftEye.position.set(-0.7, 0.3, 1);
-            rightEye.position.set(0.7, 0.3, 1);
-            
-            skull.add(leftEye);
-            skull.add(rightEye);
+            const window = new THREE.Mesh(windowGeometry, windowMaterial);
+            window.position.set(windowX, towerHeight / 4, windowZ);
+            window.lookAt(tower.position.clone().add(new THREE.Vector3(windowX * 2, towerHeight / 4, windowZ * 2)));
+            tower.add(window);
         }
         
-        // Add chains
-        const chainCount = 6;
-        for (let i = 0; i < chainCount; i++) {
-            const chainGroup = new THREE.Group();
-            const linkCount = 10;
+        // Add a decorative top to the tower
+        const topRadius = towerRadius * 1.2;
+        const topHeight = towerRadius * 0.8;
+        
+        const topGeometry = new THREE.CylinderBufferGeometry(
+            topRadius * 0.8, topRadius, topHeight, towerSegments, 2, false
+        );
+        
+        const topMaterial = new THREE.MeshStandardMaterial({
+            color: 0xcd5c5c, // Indian Red
+            roughness: 0.6,
+            metalness: 0.4,
+            flatShading: true
+        });
+        
+        const top = new THREE.Mesh(topGeometry, topMaterial);
+        top.position.y = towerHeight / 2 + topHeight / 2;
+        tower.add(top);
+        
+        // Add a flaming effect on top of the tower
+        const flameHeight = 12;
+        const flameRadius = towerRadius * 0.7;
+        
+        // Create a more interesting flame shape
+        const flameGeometry = new THREE.ConeBufferGeometry(
+            flameRadius, flameHeight, 16, 8, false
+        );
+        
+        // Apply noise to the flame vertices for a more natural look
+        const flamePositions = flameGeometry.attributes.position;
+        const flameVertices = flamePositions.count;
+        
+        for (let j = 0; j < flameVertices; j++) {
+            const idx = j * 3;
+            const x = flamePositions.array[idx];
+            const y = flamePositions.array[idx + 1];
+            const z = flamePositions.array[idx + 2];
             
-            for (let j = 0; j < linkCount; j++) {
-                const linkGeometry = new THREE.TorusBufferGeometry(1, 0.3, 8, 16);
-                const linkMaterial = new THREE.MeshPhongMaterial({
-                    color: 0x444444,
-                    shininess: 30
-                });
-                
-                const link = new THREE.Mesh(linkGeometry, linkMaterial);
-                link.position.y = -j * 2;
-                link.rotation.x = (j % 2) * Math.PI / 2;
-                chainGroup.add(link);
-            }
+            // Apply noise based on position
+            const noiseScale = 0.5;
+            const noise = (Math.sin(x * noiseScale * 5 + y * noiseScale * 3) + 
+                          Math.cos(z * noiseScale * 5 + y * noiseScale * 3)) * flameRadius * 0.3;
             
-            const x = (i - chainCount/2 + 0.5) * (gateWidth/chainCount);
-            chainGroup.position.set(x, gateHeight * 0.8, gateDepth/2);
-            hellsGateGroup.add(chainGroup);
+            // Apply more noise to the middle than the top or bottom
+            const yFactor = 1 - Math.abs(y) / (flameHeight * 0.5);
+            flamePositions.array[idx] += noise * yFactor;
+            flamePositions.array[idx + 2] += noise * yFactor;
         }
-    };
-    
-    addDecorations();
-    
-    // Add particle effects
-    const createParticleSystem = () => {
-        const particleCount = 200;
+        
+        // Update normals
+        flameGeometry.computeVertexNormals();
+        
+        // Create a more realistic flame material with emissive properties
+        const flameMaterial = new THREE.MeshStandardMaterial({
+            color: 0xff6347, // Tomato
+            transparent: true,
+            opacity: 0.8,
+            emissive: 0xff4500,
+            emissiveIntensity: 0.8,
+            flatShading: true
+        });
+        
+        const flame = new THREE.Mesh(flameGeometry, flameMaterial);
+        flame.position.y = towerHeight / 2 + topHeight + flameHeight / 2;
+        tower.add(flame);
+        
+        // Add flame particles
+        const particleCount = 50;
         const particlesGeometry = new THREE.BufferGeometry();
         const positions = new Float32Array(particleCount * 3);
-        const colors = new Float32Array(particleCount * 3);
         const sizes = new Float32Array(particleCount);
+        const colors = new Float32Array(particleCount * 3);
+        const velocities = new Float32Array(particleCount * 3);
         
-        for (let i = 0; i < particleCount; i++) {
-            const x = (Math.random() - 0.5) * gateWidth;
-            const y = Math.random() * gateHeight;
-            const z = (Math.random() - 0.5) * gateDepth;
+        for (let j = 0; j < particleCount; j++) {
+            const theta = Math.random() * Math.PI * 2;
+            const r = Math.random() * flameRadius * 0.7;
+            positions[j * 3] = Math.cos(theta) * r;
+            positions[j * 3 + 1] = towerHeight / 2 + topHeight + flameHeight / 2 + Math.random() * 2;
+            positions[j * 3 + 2] = Math.sin(theta) * r;
             
-            positions[i * 3] = x;
-            positions[i * 3 + 1] = y;
-            positions[i * 3 + 2] = z;
+            sizes[j] = Math.random() * 2 + 1;
             
-            const temp = Math.random();
-            colors[i * 3] = Math.min(1, 0.5 + temp * 0.5);     // Red
-            colors[i * 3 + 1] = Math.max(0, temp * 0.3);       // Green
-            colors[i * 3 + 2] = Math.max(0, temp * 0.1);       // Blue
+            // Create a gradient of colors from yellow to red
+            const colorFactor = Math.random();
+            colors[j * 3] = 1.0; // Red always high
+            colors[j * 3 + 1] = Math.random() * 0.5 + 0.2; // Green varies
+            colors[j * 3 + 2] = Math.random() * 0.1; // Blue very low
             
-            sizes[i] = Math.random() * 2 + 1;
+            velocities[j * 3] = (Math.random() - 0.5) * 0.05;
+            velocities[j * 3 + 1] = Math.random() * 0.15 + 0.05;
+            velocities[j * 3 + 2] = (Math.random() - 0.5) * 0.05;
         }
         
         particlesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-        particlesGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
         particlesGeometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+        particlesGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
         
         const particlesMaterial = new THREE.PointsMaterial({
             size: 2,
             vertexColors: true,
             transparent: true,
-            opacity: 0.6,
-            sizeAttenuation: true,
-            blending: THREE.AdditiveBlending
+            opacity: 0.8,
+            sizeAttenuation: true
         });
         
         const particles = new THREE.Points(particlesGeometry, particlesMaterial);
-        particles.userData.baseHeight = gateHeight * 0.4;
-        hellsGateGroup.add(particles);
-
-        // Register effects with animation system
-        if (animations) {
-            animations.registerHellsGateEffects(particles, null);
-        }
-    };
-    
-    createParticleSystem();
-    
-    // Add glowing portal effect
-    const portalGeometry = new THREE.PlaneBufferGeometry(gateWidth * 0.8, gateHeight * 0.6);
-    const portalMaterial = new THREE.MeshPhongMaterial({
-        color: 0xff0000,
-        emissive: 0xff0000,
-        emissiveIntensity: 0.5,
-        transparent: true,
-        opacity: 0.3,
-        side: THREE.DoubleSide
-    });
-    
-    const portal = new THREE.Mesh(portalGeometry, portalMaterial);
-    portal.position.set(0, gateHeight * 0.4, 0);
-    hellsGateGroup.add(portal);
-
-    // Register effects with animation system
-    if (animations) {
-        animations.registerHellsGateEffects(null, portal);
+        particles.userData.velocities = velocities;
+        particles.userData.originalPositions = positions.slice();
+        tower.add(particles);
     }
+    
+    // Add decorative elements to the base
+    const decorationCount = 8;
+    
+    for (let i = 0; i < decorationCount; i++) {
+        const angle = (i / decorationCount) * Math.PI * 2;
+        const x = Math.cos(angle) * baseRadius * 0.8;
+        const z = Math.sin(angle) * baseRadius * 0.8;
+        
+        // Create a decorative pillar
+        const pillarRadius = 2;
+        const pillarHeight = 15;
+        
+        const pillarGeometry = new THREE.CylinderBufferGeometry(
+            pillarRadius, pillarRadius * 1.2, pillarHeight, 8, 2, false
+        );
+        
+        const pillarMaterial = new THREE.MeshStandardMaterial({
+            color: 0xcd5c5c, // Indian Red
+            roughness: 0.7,
+            metalness: 0.3,
+            flatShading: true
+        });
+        
+        const pillar = new THREE.Mesh(pillarGeometry, pillarMaterial);
+        pillar.position.set(x, baseHeight / 2 + pillarHeight / 2, z);
+        hellsGateGroup.add(pillar);
+        
+        // Add a decorative top to the pillar
+        const topRadius = pillarRadius * 1.5;
+        const topHeight = pillarRadius * 0.8;
+        
+        const topGeometry = new THREE.CylinderBufferGeometry(
+            topRadius * 0.8, topRadius, topHeight, 8, 1, false
+        );
+        
+        const topMaterial = new THREE.MeshStandardMaterial({
+            color: 0x8b0000, // Dark red
+            roughness: 0.6,
+            metalness: 0.4,
+            flatShading: true
+        });
+        
+        const top = new THREE.Mesh(topGeometry, topMaterial);
+        top.position.set(x, baseHeight / 2 + pillarHeight + topHeight / 2, z);
+        hellsGateGroup.add(top);
+        
+        // Add a small flame on top of some pillars
+        if (i % 2 === 0) {
+            const flameHeight = 5;
+            const flameRadius = pillarRadius * 0.7;
+            
+            const flameGeometry = new THREE.ConeBufferGeometry(
+                flameRadius, flameHeight, 8, 2, false
+            );
+            
+            const flameMaterial = new THREE.MeshBasicMaterial({
+                color: 0xff6347, // Tomato
+                transparent: true,
+                opacity: 0.8,
+                emissive: 0xff4500,
+                emissiveIntensity: 0.5
+            });
+            
+            const flame = new THREE.Mesh(flameGeometry, flameMaterial);
+            flame.position.set(x, baseHeight / 2 + pillarHeight + topHeight + flameHeight / 2, z);
+            hellsGateGroup.add(flame);
+        }
+    }
+    
+    // Add the gate group to the main group
+    hellsGateGroup.add(gateGroup);
     
     // Position Hell's Gate
     const position = CONFIG.positions.western.hellsGate;
@@ -855,7 +1314,7 @@ function createHellsGate(scene, labelSystem, animations) {
     scene.add(hellsGateGroup);
     
     // Add label
-    labelSystem.addLabel(hellsGateGroup, "Hell's Gate", CONFIG.colors.hellsGate);
+    labelSystem.addLabel(hellsGateGroup, "Hell's End Gate", CONFIG.colors.hellsGate);
     
     return hellsGateGroup;
 }
