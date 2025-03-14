@@ -417,7 +417,7 @@ function createHellsGate(scene, labelSystem) {
     const hellsGateGroup = new THREE.Group();
 
     // Create base using Fire Islands-style geometry
-    const baseGeometry = new THREE.CylinderGeometry(50, 55, 4, 32, 8);
+    const baseGeometry = new THREE.CylinderGeometry(50, 55, 14, 32, 8); // Increased height from 4 to 14
     const vertices = baseGeometry.attributes.position.array;
     
     // Add terrain displacement similar to Fire Islands
@@ -443,6 +443,7 @@ function createHellsGate(scene, labelSystem) {
     
     const base = new THREE.Mesh(baseGeometry, baseMaterial);
     base.scale.z = 4; // Stretch north-south
+    base.position.y = -10; // Lower the base by 10 units
     hellsGateGroup.add(base);
 
     // Create main platform with detailed geometry
