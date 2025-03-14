@@ -76,6 +76,28 @@ export function setupAnimations(camera, controls, labelSystem, renderer, scene, 
         scene.traverse(object => {
             if (object instanceof THREE.Points) {
                 const positions = object.geometry.attributes.position.array;
+                
+                // Initialize velocities if they don't exist
+                if (!object.userData.velocities) {
+                    const velocities = new Float32Array(positions.length);
+                    for (let i = 0; i < positions.length; i += 3) {
+                        // Add some gentle upward and random horizontal movement
+                        velocities[i] = (Math.random() - 0.5) * 0.05;     // X velocity
+                        velocities[i + 1] = Math.random() * 0.1;          // Y velocity (upward)
+                        velocities[i + 2] = (Math.random() - 0.5) * 0.05; // Z velocity
+                    }
+                    object.userData.velocities = velocities;
+                }
+                
+                // Store original positions if they don't exist
+                if (!object.userData.originalPositions) {
+                    const originalPositions = new Float32Array(positions.length);
+                    for (let i = 0; i < positions.length; i++) {
+                        originalPositions[i] = positions[i];
+                    }
+                    object.userData.originalPositions = originalPositions;
+                }
+                
                 const velocities = object.userData.velocities;
                 const originalPositions = object.userData.originalPositions;
                 
