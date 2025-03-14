@@ -442,8 +442,8 @@ function createHellsGate(scene, labelSystem) {
     });
     
     const base = new THREE.Mesh(baseGeometry, baseMaterial);
-    base.scale.z = 4; // Stretch north-south
-    base.position.y = -10; // Lower the base by 10 units
+    base.scale.z = 3.2; // Stretch north-south (reduced from 4 to bring edges in by 40 units)
+    base.position.y = -15; // Lower the base by 15 units (additional 5 units down)
     hellsGateGroup.add(base);
 
     // Create main platform with detailed geometry
