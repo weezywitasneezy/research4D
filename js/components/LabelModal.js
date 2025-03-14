@@ -79,6 +79,7 @@ export class LabelModal {
     }
 
     show(labelId) {
+        // Use the exact label text as the key
         const content = labelContent[labelId];
         if (!content) {
             console.error(`No content found for label: ${labelId}`);

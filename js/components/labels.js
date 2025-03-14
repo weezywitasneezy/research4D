@@ -67,9 +67,8 @@ export function setupLabelSystem(container) {
         // Add click event for modal interaction
         const clickHandler = () => {
             console.log(`Clicked on: ${text}`);
-            // Convert text to kebab case for ID
-            const labelId = text.toLowerCase().replace(/\s+/g, '-');
-            modal.show(labelId);
+            // Use the exact text as the key
+            modal.show(text);
         };
         
         // Store handlers for cleanup
