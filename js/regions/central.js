@@ -530,8 +530,8 @@ function createForestedIslands(scene, labelSystem) {
         createForestedIsland(80, -100, 11),   // Reduced size, moved further out
         createForestedIsland(-80, -90, 10),   // Reduced size, moved further out
         createForestedIsland(0, -180, 13),    // Reduced size, moved further out
-        createForestedIsland(-40, -120, 9),   // Reduced size
-        createForestedIsland(40, -130, 9)     // Reduced size
+        createForestedIsland(-40, -200, 9),   // Moved 80 units south
+        createForestedIsland(40, -210, 9)     // Moved 80 units south
     ];
     
     // Add label to the first forested island
