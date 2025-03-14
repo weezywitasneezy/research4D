@@ -525,13 +525,13 @@ function createForestedIslands(scene, labelSystem) {
 
     // Create several forested islands with varying sizes
     const forestedIslands = [
-        createForestedIsland(-40, -150, 15),  // Large main island
-        createForestedIsland(40, -160, 12),   // Medium island
-        createForestedIsland(50, -100, 14),   // Medium-large island
-        createForestedIsland(-50, -90, 13),   // Medium island
-        createForestedIsland(0, -165, 16),    // Largest island
-        createForestedIsland(-20, -120, 10),  // Small island
-        createForestedIsland(30, -130, 11)    // Small-medium island
+        createForestedIsland(-60, -150, 12),  // Reduced size, moved further out
+        createForestedIsland(60, -160, 10),   // Reduced size, moved further out
+        createForestedIsland(80, -100, 11),   // Reduced size, moved further out
+        createForestedIsland(-80, -90, 10),   // Reduced size, moved further out
+        createForestedIsland(0, -180, 13),    // Reduced size, moved further out
+        createForestedIsland(-40, -120, 9),   // Reduced size
+        createForestedIsland(40, -130, 9)     // Reduced size
     ];
     
     // Add label to the first forested island
