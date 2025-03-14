@@ -416,6 +416,35 @@ function createHellsEnd(scene, labelSystem) {
 function createHellsGate(scene, labelSystem) {
     const hellsGateGroup = new THREE.Group();
 
+    // Create terrain base that stretches north-south
+    const terrainGeometry = new THREE.PlaneGeometry(40, 400, 40, 200);
+    const terrainVertices = terrainGeometry.attributes.position.array;
+    
+    // Add terrain details
+    for (let i = 0; i < terrainVertices.length; i += 3) {
+        const x = terrainVertices[i];
+        const z = terrainVertices[i + 2];
+        
+        // Create terrain variation
+        terrainVertices[i + 1] = 
+            Math.sin(x * 0.2) * Math.cos(z * 0.1) * 3 + // Base waves
+            Math.sin(x * 0.5 + z * 0.3) * 2 + // Medium details
+            (Math.random() - 0.5) * 1; // Small variations
+    }
+    
+    terrainGeometry.computeVertexNormals();
+    
+    const terrainMaterial = new THREE.MeshStandardMaterial({
+        color: CONFIG.colors.hellsGate,
+        roughness: 0.8,
+        metalness: 0.2,
+        flatShading: true
+    });
+    
+    const terrain = new THREE.Mesh(terrainGeometry, terrainMaterial);
+    terrain.rotation.x = -Math.PI / 2;
+    hellsGateGroup.add(terrain);
+
     // Create main platform with detailed geometry
     const platformGeometry = new THREE.CylinderGeometry(25, 28, 8, 16, 2);
     const vertices = platformGeometry.attributes.position.array;
@@ -445,6 +474,7 @@ function createHellsGate(scene, labelSystem) {
         flatShading: true
     });
     const platform = new THREE.Mesh(platformGeometry, platformMaterial);
+    platform.position.y = 4; // Raise slightly above terrain
     hellsGateGroup.add(platform);
 
     // Create main gate structure with intricate details
@@ -616,7 +646,9 @@ function createHellsGate(scene, labelSystem) {
     gateGroup.add(createConnector(-16));
     gateGroup.add(createConnector(16));
 
-    // Add the gate group to main group
+    // Add the gate group to main group and rotate it to face west
+    gateGroup.rotation.y = Math.PI / 2;
+    gateGroup.position.x = -20; // Move it to the edge of the platform
     hellsGateGroup.add(gateGroup);
 
     // Position Hell's Gate
