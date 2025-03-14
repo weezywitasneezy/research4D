@@ -366,19 +366,6 @@ function createHellsEnd(scene, labelSystem) {
         const volcano = new THREE.Mesh(volcanoGeometry, volcanoMaterial);
         volcano.position.set(x, height/2, z);
         
-        // Add crater
-        const craterGeometry = new THREE.CylinderGeometry(radius * 0.3, radius * 0.4, height * 0.1, 16);
-        const craterMaterial = new THREE.MeshStandardMaterial({
-            color: 0x3a0000,
-            roughness: 0.9,
-            metalness: 0.1,
-            flatShading: true
-        });
-        
-        const crater = new THREE.Mesh(craterGeometry, craterMaterial);
-        crater.position.y = height/2;
-        volcano.add(crater);
-        
         return volcano;
     };
 
@@ -605,19 +592,6 @@ function createHellsGate(scene, labelSystem) {
             const top = new THREE.Mesh(topGeometry, topMaterial);
             top.position.y = 30;
             towerGroup.add(top);
-            
-            // Flame effect
-            const flameGeometry = new THREE.ConeGeometry(3, 8, 16);
-            const flameMaterial = new THREE.MeshStandardMaterial({
-                color: 0xff6347,
-                emissive: 0xff4500,
-                emissiveIntensity: 0.8,
-                transparent: true,
-                opacity: 0.9
-            });
-            const flame = new THREE.Mesh(flameGeometry, flameMaterial);
-            flame.position.y = 35;
-            towerGroup.add(flame);
         };
         
         addTowerDecorations();
@@ -665,49 +639,40 @@ function createHellsGate(scene, labelSystem) {
 
 // Add volcanic features to Hell's End (optional enhancement)
 export function addVolcanicFeatures(scene, hellsEnd) {
-const hellsEndGroup = new THREE.Group();
+    const hellsEndGroup = new THREE.Group();
 
-// Base is the existing Hell's End continent
-hellsEndGroup.add(hellsEnd);
+    // Base is the existing Hell's End continent
+    hellsEndGroup.add(hellsEnd);
 
-// Add volcanoes
-const createVolcano = (x, z, height, radius) => {
-    // Volcano cone
-    const coneGeometry = new THREE.ConeGeometry(radius, height, 8);
-    const coneMaterial = new THREE.MeshLambertMaterial({ 
-        color: 0x8B0000 // Dark red
-    });
-    const cone = new THREE.Mesh(coneGeometry, coneMaterial);
-    
-    // Position the volcano relative to Hell's End
-    cone.position.set(x, height/2 + 7.5, z); // 7.5 is half the height of Hell's End
-    hellsEndGroup.add(cone);
-    
-    // Add crater
-    const craterGeometry = new THREE.CylinderGeometry(radius * 0.3, radius * 0.5, height * 0.2, 8);
-    const craterMaterial = new THREE.MeshBasicMaterial({ 
-        color: 0xFF4500 // Orange red
-    });
-    const crater = new THREE.Mesh(craterGeometry, craterMaterial);
-    crater.position.set(x, height + 5, z);
-    hellsEndGroup.add(crater);
-    
-    return cone;
-};
+    // Add volcanoes
+    const createVolcano = (x, z, height, radius) => {
+        // Volcano cone
+        const coneGeometry = new THREE.ConeGeometry(radius, height, 8);
+        const coneMaterial = new THREE.MeshLambertMaterial({ 
+            color: 0x8B0000 // Dark red
+        });
+        const cone = new THREE.Mesh(coneGeometry, coneMaterial);
+        
+        // Position the volcano relative to Hell's End
+        cone.position.set(x, height/2 + 7.5, z); // 7.5 is half the height of Hell's End
+        hellsEndGroup.add(cone);
+        
+        return cone;
+    };
 
-// Create several volcanoes on Hell's End
-createVolcano(-40, -150, 30, 15);
-createVolcano(-40, 0, 25, 12);
-createVolcano(-40, 150, 35, 18);
-createVolcano(40, -180, 28, 14);
-createVolcano(40, 50, 32, 16);
+    // Create several volcanoes on Hell's End
+    createVolcano(-40, -150, 30, 15);
+    createVolcano(-40, 0, 25, 12);
+    createVolcano(-40, 150, 35, 18);
+    createVolcano(40, -180, 28, 14);
+    createVolcano(40, 50, 32, 16);
 
-// Position the entire group
-const position = CONFIG.positions.western.hellsEnd;
-hellsEndGroup.position.set(position.x, position.y, position.z);
-scene.add(hellsEndGroup);
+    // Position the entire group
+    const position = CONFIG.positions.western.hellsEnd;
+    hellsEndGroup.position.set(position.x, position.y, position.z);
+    scene.add(hellsEndGroup);
 
-return hellsEndGroup;
+    return hellsEndGroup;
 }
 
 console.log('Western regions module loaded!');
