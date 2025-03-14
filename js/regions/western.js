@@ -177,53 +177,24 @@ function createFireIslands(scene, labelSystem) {
 
     // Create multiple volcanic islands of varying sizes
     const islands = [
-        createVolcanicIsland(30, 20, 0, 0, 1.0),      // Main central island
-        createVolcanicIsland(20, 15, -50, 30, 0.8),   // Secondary island
-        createVolcanicIsland(25, 18, 40, -20, 0.9),   // Third island
-        createVolcanicIsland(15, 12, -20, -40, 0.7),  // Small island
-        createVolcanicIsland(18, 14, 30, 40, 0.75)    // Another small island
+        createVolcanicIsland(30, 20, 0, 0, 1.0),          // Main central island
+        createVolcanicIsland(20, 15, -70, 60, 0.8),       // Secondary island, further out
+        createVolcanicIsland(25, 18, 60, -40, 0.9),       // Third island, spread east
+        createVolcanicIsland(15, 12, -40, -80, 0.7),      // Small island, further south
+        createVolcanicIsland(18, 14, 40, -100, 0.75)      // Another small island, far south
     ];
 
     // Add all islands to the group
     islands.forEach(island => fireIslandsGroup.add(island));
 
-    // Add connecting lava flows between some islands
-    function createLavaFlow(startX, startZ, endX, endZ) {
-        const points = [];
-        points.push(new THREE.Vector3(startX, 2, startZ));
-        
-        // Add some control points for a more natural curve
-        const midX = (startX + endX) / 2;
-        const midZ = (startZ + endZ) / 2;
-        points.push(new THREE.Vector3(
-            midX + (Math.random() - 0.5) * 20,
-            1,
-            midZ + (Math.random() - 0.5) * 20
-        ));
-        
-        points.push(new THREE.Vector3(endX, 2, endZ));
-
-        const curve = new THREE.CatmullRomCurve3(points);
-        const geometry = new THREE.TubeGeometry(curve, 20, 3, 8, false);
-        const material = new THREE.MeshBasicMaterial({
-            color: 0xff4500,
-            transparent: true,
-            opacity: 0.7
-        });
-        
-        const flow = new THREE.Mesh(geometry, material);
-        fireIslandsGroup.add(flow);
-    }
-
-    // Add some lava flows between islands
-    createLavaFlow(0, 0, -50, 30);
-    createLavaFlow(-50, 30, -20, -40);
-    createLavaFlow(0, 0, 40, -20);
-    createLavaFlow(40, -20, 30, 40);
-
     // Position the entire fire islands group
     const position = CONFIG.positions.western.fireIslands;
-    fireIslandsGroup.position.set(position.x, position.y, position.z);
+    // Shift the entire group south
+    fireIslandsGroup.position.set(
+        position.x,
+        position.y,
+        position.z + 50  // Move 50 units south
+    );
     scene.add(fireIslandsGroup);
     
     // Add label
