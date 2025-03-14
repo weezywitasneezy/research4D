@@ -300,20 +300,22 @@ function createFireIslands(scene, labelSystem) {
 function createHellsEnd(scene, labelSystem) {
     const hellsEndGroup = new THREE.Group();
 
-    // Main continent base with displacement
-    const hellsEndGeometry = new THREE.PlaneGeometry(100, 400, 50, 200);
+    // Main continent base with enhanced displacement
+    const hellsEndGeometry = new THREE.PlaneGeometry(100, 400, 100, 400); // Increased resolution
     const vertices = hellsEndGeometry.attributes.position.array;
     
-    // Create dramatic terrain displacement
+    // Create dramatic terrain displacement across the entire continent
     for (let i = 0; i < vertices.length; i += 3) {
         const x = vertices[i];
         const z = vertices[i + 2];
         
-        // Create various terrain features
+        // Create various terrain features with improved variation
         vertices[i + 1] = 
-            Math.sin(x * 0.1) * Math.cos(z * 0.1) * 5 + // Base terrain
-            Math.sin(x * 0.2 + z * 0.3) * 3 + // Rocky outcrops
-            (Math.random() - 0.5) * 2; // Random variation
+            Math.sin(x * 0.1) * Math.cos(z * 0.1) * 8 + // Base terrain waves
+            Math.sin(x * 0.3 + z * 0.2) * 4 + // Medium terrain features
+            Math.sin(x * 0.8 + z * 0.7) * 2 + // Small terrain details
+            (Math.random() - 0.5) * 3 + // Random variation
+            Math.sin(Math.sqrt(x * x + z * z) * 0.2) * 5; // Radial elevation changes
     }
 
     hellsEndGeometry.computeVertexNormals();
@@ -329,128 +331,75 @@ function createHellsEnd(scene, labelSystem) {
     hellsEndBase.rotation.x = -Math.PI / 2;
     hellsEndGroup.add(hellsEndBase);
 
-    // Create volcanic mountain ranges
-    const createVolcanicRange = (startX, startZ, length, direction) => {
-        const rangeGroup = new THREE.Group();
-        const peakCount = Math.floor(length / 30);
+    // Create more natural volcanic mountains
+    const createVolcano = (x, z) => {
+        const height = 15 + Math.random() * 20;
+        const radius = 8 + Math.random() * 12;
         
-        for (let i = 0; i < peakCount; i++) {
-            const progress = i / (peakCount - 1);
-            const x = startX + direction.x * progress * length;
-            const z = startZ + direction.z * progress * length;
+        // Create main volcano cone with detailed surface
+        const volcanoGeometry = new THREE.ConeGeometry(radius, height, 16, 8);
+        const volcanoVertices = volcanoGeometry.attributes.position.array;
+        
+        // Add surface detail to volcano
+        for (let i = 0; i < volcanoVertices.length; i += 3) {
+            const angle = Math.atan2(volcanoVertices[i], volcanoVertices[i + 2]);
+            const heightPercent = (volcanoVertices[i + 1] + height/2) / height;
             
-            // Create main volcano cone
-            const height = 25 + Math.sin(progress * Math.PI) * 15;
-            const radius = 10 + Math.sin(progress * Math.PI) * 5;
+            const displacement = 
+                Math.sin(angle * 8 + heightPercent * 10) * 0.15 + // Vertical ridges
+                Math.cos(heightPercent * 15) * 0.1 + // Horizontal bands
+                (Math.random() - 0.5) * 0.1; // Random variation
             
-            const volcanoGeometry = new THREE.ConeGeometry(radius, height, 12);
-            const volcanoMaterial = new THREE.MeshStandardMaterial({
-                color: 0x8b0000,
-                roughness: 0.7,
-                metalness: 0.3
-            });
-            
-            const volcano = new THREE.Mesh(volcanoGeometry, volcanoMaterial);
-            volcano.position.set(x, height/2, z);
-            
-            // Add crater
-            const craterRadius = radius * 0.4;
-            const craterGeometry = new THREE.CylinderGeometry(craterRadius, craterRadius * 1.2, height * 0.2, 12);
-            const craterMaterial = new THREE.MeshStandardMaterial({
-                color: 0xff4500,
-                emissive: 0xff2200,
-                emissiveIntensity: 0.5
-            });
-            
-            const crater = new THREE.Mesh(craterGeometry, craterMaterial);
-            crater.position.y = height/2;
-            volcano.add(crater);
-            
-            // Add lava particles with proper velocity setup
-            const particleCount = 50;
-            const particlesGeometry = new THREE.BufferGeometry();
-            const positions = new Float32Array(particleCount * 3);
-            const colors = new Float32Array(particleCount * 3);
-            const velocities = new Float32Array(particleCount * 3);
-            
-            for (let p = 0; p < particleCount; p++) {
-                const theta = Math.random() * Math.PI * 2;
-                const r = Math.random() * craterRadius;
-                
-                positions[p * 3] = Math.cos(theta) * r;
-                positions[p * 3 + 1] = height/2 + Math.random() * 2;
-                positions[p * 3 + 2] = Math.sin(theta) * r;
-                
-                colors[p * 3] = 1;  // R
-                colors[p * 3 + 1] = 0.3 + Math.random() * 0.4;  // G
-                colors[p * 3 + 2] = 0;  // B
-                
-                // Add velocities for animation
-                velocities[p * 3] = (Math.random() - 0.5) * 0.1;     // X velocity
-                velocities[p * 3 + 1] = Math.random() * 0.2;         // Y velocity
-                velocities[p * 3 + 2] = (Math.random() - 0.5) * 0.1; // Z velocity
-            }
-            
-            particlesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-            particlesGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-            
-            const particlesMaterial = new THREE.PointsMaterial({
-                size: 0.5,
-                vertexColors: true,
-                transparent: true,
-                opacity: 0.8
-            });
-            
-            const particles = new THREE.Points(particlesGeometry, particlesMaterial);
-            particles.userData.velocities = velocities;
-            particles.userData.originalPositions = positions.slice();
-            crater.add(particles);
-            
-            // Add rock formations around base
-            for (let j = 0; j < 8; j++) {
-                const angle = (j / 8) * Math.PI * 2;
-                const rockRadius = radius * (0.8 + Math.random() * 0.4);
-                const rockHeight = height * (0.2 + Math.random() * 0.3);
-                
-                const rockGeometry = new THREE.ConeGeometry(
-                    rockRadius * 0.2,
-                    rockHeight,
-                    4 + Math.floor(Math.random() * 3)
-                );
-                
-                const rockMaterial = new THREE.MeshStandardMaterial({
-                    color: 0x8b0000,
-                    roughness: 0.9,
-                    metalness: 0.1,
-                    flatShading: true
-                });
-                
-                const rock = new THREE.Mesh(rockGeometry, rockMaterial);
-                rock.position.set(
-                    Math.cos(angle) * rockRadius,
-                    rockHeight/2,
-                    Math.sin(angle) * rockRadius
-                );
-                rock.rotation.y = Math.random() * Math.PI;
-                rock.rotation.z = (Math.random() - 0.5) * 0.3;
-                volcano.add(rock);
-            }
-            
-            rangeGroup.add(volcano);
+            volcanoVertices[i] *= (1 + displacement);
+            volcanoVertices[i + 2] *= (1 + displacement);
         }
         
-        return rangeGroup;
+        volcanoGeometry.computeVertexNormals();
+        
+        const volcanoMaterial = new THREE.MeshStandardMaterial({
+            color: 0x8b0000,
+            roughness: 0.7,
+            metalness: 0.3,
+            flatShading: true
+        });
+        
+        const volcano = new THREE.Mesh(volcanoGeometry, volcanoMaterial);
+        volcano.position.set(x, height/2, z);
+        
+        // Add crater
+        const craterGeometry = new THREE.CylinderGeometry(radius * 0.3, radius * 0.4, height * 0.1, 16);
+        const craterMaterial = new THREE.MeshStandardMaterial({
+            color: 0x3a0000,
+            roughness: 0.9,
+            metalness: 0.1,
+            flatShading: true
+        });
+        
+        const crater = new THREE.Mesh(craterGeometry, craterMaterial);
+        crater.position.y = height/2;
+        volcano.add(crater);
+        
+        return volcano;
     };
 
-    // Add multiple volcanic ranges
-    const ranges = [
-        createVolcanicRange(-40, -150, 300, { x: 0, z: 1 }),
-        createVolcanicRange(40, -150, 300, { x: 0, z: 1 }),
-        createVolcanicRange(-20, -100, 200, { x: 1, z: 1 }),
-        createVolcanicRange(20, -100, 200, { x: -1, z: 1 })
-    ];
+    // Add randomly placed volcanoes
+    const numVolcanoes = 12; // Reduced number of volcanoes
+    const usedPositions = new Set();
     
-    ranges.forEach(range => hellsEndGroup.add(range));
+    for (let i = 0; i < numVolcanoes; i++) {
+        let x, z;
+        do {
+            x = (Math.random() - 0.5) * 80; // Spread across width
+            z = (Math.random() - 0.5) * 380; // Spread across length
+            // Ensure minimum distance between volcanoes
+        } while (Array.from(usedPositions).some(pos => {
+            const [px, pz] = pos.split(',').map(Number);
+            return Math.sqrt((x - px) ** 2 + (z - pz) ** 2) < 40;
+        }));
+        
+        usedPositions.add(`${x},${z}`);
+        hellsEndGroup.add(createVolcano(x, z));
+    }
 
     // Position Hell's End
     const position = CONFIG.positions.western.hellsEnd;
