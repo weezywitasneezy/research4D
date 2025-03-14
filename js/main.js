@@ -6,8 +6,8 @@ import { setupAnimations } from './components/animations.js';
 import { setupZoomControls } from './components/zoom.js';
 import { setupDirectionMarkers } from './components/directionMarkers.js';
 import { createEasternContinent } from './regions/eastern.js';
-import { createCentralContinent } from './regions/central.js';
-import { createWesternContinent } from './regions/western.js';
+import { createCentralIslands } from './regions/central.js';
+import { createWesternRegion } from './regions/western.js';
 import { createUnderwaterStructures } from './regions/underwater.js';
 import { createSkyStructures } from './regions/sky.js';
 import { createConnectors } from './core/utils.js';
@@ -47,8 +47,8 @@ export async function initWorldVisualization() {
         // Create regions
         const regions = {
             eastern: createEasternContinent(scene, labelSystem),
-            central: createCentralContinent(scene, labelSystem),
-            western: createWesternContinent(scene, labelSystem),
+            central: createCentralIslands(scene, labelSystem),
+            western: createWesternRegion(scene, labelSystem),
             underwater: createUnderwaterStructures(scene, labelSystem),
             sky: createSkyStructures(scene, labelSystem)
         };
