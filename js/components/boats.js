@@ -29,11 +29,21 @@ export function createBoats(scene, labelSystem) {
         mast.position.set(0, 6.25, 0);
         boatGroup.add(mast);
         
-        // Sail
-        const sailGeometry = new THREE.TriangleGeometry(0, 0, 0, 4, 0, 0, 2, 6, 0);
-        const sailMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff });
+        // Sail (using ShapeGeometry instead of TriangleGeometry)
+        const shape = new THREE.Shape();
+        shape.moveTo(0, 0);
+        shape.lineTo(4, 0);
+        shape.lineTo(2, 6);
+        shape.lineTo(0, 0);
+        
+        const sailGeometry = new THREE.ShapeGeometry(shape);
+        const sailMaterial = new THREE.MeshLambertMaterial({ 
+            color: 0xffffff,
+            side: THREE.DoubleSide
+        });
         const sail = new THREE.Mesh(sailGeometry, sailMaterial);
         sail.position.set(0, 6.25, 0);
+        sail.rotation.z = Math.PI / 2; // Rotate to face forward
         boatGroup.add(sail);
         
         return boatGroup;
