@@ -12,6 +12,9 @@ export function setupLabelSystem(container) {
     
     // Keep track of visibility state
     let labelsVisible = true;
+
+    // Ensure container has correct pointer-event settings
+    container.style.pointerEvents = 'none';
     
     // Function to add a label to a 3D object
     function addLabel(object, text, color) {
@@ -25,10 +28,12 @@ export function setupLabelSystem(container) {
         labelDiv.className = 'label3d';
         labelDiv.textContent = text;
         labelDiv.style.color = cssColor;
+        labelDiv.style.pointerEvents = 'auto';
         
         // Add hover event handlers for enhanced interaction
         const mouseEnterHandler = () => {
             console.log(`Label hover start: ${text}`);
+            isLabelHovered = true;
             
             // Additional hover effects beyond CSS
             labelDiv.style.backgroundColor = 'rgba(20, 20, 30, 0.85)';
@@ -37,23 +42,15 @@ export function setupLabelSystem(container) {
             labelDiv._originalColor = labelDiv.style.color;
             
             // Brighten color on hover
-            if (labelDiv.style.color.startsWith('#')) {
-                // For hex colors
-                labelDiv.style.color = 'white';
-            } else {
-                // For named colors
-                labelDiv.style.color = 'white';
-            }
+            labelDiv.style.color = 'white';
             
             // Add glow animation class
             labelDiv.classList.add('label3d-glow');
-            
-            // Set hover flags
-            isLabelHovered = true;
         };
         
         const mouseLeaveHandler = () => {
             console.log(`Label hover end: ${text}`);
+            isLabelHovered = false;
             
             // Restore original styles
             labelDiv.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
@@ -61,9 +58,6 @@ export function setupLabelSystem(container) {
             
             // Remove glow animation class
             labelDiv.classList.remove('label3d-glow');
-            
-            // Clear hover flags
-            isLabelHovered = false;
         };
         
         // Add click event for future interaction

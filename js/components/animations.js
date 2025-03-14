@@ -34,6 +34,11 @@ export function setupAnimations(camera, controls, labelSystem, renderer, scene, 
         if (CONFIG && CONFIG.animation && CONFIG.animation.dragEnabled === false) {
             return;
         }
+
+        // Don't start dragging if we clicked on a label
+        if (event.target.classList.contains('label3d')) {
+            return;
+        }
         
         isDragging = true;
         previousMousePosition = {
