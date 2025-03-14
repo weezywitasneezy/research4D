@@ -416,35 +416,55 @@ function createHellsEnd(scene, labelSystem) {
 function createHellsGate(scene, labelSystem) {
     const hellsGateGroup = new THREE.Group();
 
-    // Create simple platform base that stretches north-south
-    const baseGeometry = new THREE.BoxGeometry(100, 4, 800);
-    const baseMaterial = new THREE.MeshStandardMaterial({
-        color: 0x8b0000, // Dark red to match the theme
+    // Create detailed platform base that stretches north-south
+    const baseGeometry = new THREE.PlaneGeometry(100, 200, 50, 100); // Reduced length, increased detail resolution
+    const vertices = baseGeometry.attributes.position.array;
+    
+    // Add detailed terrain displacement
+    for (let i = 0; i < vertices.length; i += 3) {
+        const x = vertices[i];
+        const z = vertices[i + 2];
+        
+        // Create various terrain features similar to Hell's End
+        vertices[i + 1] = 
+            Math.sin(x * 0.2) * Math.cos(z * 0.1) * 2 + // Base terrain waves
+            Math.sin(x * 0.5 + z * 0.2) * 1.5 + // Medium terrain features
+            Math.sin(x * 0.8 + z * 0.7) * 0.5 + // Small terrain details
+            (Math.random() - 0.5) * 0.5; // Subtle random variation
+    }
+
+    baseGeometry.computeVertexNormals();
+    
+    const baseMaterial = new THREE.MeshStandardMaterial({ 
+        color: CONFIG.colors.hellsGate,
         roughness: 0.8,
-        metalness: 0.2
+        metalness: 0.2,
+        flatShading: true,
+        side: THREE.DoubleSide
     });
     
     const base = new THREE.Mesh(baseGeometry, baseMaterial);
-    base.position.set(0, -2, 0); // Slightly below ground level
+    base.rotation.x = -Math.PI / 2; // Rotate to be horizontal
+    base.position.y = 0; // Set to grid level
     hellsGateGroup.add(base);
 
     // Create main platform with detailed geometry
-    const platformGeometry = new THREE.CylinderGeometry(25, 28, 8, 16, 2);
-    const vertices = platformGeometry.attributes.position.array;
+    const platformGeometry = new THREE.CylinderGeometry(25, 28, 4, 16, 2); // Reduced height
+    const platformVertices = platformGeometry.attributes.position.array;
     
     // Add platform details
-    for (let i = 0; i < vertices.length; i += 3) {
-        const angle = Math.atan2(vertices[i], vertices[i + 2]);
-        const radius = Math.sqrt(vertices[i] * vertices[i] + vertices[i + 2] * vertices[i + 2]);
+    for (let i = 0; i < platformVertices.length; i += 3) {
+        const angle = Math.atan2(platformVertices[i], platformVertices[i + 2]);
+        const radius = Math.sqrt(platformVertices[i] * platformVertices[i] + platformVertices[i + 2] * platformVertices[i + 2]);
         
         // Add architectural details to the platform
         const displacement = 
             Math.sin(angle * 16) * 0.2 + // Radial patterns
-            Math.cos(angle * 8) * Math.sin(vertices[i + 1] * 2) * 0.3; // Vertical patterns
+            Math.cos(angle * 8) * Math.sin(platformVertices[i + 1] * 2) * 0.3; // Vertical patterns
         
         if (radius > 20) {
-            vertices[i] *= (1 + displacement * 0.1);
-            vertices[i + 2] *= (1 + displacement * 0.1);
+            platformVertices[i] *= (1 + displacement * 0.1);
+            platformVertices[i + 2] *= (1 + displacement * 0.1);
         }
     }
     
@@ -457,7 +477,7 @@ function createHellsGate(scene, labelSystem) {
         flatShading: true
     });
     const platform = new THREE.Mesh(platformGeometry, platformMaterial);
-    platform.position.set(-40, 2, 0); // Raised slightly above the base
+    platform.position.set(-40, 2, 0); // Slightly raised above base
     hellsGateGroup.add(platform);
 
     // Create main gate structure with intricate details
@@ -631,7 +651,7 @@ function createHellsGate(scene, labelSystem) {
 
     // Add the gate group to main group and rotate it to face west
     gateGroup.rotation.y = Math.PI / 2;
-    gateGroup.position.set(-40, 6, 0); // Raised above the platform
+    gateGroup.position.set(-40, 4, 0); // Lowered to be closer to base
     hellsGateGroup.add(gateGroup);
 
     // Position Hell's Gate
