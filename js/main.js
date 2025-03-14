@@ -44,11 +44,17 @@ export async function initWorldVisualization() {
         const labelSystem = setupLabelSystem(labelContainer);
         const controls = setupControls(container);
         
+        // Setup zoom controls
+        const zoomControls = await setupZoomControls(container, camera);
+        
+        // Setup animations first so we can pass it to regions
+        const animations = setupAnimations(camera, controls, labelSystem, renderer, scene, zoomControls);
+        
         // Create regions
         const regions = {
             eastern: createEasternContinent(scene, labelSystem),
             central: createCentralIslands(scene, labelSystem),
-            western: createWesternRegion(scene, labelSystem),
+            western: createWesternRegion(scene, labelSystem, animations),
             underwater: createUnderwaterStructures(scene, labelSystem),
             sky: createSkyStructures(scene, labelSystem)
         };
@@ -58,12 +64,6 @@ export async function initWorldVisualization() {
         
         // Setup direction markers
         const directionMarkers = await setupDirectionMarkers(scene);
-        
-        // Setup zoom controls
-        const zoomControls = await setupZoomControls(container, camera);
-        
-        // Setup animations
-        setupAnimations(camera, controls, labelSystem, renderer, scene, zoomControls);
         
         // Create world elements
         const boats = createBoats(scene, labelSystem);
@@ -82,6 +82,7 @@ export async function initWorldVisualization() {
             if (labelSystem && labelSystem.cleanup) labelSystem.cleanup();
             if (zoomControls && zoomControls.cleanup) zoomControls.cleanup();
             if (directionMarkers && directionMarkers.cleanup) directionMarkers.cleanup();
+            if (animations && animations.cleanup) animations.cleanup();
             
             // Remove label toggle event listener
             window.removeEventListener('toggleLabels', handleLabelToggle);

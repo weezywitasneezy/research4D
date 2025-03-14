@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { CONFIG } from '../core/config.js';
 
 // Create Western regions and related structures
-export function createWesternRegion(scene, labelSystem) {
+export function createWesternRegion(scene, labelSystem, animations) {
     // Need to check if CONFIG is available
     if (typeof CONFIG === 'undefined') {
         console.error('CONFIG is not defined. Make sure config.js is loaded first.');
@@ -11,16 +11,16 @@ export function createWesternRegion(scene, labelSystem) {
     }
     
     const elements = {
-        fireIslands: createFireIslands(scene, labelSystem),
-        hellsEnd: createHellsEnd(scene, labelSystem),
-        hellsGate: createHellsGate(scene, labelSystem)
+        fireIslands: createFireIslands(scene, labelSystem, animations),
+        hellsEnd: createHellsEnd(scene, labelSystem, animations),
+        hellsGate: createHellsGate(scene, labelSystem, animations)
     };
     
     return elements;
 }
 
 // Create Fire Islands
-function createFireIslands(scene, labelSystem) {
+function createFireIslands(scene, labelSystem, animations) {
     const fireIslandsGroup = new THREE.Group();
     
     // Function to create a volcanic island
@@ -121,13 +121,11 @@ function createFireIslands(scene, labelSystem) {
             
             lavaSizes[i] = (Math.random() * 3 + 2) * scale;
             
-            // Enhanced color variation for more realistic lava
-            const temp = Math.random(); // Temperature variation
-            lavaColors[i * 3] = Math.min(1, 0.7 + temp * 0.3); // Red
-            lavaColors[i * 3 + 1] = Math.max(0, temp * 0.5); // Green
-            lavaColors[i * 3 + 2] = Math.max(0, temp * 0.2); // Blue
+            const temp = Math.random();
+            lavaColors[i * 3] = Math.min(1, 0.7 + temp * 0.3);
+            lavaColors[i * 3 + 1] = Math.max(0, temp * 0.5);
+            lavaColors[i * 3 + 2] = Math.max(0, temp * 0.2);
             
-            // More dynamic particle movement
             const speed = Math.random() * 0.15 + 0.05;
             lavaVelocities[i * 3] = (Math.random() - 0.5) * speed;
             lavaVelocities[i * 3 + 1] = Math.random() * speed * 2;
@@ -150,7 +148,14 @@ function createFireIslands(scene, labelSystem) {
         const lavaParticles = new THREE.Points(lavaParticlesGeometry, lavaParticlesMaterial);
         lavaParticles.userData.velocities = lavaVelocities;
         lavaParticles.userData.originalPositions = lavaPositions.slice();
+        lavaParticles.userData.maxHeight = height * 1.3;
+        lavaParticles.userData.baseHeight = height * 1.1;
         craterGroup.add(lavaParticles);
+
+        // Register lava particles with animation system
+        if (animations) {
+            animations.registerHellsEndParticles(lavaParticles);
+        }
 
         // Enhanced smoke system with better visuals
         const smokeCount = 60;
@@ -170,20 +175,17 @@ function createFireIslands(scene, labelSystem) {
             
             smokeSizes[i] = (Math.random() * 4 + 3) * scale;
             
-            // More varied smoke colors
             const brightness = Math.random() * 0.3 + 0.4;
-            const warmth = Math.random() * 0.1; // Add slight warmth to some particles
+            const warmth = Math.random() * 0.1;
             smokeColors[i * 3] = brightness + warmth;
             smokeColors[i * 3 + 1] = brightness + warmth * 0.5;
             smokeColors[i * 3 + 2] = brightness;
             
-            // More natural smoke movement
             const windSpeed = Math.random() * 0.1 + 0.05;
             smokeVelocities[i * 3] = (Math.random() - 0.5) * windSpeed;
             smokeVelocities[i * 3 + 1] = Math.random() * windSpeed + 0.05;
             smokeVelocities[i * 3 + 2] = (Math.random() - 0.5) * windSpeed;
             
-            // Add lifetime for particle recycling
             smokeLifetimes[i] = Math.random();
         }
 
@@ -204,7 +206,14 @@ function createFireIslands(scene, labelSystem) {
         smoke.userData.velocities = smokeVelocities;
         smoke.userData.originalPositions = smokePositions.slice();
         smoke.userData.lifetimes = smokeLifetimes;
+        smoke.userData.maxHeight = height * 1.8;
+        smoke.userData.baseHeight = height * 1.3;
         craterGroup.add(smoke);
+
+        // Register smoke particles with animation system
+        if (animations) {
+            animations.registerHellsEndParticles(smoke);
+        }
 
         islandGroup.add(craterGroup);
 
@@ -342,7 +351,7 @@ function createFireIslands(scene, labelSystem) {
 }
 
 // Create Hell's End Continent
-function createHellsEnd(scene, labelSystem) {
+function createHellsEnd(scene, labelSystem, animations) {
     const hellsEndGroup = new THREE.Group();
 
     // Create detailed terrain base
@@ -472,7 +481,14 @@ function createHellsEnd(scene, labelSystem) {
         });
         
         const particles = new THREE.Points(particlesGeometry, particlesMaterial);
+        particles.userData.maxHeight = baseHeight + 25;
+        particles.userData.baseHeight = baseHeight;
         mountainGroup.add(particles);
+
+        // Register particles with animation system
+        if (animations) {
+            animations.registerHellsEndParticles(particles);
+        }
         
         // Add lava flows
         const flowCount = Math.floor(Math.random() * 3) + 1;
@@ -581,7 +597,14 @@ function createHellsEnd(scene, labelSystem) {
         });
         
         const particles = new THREE.Points(particlesGeometry, particlesMaterial);
+        particles.userData.maxHeight = 30;
+        particles.userData.baseHeight = 17;
         hellsEndGroup.add(particles);
+
+        // Register particles with animation system
+        if (animations) {
+            animations.registerHellsEndParticles(particles);
+        }
     }
     
     // Position Hell's End
@@ -596,7 +619,7 @@ function createHellsEnd(scene, labelSystem) {
 }
 
 // Create Hell's Gate
-function createHellsGate(scene, labelSystem) {
+function createHellsGate(scene, labelSystem, animations) {
     const hellsGateGroup = new THREE.Group();
     
     // Create the main gate structure
@@ -795,7 +818,13 @@ function createHellsGate(scene, labelSystem) {
         });
         
         const particles = new THREE.Points(particlesGeometry, particlesMaterial);
+        particles.userData.baseHeight = gateHeight * 0.4;
         hellsGateGroup.add(particles);
+
+        // Register effects with animation system
+        if (animations) {
+            animations.registerHellsGateEffects(particles, null);
+        }
     };
     
     createParticleSystem();
@@ -814,6 +843,11 @@ function createHellsGate(scene, labelSystem) {
     const portal = new THREE.Mesh(portalGeometry, portalMaterial);
     portal.position.set(0, gateHeight * 0.4, 0);
     hellsGateGroup.add(portal);
+
+    // Register effects with animation system
+    if (animations) {
+        animations.registerHellsGateEffects(null, portal);
+    }
     
     // Position Hell's Gate
     const position = CONFIG.positions.western.hellsGate;
