@@ -92,7 +92,7 @@ export function createBoats(scene, labelSystem) {
     
     // Animation function
     function animateBoats() {
-        const speed = 0.5; // Speed of boat movement
+        const speed = 0.1; // Reduced from 0.5 to 0.1 for slower movement
         
         // Update each boat
         [boat1, boat2].forEach((boat, index) => {
@@ -109,10 +109,23 @@ export function createBoats(scene, labelSystem) {
             const dz = nextPoint.z - currentPoint.z;
             const angle = Math.atan2(dz, dx);
             
-            // Update boat position
-            boat.position.x = currentPoint.x + dx * state.progress;
-            boat.position.z = currentPoint.z + dz * state.progress;
-            boat.rotation.y = angle;
+            // Smooth rotation transition
+            const currentRotation = boat.rotation.y;
+            const targetRotation = angle;
+            const rotationDiff = targetRotation - currentRotation;
+            
+            // Normalize rotation difference to [-PI, PI]
+            let normalizedDiff = rotationDiff;
+            while (normalizedDiff > Math.PI) normalizedDiff -= 2 * Math.PI;
+            while (normalizedDiff < -Math.PI) normalizedDiff += 2 * Math.PI;
+            
+            // Smoothly rotate the boat
+            boat.rotation.y += normalizedDiff * 0.1;
+            
+            // Update boat position with easing
+            const easing = 0.05; // Smoothing factor for position
+            boat.position.x += (currentPoint.x + dx * state.progress - boat.position.x) * easing;
+            boat.position.z += (currentPoint.z + dz * state.progress - boat.position.z) * easing;
             
             // Update progress
             state.progress += speed;
