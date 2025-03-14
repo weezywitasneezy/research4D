@@ -417,20 +417,24 @@ function createHellsGate(scene, labelSystem) {
     const hellsGateGroup = new THREE.Group();
 
     // Create detailed platform base that stretches north-south
-    const baseGeometry = new THREE.PlaneGeometry(100, 200, 50, 100); // Reduced length, increased detail resolution
+    const baseGeometry = new THREE.PlaneGeometry(100, 200, 50, 100);
     const vertices = baseGeometry.attributes.position.array;
     
-    // Add detailed terrain displacement
+    // Add architectural details to the base
     for (let i = 0; i < vertices.length; i += 3) {
         const x = vertices[i];
         const z = vertices[i + 2];
+        const radius = Math.sqrt(x * x + z * z);
+        const angle = Math.atan2(x, z);
         
-        // Create various terrain features similar to Hell's End
-        vertices[i + 1] = 
-            Math.sin(x * 0.2) * Math.cos(z * 0.1) * 2 + // Base terrain waves
-            Math.sin(x * 0.5 + z * 0.2) * 1.5 + // Medium terrain features
-            Math.sin(x * 0.8 + z * 0.7) * 0.5 + // Small terrain details
-            (Math.random() - 0.5) * 0.5; // Subtle random variation
+        // Create architectural patterns similar to the platform
+        const displacement = 
+            Math.sin(angle * 16) * 0.5 + // Radial patterns like the platform
+            Math.cos(angle * 8) * Math.sin(z * 0.2) * 0.3 + // Vertical patterns
+            Math.sin(x * 0.4) * Math.cos(z * 0.4) * 0.4 + // Grid-like pattern
+            Math.sin(radius * 0.2) * 0.3; // Concentric circles
+        
+        vertices[i + 1] = displacement * 2; // Apply height displacement
     }
 
     baseGeometry.computeVertexNormals();
