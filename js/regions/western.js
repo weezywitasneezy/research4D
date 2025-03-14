@@ -416,44 +416,37 @@ function createHellsEnd(scene, labelSystem) {
 function createHellsGate(scene, labelSystem) {
     const hellsGateGroup = new THREE.Group();
 
-    // Create detailed platform base that stretches north-south
-    const baseGeometry = new THREE.PlaneGeometry(100, 200, 50, 100);
+    // Create base using Fire Islands-style geometry
+    const baseGeometry = new THREE.CylinderGeometry(50, 55, 4, 32, 8);
     const vertices = baseGeometry.attributes.position.array;
     
-    // Add architectural details to the base
+    // Add terrain displacement similar to Fire Islands
     for (let i = 0; i < vertices.length; i += 3) {
-        const x = vertices[i];
-        const z = vertices[i + 2];
-        const radius = Math.sqrt(x * x + z * z);
-        const angle = Math.atan2(x, z);
-        
-        // Create architectural patterns similar to the platform
+        const angle = Math.atan2(vertices[i], vertices[i + 2]);
         const displacement = 
-            Math.sin(angle * 16) * 0.5 + // Radial patterns like the platform
-            Math.cos(angle * 8) * Math.sin(z * 0.2) * 0.3 + // Vertical patterns
-            Math.sin(x * 0.4) * Math.cos(z * 0.4) * 0.4 + // Grid-like pattern
-            Math.sin(radius * 0.2) * 0.3; // Concentric circles
+            Math.sin(angle * 8) * 0.2 + // Create ridges
+            Math.sin(angle * 4 + vertices[i + 1] * 0.2) * 0.3 + // Add variation
+            (Math.random() - 0.5) * 0.1; // Random noise
         
-        vertices[i + 1] = displacement * 2; // Apply height displacement
+        vertices[i] *= (1 + displacement);
+        vertices[i + 2] *= (1 + displacement);
     }
-
+    
     baseGeometry.computeVertexNormals();
     
     const baseMaterial = new THREE.MeshStandardMaterial({ 
         color: CONFIG.colors.hellsGate,
         roughness: 0.8,
         metalness: 0.2,
-        flatShading: true,
-        side: THREE.DoubleSide
+        flatShading: true
     });
     
     const base = new THREE.Mesh(baseGeometry, baseMaterial);
-    base.rotation.x = -Math.PI / 2; // Rotate to be horizontal
-    base.position.y = 0; // Set to grid level
+    base.scale.z = 4; // Stretch north-south
     hellsGateGroup.add(base);
 
     // Create main platform with detailed geometry
-    const platformGeometry = new THREE.CylinderGeometry(25, 28, 4, 16, 2); // Reduced height
+    const platformGeometry = new THREE.CylinderGeometry(25, 28, 4, 16, 2);
     const platformVertices = platformGeometry.attributes.position.array;
     
     // Add platform details
@@ -461,7 +454,6 @@ function createHellsGate(scene, labelSystem) {
         const angle = Math.atan2(platformVertices[i], platformVertices[i + 2]);
         const radius = Math.sqrt(platformVertices[i] * platformVertices[i] + platformVertices[i + 2] * platformVertices[i + 2]);
         
-        // Add architectural details to the platform
         const displacement = 
             Math.sin(angle * 16) * 0.2 + // Radial patterns
             Math.cos(angle * 8) * Math.sin(platformVertices[i + 1] * 2) * 0.3; // Vertical patterns
@@ -480,8 +472,9 @@ function createHellsGate(scene, labelSystem) {
         metalness: 0.3,
         flatShading: true
     });
+    
     const platform = new THREE.Mesh(platformGeometry, platformMaterial);
-    platform.position.set(-40, 2, 0); // Slightly raised above base
+    platform.position.set(-40, 2, 0);
     hellsGateGroup.add(platform);
 
     // Create main gate structure with intricate details
