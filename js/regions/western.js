@@ -97,58 +97,90 @@ function createFireIslands(scene, labelSystem) {
         });
         const crater = new THREE.Mesh(craterGeometry, craterMaterial);
         craterGroup.add(crater);
+
+        // Add lava particles with proper velocity setup
+        const particleCount = 50;
+        const lavaParticlesGeometry = new THREE.BufferGeometry();
+        const lavaPositions = new Float32Array(particleCount * 3);
+        const lavaColors = new Float32Array(particleCount * 3);
+        const lavaVelocities = new Float32Array(particleCount * 3);
         
-        // Inner crater glow
-        const glowGeometry = new THREE.TorusGeometry(radius * 0.35, radius * 0.05, 16, 32);
-        const glowMaterial = new THREE.MeshBasicMaterial({ 
-            color: 0xff6600,
+        for (let i = 0; i < particleCount; i++) {
+            const theta = Math.random() * Math.PI * 2;
+            const r = Math.random() * (radius * 0.3);
+            
+            lavaPositions[i * 3] = Math.cos(theta) * r;
+            lavaPositions[i * 3 + 1] = height * 0.1;
+            lavaPositions[i * 3 + 2] = Math.sin(theta) * r;
+            
+            lavaColors[i * 3] = 1;  // R
+            lavaColors[i * 3 + 1] = 0.3 + Math.random() * 0.4;  // G
+            lavaColors[i * 3 + 2] = 0;  // B
+            
+            // Add velocities for animation
+            lavaVelocities[i * 3] = (Math.random() - 0.5) * 0.1;     // X velocity
+            lavaVelocities[i * 3 + 1] = Math.random() * 0.2;         // Y velocity
+            lavaVelocities[i * 3 + 2] = (Math.random() - 0.5) * 0.1; // Z velocity
+        }
+        
+        lavaParticlesGeometry.setAttribute('position', new THREE.BufferAttribute(lavaPositions, 3));
+        lavaParticlesGeometry.setAttribute('color', new THREE.BufferAttribute(lavaColors, 3));
+        
+        const lavaParticlesMaterial = new THREE.PointsMaterial({
+            size: 1.0,
+            vertexColors: true,
             transparent: true,
-            opacity: 0.7
+            opacity: 0.8
         });
-        const glow = new THREE.Mesh(glowGeometry, glowMaterial);
-        glow.rotation.x = Math.PI / 2;
-        glow.position.y = -height * 0.05;
-        craterGroup.add(glow);
         
+        const lavaParticles = new THREE.Points(lavaParticlesGeometry, lavaParticlesMaterial);
+        lavaParticles.userData.velocities = lavaVelocities;
+        lavaParticles.userData.originalPositions = lavaPositions.slice();
+        craterGroup.add(lavaParticles);
+
+        // Add smoke particles with proper velocity setup
+        const smokeCount = 30;
+        const smokeGeometry = new THREE.BufferGeometry();
+        const smokePositions = new Float32Array(smokeCount * 3);
+        const smokeColors = new Float32Array(smokeCount * 3);
+        const smokeVelocities = new Float32Array(smokeCount * 3);
+        
+        for (let i = 0; i < smokeCount; i++) {
+            const theta = Math.random() * Math.PI * 2;
+            const r = Math.random() * (radius * 0.2);
+            
+            smokePositions[i * 3] = Math.cos(theta) * r;
+            smokePositions[i * 3 + 1] = height * 0.2;
+            smokePositions[i * 3 + 2] = Math.sin(theta) * r;
+            
+            const gray = 0.3 + Math.random() * 0.4;
+            smokeColors[i * 3] = gray;
+            smokeColors[i * 3 + 1] = gray;
+            smokeColors[i * 3 + 2] = gray;
+            
+            // Add velocities for animation
+            smokeVelocities[i * 3] = (Math.random() - 0.5) * 0.05;    // X velocity
+            smokeVelocities[i * 3 + 1] = 0.1 + Math.random() * 0.1;   // Y velocity
+            smokeVelocities[i * 3 + 2] = (Math.random() - 0.5) * 0.05; // Z velocity
+        }
+        
+        smokeGeometry.setAttribute('position', new THREE.BufferAttribute(smokePositions, 3));
+        smokeGeometry.setAttribute('color', new THREE.BufferAttribute(smokeColors, 3));
+        
+        const smokeMaterial = new THREE.PointsMaterial({
+            size: 2.0,
+            vertexColors: true,
+            transparent: true,
+            opacity: 0.4
+        });
+        
+        const smoke = new THREE.Points(smokeGeometry, smokeMaterial);
+        smoke.userData.velocities = smokeVelocities;
+        smoke.userData.originalPositions = smokePositions.slice();
+        craterGroup.add(smoke);
+
         craterGroup.position.y = height * 1.2;
         islandGroup.add(craterGroup);
-
-        // Add lava flows
-        const createLavaFlow = (startAngle, length) => {
-            const flowPoints = [];
-            const segments = 20;
-            
-            for (let i = 0; i <= segments; i++) {
-                const t = i / segments;
-                const angle = startAngle + Math.sin(t * Math.PI * 2) * 0.3;
-                const r = radius * (1.2 - t * 0.7);
-                const y = height * (0.6 - t * 0.6);
-                
-                flowPoints.push(new THREE.Vector3(
-                    Math.cos(angle) * r,
-                    y,
-                    Math.sin(angle) * r
-                ));
-            }
-            
-            const flowCurve = new THREE.CatmullRomCurve3(flowPoints);
-            const flowGeometry = new THREE.TubeGeometry(flowCurve, 20, radius * 0.1, 8, false);
-            const flowMaterial = new THREE.MeshStandardMaterial({
-                color: 0xff4500,
-                emissive: 0xff2200,
-                emissiveIntensity: 0.5,
-                transparent: true,
-                opacity: 0.9
-            });
-            
-            const flow = new THREE.Mesh(flowGeometry, flowMaterial);
-            islandGroup.add(flow);
-        };
-        
-        // Add multiple lava flows
-        for (let i = 0; i < 5; i++) {
-            createLavaFlow(i * Math.PI * 0.4, radius);
-        }
 
         // Add rock formations around base
         for (let i = 0; i < 8; i++) {
@@ -334,11 +366,12 @@ function createHellsEnd(scene, labelSystem) {
             crater.position.y = height/2;
             volcano.add(crater);
             
-            // Add lava particles
+            // Add lava particles with proper velocity setup
             const particleCount = 50;
             const particlesGeometry = new THREE.BufferGeometry();
             const positions = new Float32Array(particleCount * 3);
             const colors = new Float32Array(particleCount * 3);
+            const velocities = new Float32Array(particleCount * 3);
             
             for (let p = 0; p < particleCount; p++) {
                 const theta = Math.random() * Math.PI * 2;
@@ -351,6 +384,11 @@ function createHellsEnd(scene, labelSystem) {
                 colors[p * 3] = 1;  // R
                 colors[p * 3 + 1] = 0.3 + Math.random() * 0.4;  // G
                 colors[p * 3 + 2] = 0;  // B
+                
+                // Add velocities for animation
+                velocities[p * 3] = (Math.random() - 0.5) * 0.1;     // X velocity
+                velocities[p * 3 + 1] = Math.random() * 0.2;         // Y velocity
+                velocities[p * 3 + 2] = (Math.random() - 0.5) * 0.1; // Z velocity
             }
             
             particlesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
@@ -364,6 +402,8 @@ function createHellsEnd(scene, labelSystem) {
             });
             
             const particles = new THREE.Points(particlesGeometry, particlesMaterial);
+            particles.userData.velocities = velocities;
+            particles.userData.originalPositions = positions.slice();
             crater.add(particles);
             
             // Add rock formations around base
