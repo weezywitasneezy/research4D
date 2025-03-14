@@ -62,25 +62,43 @@ export function createBoats(scene, labelSystem) {
     
     // Define safe paths for boats
     const paths = {
-        boat1: [
-            { x: -200, z: -100 },
-            { x: -100, z: -150 },
-            { x: 0, z: -100 },
-            { x: 100, z: -50 },
-            { x: 200, z: -100 },
-            { x: 100, z: -150 },
-            { x: 0, z: -200 },
-            { x: -100, z: -150 }
+        boat1: [ // Eastern-Central Trade Route
+            { x: 180, z: -40 },    // Eastern continent start
+            { x: 160, z: -60 },    // Following eastern coast
+            { x: 140, z: -80 },    // Curving around farms
+            { x: 100, z: -60 },    // Approaching central waters
+            { x: 60, z: -80 },     // Nearing Magic Islands
+            { x: 20, z: -100 },    // North of Magic Islands
+            { x: -20, z: -80 },    // Circling Magic Islands
+            { x: -40, z: -40 },    // Trade stop
+            { x: -20, z: -20 },    // Return path start
+            { x: 20, z: -40 },     // Between regions
+            { x: 60, z: -20 },     // Approaching eastern waters
+            { x: 100, z: -40 },    // Eastern coastal waters
+            { x: 140, z: -20 },    // Following coast back
+            { x: 160, z: -40 }     // Return to start
         ],
-        boat2: [
-            { x: 200, z: 100 },
-            { x: 100, z: 150 },
-            { x: 0, z: 100 },
-            { x: -100, z: 50 },
-            { x: -200, z: 100 },
-            { x: -100, z: 150 },
-            { x: 0, z: 200 },
-            { x: 100, z: 150 }
+        boat2: [ // Western-Central-Southern Route
+            { x: -180, z: 40 },    // Western start
+            { x: -160, z: 60 },    // Following western coast
+            { x: -120, z: 40 },    // Fire Islands approach
+            { x: -80, z: 60 },     // Safe passage
+            { x: -40, z: 80 },     // Central waters
+            { x: 0, z: 60 },       // Central region
+            { x: 40, z: 80 },      // Eastern approach
+            { x: 80, z: 100 },     // Industrial area
+            { x: 120, z: 80 },     // Space farms
+            { x: 160, z: 60 },     // Eastern coast
+            { x: 180, z: 40 },     // Eastern point
+            { x: 160, z: 20 },     // Return journey
+            { x: 120, z: 40 },     // Following coast
+            { x: 80, z: 20 },      // Past industrial
+            { x: 40, z: 40 },      // Central waters
+            { x: 0, z: 20 },       // Central region
+            { x: -40, z: 40 },     // Western approach
+            { x: -80, z: 20 },     // Past Fire Islands
+            { x: -120, z: 40 },    // Western waters
+            { x: -160, z: 20 }     // Return to start
         ]
     };
     
@@ -92,7 +110,9 @@ export function createBoats(scene, labelSystem) {
     
     // Animation function
     function animateBoats() {
-        const speed = 0.1; // Reduced from 0.5 to 0.1 for slower movement
+        const speed = 0.01; // 10x slower than original
+        const rotationSpeed = 0.05; // Slightly faster rotation for tighter turns
+        const positionEasing = 0.03; // Slightly faster position changes
         
         // Update each boat
         [boat1, boat2].forEach((boat, index) => {
@@ -120,12 +140,13 @@ export function createBoats(scene, labelSystem) {
             while (normalizedDiff < -Math.PI) normalizedDiff += 2 * Math.PI;
             
             // Smoothly rotate the boat
-            boat.rotation.y += normalizedDiff * 0.1;
+            boat.rotation.y += normalizedDiff * rotationSpeed;
             
             // Update boat position with easing
-            const easing = 0.05; // Smoothing factor for position
-            boat.position.x += (currentPoint.x + dx * state.progress - boat.position.x) * easing;
-            boat.position.z += (currentPoint.z + dz * state.progress - boat.position.z) * easing;
+            const targetX = currentPoint.x + dx * state.progress;
+            const targetZ = currentPoint.z + dz * state.progress;
+            boat.position.x += (targetX - boat.position.x) * positionEasing;
+            boat.position.z += (targetZ - boat.position.z) * positionEasing;
             
             // Update progress
             state.progress += speed;
