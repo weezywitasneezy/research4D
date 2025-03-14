@@ -23,141 +23,162 @@ export function createWesternRegion(scene, labelSystem) {
 function createFireIslands(scene, labelSystem) {
     const fireIslandsGroup = new THREE.Group();
     
-    // Function to create a volcanic island
+    // Function to create a volcanic island with enhanced features
     function createVolcanicIsland(radius, height, x, z, scale = 1.0) {
         const islandGroup = new THREE.Group();
         
-        // Base island
-        const baseGeometry = new THREE.CylinderGeometry(radius, radius * 1.2, height, 8);
-        const baseMaterial = new THREE.MeshLambertMaterial({ 
-            color: CONFIG.colors.fireIslands
+        // Create detailed island base with displacement
+        const baseGeometry = new THREE.CylinderGeometry(radius, radius * 1.2, height, 32, 8);
+        const vertices = baseGeometry.attributes.position.array;
+        
+        // Add terrain displacement
+        for (let i = 0; i < vertices.length; i += 3) {
+            const angle = Math.atan2(vertices[i], vertices[i + 2]);
+            const displacement = 
+                Math.sin(angle * 8) * 0.2 + // Create ridges
+                Math.sin(angle * 4 + vertices[i + 1] * 0.2) * 0.3 + // Add variation
+                (Math.random() - 0.5) * 0.1; // Random noise
+            
+            vertices[i] *= (1 + displacement);
+            vertices[i + 2] *= (1 + displacement);
+        }
+        
+        baseGeometry.computeVertexNormals();
+        
+        const baseMaterial = new THREE.MeshStandardMaterial({ 
+            color: CONFIG.colors.fireIslands,
+            roughness: 0.8,
+            metalness: 0.2,
+            flatShading: true
         });
         const base = new THREE.Mesh(baseGeometry, baseMaterial);
         islandGroup.add(base);
         
-        // Volcano cone
-        const volcanoGeometry = new THREE.ConeGeometry(radius * 0.7, height * 1.2, 8);
-        const volcanoMaterial = new THREE.MeshLambertMaterial({ 
-            color: 0xb22222 // Firebrick
+        // Create detailed volcano cone
+        const volcanoGeometry = new THREE.ConeGeometry(radius * 0.7, height * 1.2, 32, 8);
+        const volcanoVertices = volcanoGeometry.attributes.position.array;
+        
+        // Add volcanic rock texture through geometry
+        for (let i = 0; i < volcanoVertices.length; i += 3) {
+            const angle = Math.atan2(volcanoVertices[i], volcanoVertices[i + 2]);
+            const height = volcanoVertices[i + 1];
+            const displacement = 
+                Math.sin(angle * 12 + height * 2) * 0.1 + // Vertical ridges
+                Math.cos(angle * 8) * Math.sin(height * 4) * 0.15 + // Horizontal bands
+                (Math.random() - 0.5) * 0.05; // Random variation
+            
+            volcanoVertices[i] *= (1 + displacement);
+            volcanoVertices[i + 2] *= (1 + displacement);
+        }
+        
+        volcanoGeometry.computeVertexNormals();
+        
+        const volcanoMaterial = new THREE.MeshStandardMaterial({ 
+            color: 0xb22222,
+            roughness: 0.9,
+            metalness: 0.1,
+            flatShading: true
         });
         const volcano = new THREE.Mesh(volcanoGeometry, volcanoMaterial);
         volcano.position.y = height * 0.6;
         islandGroup.add(volcano);
         
-        // Lava crater
-        const craterGeometry = new THREE.CylinderGeometry(radius * 0.3, radius * 0.4, height * 0.2, 8);
-        const craterMaterial = new THREE.MeshBasicMaterial({ 
-            color: 0xff4500, // OrangeRed
-            transparent: true,
-            opacity: 0.9
+        // Create complex crater
+        const craterGroup = new THREE.Group();
+        
+        // Main crater
+        const craterGeometry = new THREE.CylinderGeometry(radius * 0.3, radius * 0.4, height * 0.2, 32, 2, true);
+        const craterMaterial = new THREE.MeshStandardMaterial({ 
+            color: 0xff4500,
+            emissive: 0xff2200,
+            emissiveIntensity: 0.5,
+            roughness: 0.7,
+            metalness: 0.3
         });
         const crater = new THREE.Mesh(craterGeometry, craterMaterial);
-        crater.position.y = height * 1.2;
-        islandGroup.add(crater);
-
-        // Add glowing lava particles in the crater
-        const particleCount = 50;
-        const lavaParticlesGeometry = new THREE.BufferGeometry();
-        const lavaPositions = new Float32Array(particleCount * 3);
-        const lavaSizes = new Float32Array(particleCount);
-        const lavaColors = new Float32Array(particleCount * 3);
-        const lavaVelocities = new Float32Array(particleCount * 3);
-
-        for (let i = 0; i < particleCount; i++) {
-            const theta = Math.random() * Math.PI * 2;
-            const r = Math.random() * radius * 0.2;
-            lavaPositions[i * 3] = Math.cos(theta) * r;
-            lavaPositions[i * 3 + 1] = height * 1.2;
-            lavaPositions[i * 3 + 2] = Math.sin(theta) * r;
-            
-            lavaSizes[i] = (Math.random() * 2 + 1) * scale;
-            
-            // Random orange-red color for each particle
-            lavaColors[i * 3] = Math.random() * 0.5 + 0.5; // Red
-            lavaColors[i * 3 + 1] = Math.random() * 0.3; // Green
-            lavaColors[i * 3 + 2] = 0; // Blue
-            
-            // Add vertical velocity for animation
-            lavaVelocities[i * 3] = (Math.random() - 0.5) * 0.02;
-            lavaVelocities[i * 3 + 1] = Math.random() * 0.1;
-            lavaVelocities[i * 3 + 2] = (Math.random() - 0.5) * 0.02;
-        }
-
-        lavaParticlesGeometry.setAttribute('position', new THREE.BufferAttribute(lavaPositions, 3));
-        lavaParticlesGeometry.setAttribute('size', new THREE.BufferAttribute(lavaSizes, 1));
-        lavaParticlesGeometry.setAttribute('color', new THREE.BufferAttribute(lavaColors, 3));
-
-        const lavaParticlesMaterial = new THREE.PointsMaterial({
-            size: 1,
-            vertexColors: true,
+        craterGroup.add(crater);
+        
+        // Inner crater glow
+        const glowGeometry = new THREE.TorusGeometry(radius * 0.35, radius * 0.05, 16, 32);
+        const glowMaterial = new THREE.MeshBasicMaterial({ 
+            color: 0xff6600,
             transparent: true,
-            opacity: 0.8,
-            sizeAttenuation: true
+            opacity: 0.7
         });
+        const glow = new THREE.Mesh(glowGeometry, glowMaterial);
+        glow.rotation.x = Math.PI / 2;
+        glow.position.y = -height * 0.05;
+        craterGroup.add(glow);
+        
+        craterGroup.position.y = height * 1.2;
+        islandGroup.add(craterGroup);
 
-        const lavaParticles = new THREE.Points(lavaParticlesGeometry, lavaParticlesMaterial);
-        lavaParticles.userData.velocities = lavaVelocities;
-        lavaParticles.userData.originalPositions = lavaPositions.slice();
-        islandGroup.add(lavaParticles);
-
-        // Add smoke particles above the crater
-        const smokeCount = 30;
-        const smokeGeometry = new THREE.BufferGeometry();
-        const smokePositions = new Float32Array(smokeCount * 3);
-        const smokeSizes = new Float32Array(smokeCount);
-        const smokeColors = new Float32Array(smokeCount * 3);
-        const smokeVelocities = new Float32Array(smokeCount * 3);
-
-        for (let i = 0; i < smokeCount; i++) {
-            const theta = Math.random() * Math.PI * 2;
-            const r = Math.random() * radius * 0.2;
-            smokePositions[i * 3] = Math.cos(theta) * r;
-            smokePositions[i * 3 + 1] = height * 1.3;
-            smokePositions[i * 3 + 2] = Math.sin(theta) * r;
+        // Add lava flows
+        const createLavaFlow = (startAngle, length) => {
+            const flowPoints = [];
+            const segments = 20;
             
-            smokeSizes[i] = (Math.random() * 3 + 2) * scale;
+            for (let i = 0; i <= segments; i++) {
+                const t = i / segments;
+                const angle = startAngle + Math.sin(t * Math.PI * 2) * 0.3;
+                const r = radius * (1.2 - t * 0.7);
+                const y = height * (0.6 - t * 0.6);
+                
+                flowPoints.push(new THREE.Vector3(
+                    Math.cos(angle) * r,
+                    y,
+                    Math.sin(angle) * r
+                ));
+            }
             
-            // Gray color with slight variation
-            const gray = Math.random() * 0.3 + 0.4;
-            smokeColors[i * 3] = gray;
-            smokeColors[i * 3 + 1] = gray;
-            smokeColors[i * 3 + 2] = gray;
+            const flowCurve = new THREE.CatmullRomCurve3(flowPoints);
+            const flowGeometry = new THREE.TubeGeometry(flowCurve, 20, radius * 0.1, 8, false);
+            const flowMaterial = new THREE.MeshStandardMaterial({
+                color: 0xff4500,
+                emissive: 0xff2200,
+                emissiveIntensity: 0.5,
+                transparent: true,
+                opacity: 0.9
+            });
             
-            // Add upward and slight horizontal velocity
-            smokeVelocities[i * 3] = (Math.random() - 0.5) * 0.05;
-            smokeVelocities[i * 3 + 1] = Math.random() * 0.1 + 0.05;
-            smokeVelocities[i * 3 + 2] = (Math.random() - 0.5) * 0.05;
-        }
-
-        smokeGeometry.setAttribute('position', new THREE.BufferAttribute(smokePositions, 3));
-        smokeGeometry.setAttribute('size', new THREE.BufferAttribute(smokeSizes, 1));
-        smokeGeometry.setAttribute('color', new THREE.BufferAttribute(smokeColors, 3));
-
-        const smokeMaterial = new THREE.PointsMaterial({
-            size: 1,
-            vertexColors: true,
-            transparent: true,
-            opacity: 0.4,
-            sizeAttenuation: true
-        });
-
-        const smoke = new THREE.Points(smokeGeometry, smokeMaterial);
-        smoke.userData.velocities = smokeVelocities;
-        smoke.userData.originalPositions = smokePositions.slice();
-        islandGroup.add(smoke);
-
-        // Add some rocky outcrops around the base
+            const flow = new THREE.Mesh(flowGeometry, flowMaterial);
+            islandGroup.add(flow);
+        };
+        
+        // Add multiple lava flows
         for (let i = 0; i < 5; i++) {
-            const angle = (i / 5) * Math.PI * 2;
+            createLavaFlow(i * Math.PI * 0.4, radius);
+        }
+
+        // Add rock formations around base
+        for (let i = 0; i < 8; i++) {
+            const angle = (i / 8) * Math.PI * 2;
             const distance = radius * (0.7 + Math.random() * 0.3);
+            const rockHeight = height * (0.3 + Math.random() * 0.3);
+            
             const rockGeometry = new THREE.ConeGeometry(
                 radius * 0.2,
-                height * (0.3 + Math.random() * 0.3),
-                4
+                rockHeight,
+                5 + Math.floor(Math.random() * 3)
             );
-            const rockMaterial = new THREE.MeshLambertMaterial({
-                color: 0x8b0000 // Dark red
+            
+            // Distort rock geometry
+            const rockVertices = rockGeometry.attributes.position.array;
+            for (let j = 0; j < rockVertices.length; j += 3) {
+                const displacement = (Math.random() - 0.5) * 0.2;
+                rockVertices[j] *= (1 + displacement);
+                rockVertices[j + 2] *= (1 + displacement);
+            }
+            
+            rockGeometry.computeVertexNormals();
+            
+            const rockMaterial = new THREE.MeshStandardMaterial({
+                color: 0x8b0000,
+                roughness: 0.9,
+                metalness: 0.1,
+                flatShading: true
             });
+            
             const rock = new THREE.Mesh(rockGeometry, rockMaterial);
             rock.position.set(
                 Math.cos(angle) * distance,
@@ -165,6 +186,7 @@ function createFireIslands(scene, labelSystem) {
                 Math.sin(angle) * distance
             );
             rock.rotation.y = Math.random() * Math.PI;
+            rock.rotation.z = (Math.random() - 0.5) * 0.3;
             islandGroup.add(rock);
         }
 
@@ -175,154 +197,448 @@ function createFireIslands(scene, labelSystem) {
         return islandGroup;
     }
 
-    // Create multiple volcanic islands of varying sizes
+    // Create multiple volcanic islands with varying characteristics
     const islands = [
         createVolcanicIsland(30, 20, 0, 0, 1.0),          // Main central island
-        createVolcanicIsland(20, 15, -70, 60, 0.8),       // Secondary island, further out
-        createVolcanicIsland(25, 18, 60, -40, 0.9),       // Third island, spread east
-        createVolcanicIsland(15, 12, -40, -80, 0.7),      // Small island, further south
-        createVolcanicIsland(18, 14, 40, -100, 0.75)      // Another small island, far south
+        createVolcanicIsland(20, 15, -70, 60, 0.8),       // Secondary island
+        createVolcanicIsland(25, 18, 60, -40, 0.9),       // Third island
+        createVolcanicIsland(15, 12, -40, -80, 0.7),      // Small island
+        createVolcanicIsland(18, 14, 40, -100, 0.75)      // Another small island
     ];
+
+    // Create obsidian bridges connecting islands
+    const createObsidianBridge = (start, end, height) => {
+        const bridgePoints = [];
+        const segments = 20;
+        
+        for (let i = 0; i <= segments; i++) {
+            const t = i / segments;
+            const x = start.x + (end.x - start.x) * t;
+            const z = start.z + (end.z - start.z) * t;
+            const y = height * Math.sin(t * Math.PI); // Arch shape
+            
+            bridgePoints.push(new THREE.Vector3(x, y, z));
+        }
+        
+        const bridgeCurve = new THREE.CatmullRomCurve3(bridgePoints);
+        const bridgeGeometry = new THREE.TubeGeometry(bridgeCurve, 20, 2, 8, false);
+        const bridgeMaterial = new THREE.MeshStandardMaterial({
+            color: 0x111111,
+            roughness: 0.2,
+            metalness: 0.8,
+            transparent: true,
+            opacity: 0.9
+        });
+        
+        return new THREE.Mesh(bridgeGeometry, bridgeMaterial);
+    };
+
+    // Connect islands with obsidian bridges
+    const bridgeConnections = [
+        { start: {x: 0, z: 0}, end: {x: -70, z: 60}, height: 15 },
+        { start: {x: 0, z: 0}, end: {x: 60, z: -40}, height: 12 },
+        { start: {x: -70, z: 60}, end: {x: -40, z: -80}, height: 10 },
+        { start: {x: 60, z: -40}, end: {x: 40, z: -100}, height: 8 }
+    ];
+
+    bridgeConnections.forEach(connection => {
+        const bridge = createObsidianBridge(connection.start, connection.end, connection.height);
+        fireIslandsGroup.add(bridge);
+    });
 
     // Add all islands to the group
     islands.forEach(island => fireIslandsGroup.add(island));
 
     // Position the entire fire islands group
     const position = CONFIG.positions.western.fireIslands;
-    // Shift the entire group south
     fireIslandsGroup.position.set(
         position.x,
         position.y,
         position.z + 50  // Move 50 units south
     );
     scene.add(fireIslandsGroup);
-    
+
     // Add label
     labelSystem.addLabel(fireIslandsGroup, "Fire Islands", CONFIG.colors.fireIslands);
-    
-    // Return the group for animation updates
+
     return fireIslandsGroup;
 }
 
 // Create Hell's End Continent
 function createHellsEnd(scene, labelSystem) {
-    // Hell's End Continent
-    const hellsEndGeometry = new THREE.BoxGeometry(100, 15, 400);
-    const hellsEndMaterial = new THREE.MeshLambertMaterial({ 
-        color: CONFIG.colors.hellsEnd
-    });
-    const hellsEnd = new THREE.Mesh(hellsEndGeometry, hellsEndMaterial);
+    const hellsEndGroup = new THREE.Group();
+
+    // Main continent base with displacement
+    const hellsEndGeometry = new THREE.PlaneGeometry(100, 400, 50, 200);
+    const vertices = hellsEndGeometry.attributes.position.array;
     
-    // Add volcanic terrain features
-    const terrainFeatures = new THREE.Group();
-    
-    // Create volcanic mountains
-    for (let i = 0; i < 8; i++) {
-        const x = (Math.random() - 0.5) * 80;
-        const z = (Math.random() - 0.5) * 380;
-        const height = 10 + Math.random() * 15;
-        const radius = 5 + Math.random() * 10;
+    // Create dramatic terrain displacement
+    for (let i = 0; i < vertices.length; i += 3) {
+        const x = vertices[i];
+        const z = vertices[i + 2];
         
-        const mountainGeometry = new THREE.ConeGeometry(radius, height, 8);
-        const mountainMaterial = new THREE.MeshLambertMaterial({
-            color: 0x8b0000 // Dark red
-        });
-        const mountain = new THREE.Mesh(mountainGeometry, mountainMaterial);
-        mountain.position.set(x, height/2 + 7.5, z);
-        
-        terrainFeatures.add(mountain);
-        
-       // Add lava pool to some mountains
-       if (Math.random() > 0.5) {
-        const poolGeometry = new THREE.CylinderGeometry(radius * 0.3, radius * 0.3, 1, 8);
-        const poolMaterial = new THREE.MeshBasicMaterial({
-            color: 0xff4500 // OrangeRed
-        });
-        const pool = new THREE.Mesh(poolGeometry, poolMaterial);
-        pool.position.set(x, height + 7.5, z);
-        terrainFeatures.add(pool);
+        // Create various terrain features
+        vertices[i + 1] = 
+            Math.sin(x * 0.1) * Math.cos(z * 0.1) * 5 + // Base terrain
+            Math.sin(x * 0.2 + z * 0.3) * 3 + // Rocky outcrops
+            (Math.random() - 0.5) * 2; // Random variation
     }
-}
 
-hellsEnd.add(terrainFeatures);
+    hellsEndGeometry.computeVertexNormals();
+    
+    const hellsEndMaterial = new THREE.MeshStandardMaterial({ 
+        color: CONFIG.colors.hellsEnd,
+        roughness: 0.8,
+        metalness: 0.2,
+        flatShading: true
+    });
+    
+    const hellsEndBase = new THREE.Mesh(hellsEndGeometry, hellsEndMaterial);
+    hellsEndBase.rotation.x = -Math.PI / 2;
+    hellsEndGroup.add(hellsEndBase);
 
-// Position Hell's End
-const position = CONFIG.positions.western.hellsEnd;
-hellsEnd.position.set(position.x, position.y, position.z);
-scene.add(hellsEnd);
+    // Create volcanic mountain ranges
+    const createVolcanicRange = (startX, startZ, length, direction) => {
+        const rangeGroup = new THREE.Group();
+        const peakCount = Math.floor(length / 30);
+        
+        for (let i = 0; i < peakCount; i++) {
+            const progress = i / (peakCount - 1);
+            const x = startX + direction.x * progress * length;
+            const z = startZ + direction.z * progress * length;
+            
+            // Create main volcano cone
+            const height = 25 + Math.sin(progress * Math.PI) * 15;
+            const radius = 10 + Math.sin(progress * Math.PI) * 5;
+            
+            const volcanoGeometry = new THREE.ConeGeometry(radius, height, 12);
+            const volcanoMaterial = new THREE.MeshStandardMaterial({
+                color: 0x8b0000,
+                roughness: 0.7,
+                metalness: 0.3
+            });
+            
+            const volcano = new THREE.Mesh(volcanoGeometry, volcanoMaterial);
+            volcano.position.set(x, height/2, z);
+            
+            // Add crater
+            const craterRadius = radius * 0.4;
+            const craterGeometry = new THREE.CylinderGeometry(craterRadius, craterRadius * 1.2, height * 0.2, 12);
+            const craterMaterial = new THREE.MeshStandardMaterial({
+                color: 0xff4500,
+                emissive: 0xff2200,
+                emissiveIntensity: 0.5
+            });
+            
+            const crater = new THREE.Mesh(craterGeometry, craterMaterial);
+            crater.position.y = height/2;
+            volcano.add(crater);
+            
+            // Add lava particles
+            const particleCount = 50;
+            const particlesGeometry = new THREE.BufferGeometry();
+            const positions = new Float32Array(particleCount * 3);
+            const colors = new Float32Array(particleCount * 3);
+            
+            for (let p = 0; p < particleCount; p++) {
+                const theta = Math.random() * Math.PI * 2;
+                const r = Math.random() * craterRadius;
+                
+                positions[p * 3] = Math.cos(theta) * r;
+                positions[p * 3 + 1] = height/2 + Math.random() * 2;
+                positions[p * 3 + 2] = Math.sin(theta) * r;
+                
+                colors[p * 3] = 1;  // R
+                colors[p * 3 + 1] = 0.3 + Math.random() * 0.4;  // G
+                colors[p * 3 + 2] = 0;  // B
+            }
+            
+            particlesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            particlesGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+            
+            const particlesMaterial = new THREE.PointsMaterial({
+                size: 0.5,
+                vertexColors: true,
+                transparent: true,
+                opacity: 0.8
+            });
+            
+            const particles = new THREE.Points(particlesGeometry, particlesMaterial);
+            crater.add(particles);
+            
+            // Add rock formations around base
+            for (let j = 0; j < 8; j++) {
+                const angle = (j / 8) * Math.PI * 2;
+                const rockRadius = radius * (0.8 + Math.random() * 0.4);
+                const rockHeight = height * (0.2 + Math.random() * 0.3);
+                
+                const rockGeometry = new THREE.ConeGeometry(
+                    rockRadius * 0.2,
+                    rockHeight,
+                    4 + Math.floor(Math.random() * 3)
+                );
+                
+                const rockMaterial = new THREE.MeshStandardMaterial({
+                    color: 0x8b0000,
+                    roughness: 0.9,
+                    metalness: 0.1,
+                    flatShading: true
+                });
+                
+                const rock = new THREE.Mesh(rockGeometry, rockMaterial);
+                rock.position.set(
+                    Math.cos(angle) * rockRadius,
+                    rockHeight/2,
+                    Math.sin(angle) * rockRadius
+                );
+                rock.rotation.y = Math.random() * Math.PI;
+                rock.rotation.z = (Math.random() - 0.5) * 0.3;
+                volcano.add(rock);
+            }
+            
+            rangeGroup.add(volcano);
+        }
+        
+        return rangeGroup;
+    };
 
-// Add label
-labelSystem.addLabel(hellsEnd, "Hell's End", CONFIG.colors.hellsEnd);
+    // Add multiple volcanic ranges
+    const ranges = [
+        createVolcanicRange(-40, -150, 300, { x: 0, z: 1 }),
+        createVolcanicRange(40, -150, 300, { x: 0, z: 1 }),
+        createVolcanicRange(-20, -100, 200, { x: 1, z: 1 }),
+        createVolcanicRange(20, -100, 200, { x: -1, z: 1 })
+    ];
+    
+    ranges.forEach(range => hellsEndGroup.add(range));
 
-return hellsEnd;
+    // Position Hell's End
+    const position = CONFIG.positions.western.hellsEnd;
+    hellsEndGroup.position.set(position.x, position.y, position.z);
+    scene.add(hellsEndGroup);
+
+    // Add label
+    labelSystem.addLabel(hellsEndGroup, "Hell's End", CONFIG.colors.hellsEnd);
+
+    return hellsEndGroup;
 }
 
 // Create Hell's End Gate Capital
 function createHellsGate(scene, labelSystem) {
-// Hell's End Gate Capital
-const hellsGateGeometry = new THREE.CylinderGeometry(25, 25, 25, 8);
-const hellsGateMaterial = new THREE.MeshLambertMaterial({ 
-    color: CONFIG.colors.hellsGate
-});
-const hellsGate = new THREE.Mesh(hellsGateGeometry, hellsGateMaterial);
+    const hellsGateGroup = new THREE.Group();
 
-// Add gate structures
-const gateGeometry = new THREE.BoxGeometry(50, 40, 5);
-const gateMaterial = new THREE.MeshLambertMaterial({ 
-    color: 0x8b0000 // Dark red
-});
-const gate = new THREE.Mesh(gateGeometry, gateMaterial);
-gate.position.set(0, 20, 0);
-hellsGate.add(gate);
+    // Create main platform with detailed geometry
+    const platformGeometry = new THREE.CylinderGeometry(25, 28, 8, 16, 2);
+    const vertices = platformGeometry.attributes.position.array;
+    
+    // Add platform details
+    for (let i = 0; i < vertices.length; i += 3) {
+        const angle = Math.atan2(vertices[i], vertices[i + 2]);
+        const radius = Math.sqrt(vertices[i] * vertices[i] + vertices[i + 2] * vertices[i + 2]);
+        
+        // Add architectural details to the platform
+        const displacement = 
+            Math.sin(angle * 16) * 0.2 + // Radial patterns
+            Math.cos(angle * 8) * Math.sin(vertices[i + 1] * 2) * 0.3; // Vertical patterns
+        
+        if (radius > 20) {
+            vertices[i] *= (1 + displacement * 0.1);
+            vertices[i + 2] *= (1 + displacement * 0.1);
+        }
+    }
+    
+    platformGeometry.computeVertexNormals();
+    
+    const platformMaterial = new THREE.MeshStandardMaterial({ 
+        color: CONFIG.colors.hellsGate,
+        roughness: 0.7,
+        metalness: 0.3,
+        flatShading: true
+    });
+    const platform = new THREE.Mesh(platformGeometry, platformMaterial);
+    hellsGateGroup.add(platform);
 
-// Create gate opening
-const openingGeometry = new THREE.BoxGeometry(20, 30, 10);
-const openingMaterial = new THREE.MeshBasicMaterial({ 
-    color: 0x000000 // Black
-});
-const opening = new THREE.Mesh(openingGeometry, openingMaterial);
-opening.position.set(0, 15, 0);
-hellsGate.add(opening);
+    // Create main gate structure with intricate details
+    const gateGroup = new THREE.Group();
+    
+    // Main archway
+    const archPoints = [];
+    const archSegments = 20;
+    
+    for (let i = 0; i <= archSegments; i++) {
+        const t = i / archSegments;
+        const angle = t * Math.PI;
+        archPoints.push(new THREE.Vector3(
+            Math.cos(angle) * 15,
+            Math.sin(angle) * 20 + 20,
+            0
+        ));
+    }
+    
+    const archCurve = new THREE.CatmullRomCurve3(archPoints);
+    const archGeometry = new THREE.TubeGeometry(archCurve, 20, 2, 12, false);
+    const archMaterial = new THREE.MeshStandardMaterial({
+        color: 0x8b0000,
+        roughness: 0.6,
+        metalness: 0.4
+    });
+    
+    const arch = new THREE.Mesh(archGeometry, archMaterial);
+    gateGroup.add(arch);
 
-// Add towers on either side of the gate
-const towerGeometry = new THREE.CylinderGeometry(5, 7, 50, 8);
-const towerMaterial = new THREE.MeshLambertMaterial({
-    color: 0x800000 // Maroon
-});
+    // Gate walls with detailed architecture
+    const wallGeometry = new THREE.BoxGeometry(40, 40, 5);
+    const wallVertices = wallGeometry.attributes.position.array;
+    
+    // Add architectural details to walls
+    for (let i = 0; i < wallVertices.length; i += 3) {
+        if (Math.abs(wallVertices[i]) > 15) { // Only modify edges
+            const height = wallVertices[i + 1];
+            const pattern = 
+                Math.sin(height * 0.5) * 0.3 + // Horizontal ridges
+                Math.cos(height * 0.8) * 0.2; // Additional detail
+            
+            wallVertices[i] *= (1 + pattern * 0.1);
+        }
+    }
+    
+    wallGeometry.computeVertexNormals();
+    
+    const wallMaterial = new THREE.MeshStandardMaterial({
+        color: 0x8b0000,
+        roughness: 0.8,
+        metalness: 0.2,
+        flatShading: true
+    });
+    
+    const wall = new THREE.Mesh(wallGeometry, wallMaterial);
+    wall.position.set(0, 20, 0);
+    gateGroup.add(wall);
 
-const leftTower = new THREE.Mesh(towerGeometry, towerMaterial);
-leftTower.position.set(-22, 25, 0);
-hellsGate.add(leftTower);
+    // Create intricate gate opening
+    const openingGeometry = new THREE.BoxGeometry(20, 30, 10);
+    const openingMaterial = new THREE.MeshStandardMaterial({ 
+        color: 0x000000,
+        emissive: 0x330000,
+        emissiveIntensity: 0.5
+    });
+    const opening = new THREE.Mesh(openingGeometry, openingMaterial);
+    opening.position.set(0, 15, 0);
+    gateGroup.add(opening);
 
-const rightTower = new THREE.Mesh(towerGeometry, towerMaterial);
-rightTower.position.set(22, 25, 0);
-hellsGate.add(rightTower);
+    // Create detailed towers
+    const createDetailedTower = (x) => {
+        const towerGroup = new THREE.Group();
+        
+        // Main tower body with architectural details
+        const towerGeometry = new THREE.CylinderGeometry(5, 7, 50, 12, 8);
+        const towerVertices = towerGeometry.attributes.position.array;
+        
+        // Add architectural details to tower
+        for (let i = 0; i < towerVertices.length; i += 3) {
+            const angle = Math.atan2(towerVertices[i], towerVertices[i + 2]);
+            const height = towerVertices[i + 1];
+            
+            const detail = 
+                Math.sin(angle * 6 + height * 0.2) * 0.2 + // Vertical ridges
+                Math.cos(height * 0.4) * 0.1; // Horizontal bands
+            
+            towerVertices[i] *= (1 + detail);
+            towerVertices[i + 2] *= (1 + detail);
+        }
+        
+        towerGeometry.computeVertexNormals();
+        
+        const towerMaterial = new THREE.MeshStandardMaterial({
+            color: 0x800000,
+            roughness: 0.7,
+            metalness: 0.3,
+            flatShading: true
+        });
+        
+        const tower = new THREE.Mesh(towerGeometry, towerMaterial);
+        towerGroup.add(tower);
+        
+        // Add decorative elements to tower
+        const addTowerDecorations = () => {
+            // Decorative rings
+            for (let i = 0; i < 3; i++) {
+                const ringGeometry = new THREE.TorusGeometry(6, 0.5, 8, 24);
+                const ringMaterial = new THREE.MeshStandardMaterial({
+                    color: 0x8b0000,
+                    roughness: 0.6,
+                    metalness: 0.4
+                });
+                const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+                ring.position.y = 10 + i * 15;
+                ring.rotation.x = Math.PI / 2;
+                towerGroup.add(ring);
+            }
+            
+            // Tower top
+            const topGeometry = new THREE.ConeGeometry(6, 10, 8);
+            const topMaterial = new THREE.MeshStandardMaterial({
+                color: 0x8b0000,
+                roughness: 0.5,
+                metalness: 0.5
+            });
+            const top = new THREE.Mesh(topGeometry, topMaterial);
+            top.position.y = 30;
+            towerGroup.add(top);
+            
+            // Flame effect
+            const flameGeometry = new THREE.ConeGeometry(3, 8, 16);
+            const flameMaterial = new THREE.MeshStandardMaterial({
+                color: 0xff6347,
+                emissive: 0xff4500,
+                emissiveIntensity: 0.8,
+                transparent: true,
+                opacity: 0.9
+            });
+            const flame = new THREE.Mesh(flameGeometry, flameMaterial);
+            flame.position.y = 35;
+            towerGroup.add(flame);
+        };
+        
+        addTowerDecorations();
+        towerGroup.position.set(x, 25, 0);
+        return towerGroup;
+    };
 
-// Add flaming effects on top of towers
-const flameGeometry = new THREE.ConeGeometry(5, 10, 8);
-const flameMaterial = new THREE.MeshBasicMaterial({
-    color: 0xff6347, // Tomato
-    transparent: true,
-    opacity: 0.8
-});
+    // Add towers
+    const leftTower = createDetailedTower(-22);
+    const rightTower = createDetailedTower(22);
+    gateGroup.add(leftTower);
+    gateGroup.add(rightTower);
 
-const leftFlame = new THREE.Mesh(flameGeometry, flameMaterial);
-leftFlame.position.set(0, 30, 0);
-leftTower.add(leftFlame);
+    // Add decorative elements connecting towers to main gate
+    const createConnector = (x) => {
+        const connectorGeometry = new THREE.BoxGeometry(8, 30, 3);
+        const connectorMaterial = new THREE.MeshStandardMaterial({
+            color: 0x8b0000,
+            roughness: 0.7,
+            metalness: 0.3
+        });
+        const connector = new THREE.Mesh(connectorGeometry, connectorMaterial);
+        connector.position.set(x, 15, 0);
+        return connector;
+    };
 
-const rightFlame = new THREE.Mesh(flameGeometry, flameMaterial);
-rightFlame.position.set(0, 30, 0);
-rightTower.add(rightFlame);
+    gateGroup.add(createConnector(-16));
+    gateGroup.add(createConnector(16));
 
-// Position Hell's Gate
-const position = CONFIG.positions.western.hellsGate;
-hellsGate.position.set(position.x, position.y, position.z);
-scene.add(hellsGate);
+    // Add the gate group to main group
+    hellsGateGroup.add(gateGroup);
 
-// Add label
-labelSystem.addLabel(hellsGate, "Hell's End Gate", CONFIG.colors.hellsGate);
+    // Position Hell's Gate
+    const position = CONFIG.positions.western.hellsGate;
+    hellsGateGroup.position.set(position.x, position.y, position.z);
+    scene.add(hellsGateGroup);
 
-return hellsGate;
+    // Add label
+    labelSystem.addLabel(hellsGateGroup, "Hell's End Gate", CONFIG.colors.hellsGate);
+
+    return hellsGateGroup;
 }
 
 // Add volcanic features to Hell's End (optional enhancement)
